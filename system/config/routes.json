@@ -1,49 +1,55 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "basePath": "/",
-  "routes": {
-    "/": {
+  "routes": [
+    {
+      "path": "/",
       "component": "home",
       "title": "الرئيسية",
       "auth": false,
       "layout": "default"
     },
-    "/apps": {
+    {
+      "path": "/apps",
       "component": "app-manager",
       "title": "التطبيقات",
       "auth": true,
       "permissions": ["view:apps"],
       "layout": "default"
     },
-    "/settings": {
+    {
+      "path": "/settings",
       "component": "settings-panel",
       "title": "الإعدادات",
       "auth": true,
       "permissions": ["manage:settings"],
       "layout": "admin"
     },
-    "/admin": {
+    {
+      "path": "/admin",
       "component": "admin-dashboard",
       "title": "لوحة الإدارة",
       "auth": true,
       "permissions": ["access:admin"],
       "layout": "admin"
     },
-    "/profile/:id": {
+    {
+      "path": "/profile/:id",
       "component": "user-profile",
       "title": "الملف الشخصي",
       "auth": true,
       "dynamic": true,
       "layout": "default"
     },
-    "/addons/:name": {
+    {
+      "path": "/addons/:name",
       "component": "addon-viewer",
       "title": "الإضافة",
       "auth": true,
       "dynamic": true,
       "layout": "addon"
     }
-  },
+  ],
   "middleware": [
     {
       "name": "auth",
@@ -62,11 +68,11 @@
     }
   ],
   "notFound": {
-    "component": "404",
+    "component": "not-found",
     "title": "الصفحة غير موجودة"
   },
   "error": {
     "component": "error",
     "title": "خطأ في النظام"
   }
-}{}
+}

@@ -1,6 +1,6 @@
 /**
  * Alaisai Themes - نظام الثيمات المتقدم
- * @version 1.3.0
+ * @version 2.0.0
  */
 
 /* ===== الثيم الداكن (الافتراضي) ===== */
@@ -33,6 +33,7 @@
     --bg-tertiary: #0f3460;
     --bg-card: rgba(255, 255, 255, 0.05);
     --bg-hover: rgba(255, 255, 255, 0.1);
+    --bg-input: #2a2a3a;
     
     /* نصوص */
     --text-primary: #ffffff;
@@ -94,6 +95,7 @@
     --bg-tertiary: #dee2e6;
     --bg-card: #ffffff;
     --bg-hover: #f1f3f5;
+    --bg-input: #ffffff;
     
     /* نصوص */
     --text-primary: #212529;
@@ -125,10 +127,9 @@
     --glass-blur: blur(10px);
 }
 
-/* ===== الثمن الأزرق ===== */
+/* ===== الثيم الأزرق ===== */
 .theme-blue,
 [data-theme="blue"] {
-    /* الألوان الأساسية */
     --primary: #3b82f6;
     --primary-dark: #2563eb;
     --primary-light: #60a5fa;
@@ -149,29 +150,21 @@
     --danger-dark: #dc2626;
     --danger-light: #f87171;
     
-    /* خلفيات */
     --bg-primary: #0f172a;
     --bg-secondary: #1e293b;
     --bg-tertiary: #334155;
     --bg-card: rgba(255, 255, 255, 0.05);
-    --bg-hover: rgba(255, 255, 255, 0.1);
+    --bg-input: #1e293b;
     
-    /* نصوص */
     --text-primary: #ffffff;
     --text-secondary: #cbd5e1;
     --text-muted: #94a3b8;
-    --text-disabled: #64748b;
-    
-    /* حدود */
-    --border-light: #334155;
-    --border-medium: #475569;
-    --border-heavy: #64748b;
     
     --gradient-primary: linear-gradient(135deg, #3b82f6, #2563eb);
     --gradient-secondary: linear-gradient(135deg, #8b5cf6, #7c3aed);
 }
 
-/* ===== الثمن الأخضر ===== */
+/* ===== الثيم الأخضر ===== */
 .theme-green,
 [data-theme="green"] {
     --primary: #10b981;
@@ -190,7 +183,7 @@
     --gradient-secondary: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
-/* ===== الثمن الأرجواني ===== */
+/* ===== الثيم الأرجواني ===== */
 .theme-purple,
 [data-theme="purple"] {
     --primary: #8b5cf6;
@@ -209,11 +202,12 @@
     --gradient-secondary: linear-gradient(135deg, #ec4899, #db2777);
 }
 
-/* ===== تطبيق المتغيرات ===== */
+/* ===== تطبيق المتغيرات على العناصر الأساسية ===== */
 body {
     background: var(--bg-primary);
     color: var(--text-primary);
     transition: background-color 0.3s ease, color 0.3s ease;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
 /* عناصر شائعة */
@@ -221,16 +215,20 @@ body {
     background: var(--bg-card);
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow-md);
+    border-radius: 12px;
+    color: var(--text-primary);
 }
 
 .btn-primary {
     background: var(--gradient-primary);
     color: white;
+    border: none;
 }
 
 .btn-secondary {
     background: var(--gradient-secondary);
     color: white;
+    border: none;
 }
 
 .text-primary { color: var(--text-primary); }
@@ -248,7 +246,7 @@ body {
     border: 1px solid var(--glass-border);
 }
 
-/* ===== تبديل الثيم ===== */
+/* ===== مبدل الثيم ===== */
 .theme-switcher {
     position: fixed;
     bottom: 20px;
@@ -274,4 +272,4 @@ body {
 .theme-btn:hover {
     transform: scale(1.1);
     border-color: var(--primary);
-}/* Alaisai Themes */
+}

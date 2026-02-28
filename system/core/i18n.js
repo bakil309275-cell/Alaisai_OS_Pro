@@ -1,42 +1,39 @@
 /**
- * Alaisai i18n - نظام الترجمة والدولنة
- * @version 1.2.0
+ * Alaisai i18n - نظام الترجمة والدولنة المتقدم
+ * @version 2.0.0
  */
 
 const AlaisaiI18n = {
-    version: '1.2.0',
+    version: '2.0.0',
     locale: 'ar',
     fallback: 'en',
     translations: new Map(),
     formatters: new Map(),
     
-    // اللغات المدعومة
     locales: {
-        ar: {
-            name: 'العربية',
-            dir: 'rtl',
-            code: 'ar'
-        },
-        en: {
-            name: 'English',
-            dir: 'ltr',
-            code: 'en'
-        }
+        ar: { name: 'العربية', dir: 'rtl', code: 'ar' },
+        en: { name: 'English', dir: 'ltr', code: 'en' }
     },
     
     // تهيئة النظام
     init(options = {}) {
-        this.locale = options.locale || 'ar';
+        this.locale = options.locale || localStorage.getItem('alaisai_locale') || 'ar';
         this.fallback = options.fallback || 'en';
         
-        // تحميل الترجمات الافتراضية
         this.loadDefaultTranslations();
+        this.applyDirection();
         
         console.log(`🌐 Alaisai i18n initialized with locale: ${this.locale}`);
         return this;
     },
     
-    // تحميل الترجمات الافتراضية
+    // تطبيق اتجاه الصفحة
+    applyDirection() {
+        document.documentElement.dir = this.locales[this.locale]?.dir || 'rtl';
+        document.documentElement.lang = this.locale;
+    },
+    
+    // تحميل الترجمات الافتراضية مع مفردات الوقت
     loadDefaultTranslations() {
         // العربية
         this.addTranslations('ar', {
@@ -55,28 +52,27 @@ const AlaisaiI18n = {
             'dark': 'داكن',
             'light': 'فاتح',
             'system': 'النظام',
-            
-            // الأخطاء
-            'error': 'خطأ',
+            'confirm': 'تأكيد',
             'success': 'نجاح',
+            'error': 'خطأ',
             'warning': 'تحذير',
             'info': 'معلومات',
-            'confirm': 'تأكيد',
+            
+            // الوقت
+            'days': '{count} يوم | {count} أيام',
+            'hours': '{count} ساعة | {count} ساعات',
+            'minutes': '{count} دقيقة | {count} دقائق',
+            'seconds': '{count} ثانية | {count} ثواني',
+            'now': 'الآن',
+            'yesterday': 'أمس',
+            'tomorrow': 'غداً',
+            'today': 'اليوم',
             
             // التطبيقات
             'apps': 'التطبيقات',
             'addons': 'الإضافات',
             'settings.system': 'إعدادات النظام',
             'settings.account': 'إعدادات الحساب',
-            
-            // الوقت
-            'today': 'اليوم',
-            'yesterday': 'أمس',
-            'tomorrow': 'غداً',
-            'days': 'أيام',
-            'hours': 'ساعات',
-            'minutes': 'دقائق',
-            'seconds': 'ثواني',
             
             // الحالة
             'online': 'متصل',
@@ -85,12 +81,20 @@ const AlaisaiI18n = {
             'inactive': 'غير نشط',
             'pending': 'قيد الانتظار',
             'completed': 'مكتمل',
-            'failed': 'فشل'
+            'failed': 'فشل',
+            
+            // واجهة المستخدم
+            'close': 'إغلاق',
+            'open': 'فتح',
+            'back': 'رجوع',
+            'next': 'التالي',
+            'previous': 'السابق',
+            'submit': 'إرسال',
+            'reset': 'إعادة ضبط'
         });
         
         // الإنجليزية
         this.addTranslations('en', {
-            // General
             'welcome': 'Welcome',
             'loading': 'Loading...',
             'save': 'Save',
@@ -105,37 +109,41 @@ const AlaisaiI18n = {
             'dark': 'Dark',
             'light': 'Light',
             'system': 'System',
-            
-            // Errors
-            'error': 'Error',
+            'confirm': 'Confirm',
             'success': 'Success',
+            'error': 'Error',
             'warning': 'Warning',
             'info': 'Info',
-            'confirm': 'Confirm',
             
-            // Apps
+            'days': '{count} day | {count} days',
+            'hours': '{count} hour | {count} hours',
+            'minutes': '{count} minute | {count} minutes',
+            'seconds': '{count} second | {count} seconds',
+            'now': 'Now',
+            'yesterday': 'Yesterday',
+            'tomorrow': 'Tomorrow',
+            'today': 'Today',
+            
             'apps': 'Apps',
             'addons': 'Addons',
             'settings.system': 'System Settings',
             'settings.account': 'Account Settings',
             
-            // Time
-            'today': 'Today',
-            'yesterday': 'Yesterday',
-            'tomorrow': 'Tomorrow',
-            'days': 'days',
-            'hours': 'hours',
-            'minutes': 'minutes',
-            'seconds': 'seconds',
-            
-            // Status
             'online': 'Online',
             'offline': 'Offline',
             'active': 'Active',
             'inactive': 'Inactive',
             'pending': 'Pending',
             'completed': 'Completed',
-            'failed': 'Failed'
+            'failed': 'Failed',
+            
+            'close': 'Close',
+            'open': 'Open',
+            'back': 'Back',
+            'next': 'Next',
+            'previous': 'Previous',
+            'submit': 'Submit',
+            'reset': 'Reset'
         });
     },
     
@@ -144,35 +152,32 @@ const AlaisaiI18n = {
         if (!this.translations.has(locale)) {
             this.translations.set(locale, {});
         }
-        
-        const current = this.translations.get(locale);
-        Object.assign(current, translations);
-        
+        Object.assign(this.translations.get(locale), translations);
         return this;
     },
     
-    // ترجمة نص
+    // ترجمة مع دعم الجمع (pluralization)
     t(key, params = {}, locale = null) {
         const targetLocale = locale || this.locale;
-        
-        // البحث في اللغة المطلوبة
         let translation = this.translations.get(targetLocale)?.[key];
         
-        // إذا لم نجد، نبحث في اللغة الاحتياطية
         if (translation === undefined && targetLocale !== this.fallback) {
             translation = this.translations.get(this.fallback)?.[key];
         }
         
-        // إذا لم نجد، نرجع المفتاح نفسه
-        if (translation === undefined) {
-            return key;
+        if (translation === undefined) return key;
+        
+        // دعم صيغ الجمع (مثل: "{count} يوم|{count} أيام")
+        if (typeof translation === 'string' && translation.includes('|')) {
+            const forms = translation.split('|');
+            const count = params.count || 0;
+            if (count === 1) translation = forms[0];
+            else translation = forms[1] || forms[0];
         }
         
-        // استبدال المتغيرات
         return this.interpolate(translation, params);
     },
     
-    // استبدال المتغيرات في النص
     interpolate(text, params) {
         return text.replace(/\{(\w+)\}/g, (match, key) => {
             return params[key] !== undefined ? params[key] : match;
@@ -181,26 +186,19 @@ const AlaisaiI18n = {
     
     // تغيير اللغة
     setLocale(locale) {
-        if (this.locales[locale]) {
-            this.locale = locale;
-            
-            // تحديث اتجاه الصفحة
-            document.documentElement.dir = this.locales[locale].dir;
-            document.documentElement.lang = locale;
-            
-            // حفظ التفضيل
-            localStorage.setItem('alaisai_locale', locale);
-            
-            console.log(`🌐 تم تغيير اللغة إلى: ${this.locales[locale].name}`);
-            
-            // إطلاق حدث
-            window.dispatchEvent(new CustomEvent('locale:changed', { 
-                detail: { locale, direction: this.locales[locale].dir }
-            }));
-            
-            return true;
+        if (!this.locales[locale]) return false;
+        this.locale = locale;
+        this.applyDirection();
+        localStorage.setItem('alaisai_locale', locale);
+        
+        // إطلاق حدث لتحديث واجهات المستخدم
+        window.dispatchEvent(new CustomEvent('localeChanged', { detail: { locale } }));
+        if (window.AlaisaiCore) {
+            AlaisaiCore.emit('i18n:localeChanged', { locale });
         }
-        return false;
+        
+        console.log(`🌐 تم تغيير اللغة إلى: ${this.locales[locale].name}`);
+        return true;
     },
     
     // تنسيق الأرقام
@@ -212,7 +210,7 @@ const AlaisaiI18n = {
         }
     },
     
-    // تنسيق التواريخ
+    // تنسيق التاريخ مع دعم اللغة
     formatDate(date, options = {}) {
         try {
             const d = date instanceof Date ? date : new Date(date);
@@ -222,62 +220,17 @@ const AlaisaiI18n = {
         }
     },
     
-    // تنسيق العملات
-    formatCurrency(amount, currency = 'SAR') {
-        try {
-            return new Intl.NumberFormat(this.locale, {
-                style: 'currency',
-                currency
-            }).format(amount);
-        } catch {
-            return `${amount} ${currency}`;
-        }
-    },
-    
-    // تنسيق الوقت النسبي (منذ...)
+    // تنسيق الوقت النسبي باستخدام الترجمة
     formatRelativeTime(date) {
         const now = new Date();
         const then = new Date(date);
-        const diff = now - then;
+        const diffSeconds = Math.floor((now - then) / 1000);
+        const absDiff = Math.abs(diffSeconds);
         
-        const seconds = Math.floor(diff / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const hours = Math.floor(minutes / 60);
-        const days = Math.floor(hours / 24);
-        
-        if (days > 0) {
-            return this.t('days', { count: days });
-        }
-        if (hours > 0) {
-            return this.t('hours', { count: hours });
-        }
-        if (minutes > 0) {
-            return this.t('minutes', { count: minutes });
-        }
-        return this.t('seconds', { count: seconds });
-    },
-    
-    // إضافة مُنسق مخصص
-    addFormatter(name, formatter) {
-        this.formatters.set(name, formatter);
-        return this;
-    },
-    
-    // استخدام مُنسق مخصص
-    format(name, value, ...args) {
-        const formatter = this.formatters.get(name);
-        if (formatter) {
-            return formatter(value, ...args);
-        }
-        return value;
-    },
-    
-    // قائمة اللغات المتاحة
-    getAvailableLocales() {
-        return Object.entries(this.locales).map(([code, info]) => ({
-            code,
-            ...info
-        }));
+        if (absDiff < 60) return this.t('seconds', { count: absDiff });
+        if (absDiff < 3600) return this.t('minutes', { count: Math.floor(absDiff / 60) });
+        if (absDiff < 86400) return this.t('hours', { count: Math.floor(absDiff / 3600) });
+        return this.t('days', { count: Math.floor(absDiff / 86400) });
     },
     
     // هل اللغة RTL؟
@@ -286,10 +239,12 @@ const AlaisaiI18n = {
     }
 };
 
-// تهيئة النظام
-AlaisaiI18n.init({
-    locale: localStorage.getItem('alaisai_locale') || 'ar'
-});
+// تهيئة
+if (window.AlaisaiCore) {
+    AlaisaiCore.registerModule('AlaisaiI18n', AlaisaiI18n);
+    AlaisaiI18n.init();
+} else {
+    window.AlaisaiI18n = AlaisaiI18n.init();
+}
 
-window.AlaisaiI18n = AlaisaiI18n;
-console.log('🌐 Alaisai i18n جاهز للعمل');// Alaisai i18n v1.2.0
+console.log('🌐 Alaisai i18n جاهز للعمل (مع دعم الجمع والأحداث)');

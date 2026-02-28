@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "errors": {
     "400": {
       "code": "BAD_REQUEST",
@@ -102,4 +102,4 @@
       "unsaved_changes": "You have unsaved changes"
     }
   }
-}{}
+}

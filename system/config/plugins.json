@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "plugins": {
     "enabled": [
       "core-system",
@@ -23,7 +23,7 @@
       },
       "file-manager": {
         "name": "مدير الملفات",
-        "version": "1.5.0",
+        "version": "2.0.0",
         "author": "Alaisai",
         "enabled": true,
         "dependencies": ["core-system"],
@@ -55,4 +55,4 @@
     "uninstall": ["admin"],
     "configure": ["admin", "manager"]
   }
-}{}
+}

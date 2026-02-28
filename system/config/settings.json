@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "system": {
     "name": "Alaisai OS",
     "version": "2.0.0",
-    "build": "2026.02",
+    "build": "2026.03",
     "environment": "production",
     "debug": false,
     "maintenance": false
@@ -59,4 +59,4 @@
     "checkInterval": 86400,
     "channel": "stable"
   }
-}{}
+}

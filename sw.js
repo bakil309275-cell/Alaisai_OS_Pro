@@ -1,28 +1,47 @@
 /**
- * Alaisai OS - Service Worker 2026
- * وظيفة الملف: ضمان العمل بدون إنترنت وتخزين ملفات النظام Assets
+ * Alaisai OS - Service Worker 2026 (محسّن)
+ * وظيفة الملف: ضمان العمل بدون إنترنت وتخزين ملفات النظام
  */
 
-const CACHE_NAME = 'alaisai-ultra-v1';
+const CACHE_NAME = 'alaisai-ultra-v2';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './manifest.json',
-    './assets/images/logo.png',
-    // أضف أي ملفات أساسية أخرى هنا
+    './assets/images/icon-72.png',
+    './assets/images/icon-128.png',
+    './assets/images/icon-144.png',
+    './assets/images/icon-152.png',
+    './assets/images/icon-192.png',
+    './assets/images/icon-384.png',
+    './assets/images/icon-512.png',
+    './assets/css/themes.css',
+    './assets/css/animations.css',
+    './system/core/core.js',
+    './system/core/database.js',
+    './system/core/security.js',
+    './system/core/api.js',
+    './system/core/addons-manager.js',
+    './system/ui/i18n.js',
+    './system/ui/ui-kit.js',
+    './system/ui/components.js',
+    './system/ui/file-manager.js',
+    './system/ui/validators.js',
+    './system/ui/helpers.js',
+    './system/ui/formatters.js'
 ];
 
-// مرحلة التثبيت: تخزين الملفات الأساسية في الذاكرة المؤقتة
+// مرحلة التثبيت
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('🛡️ Alaisai Cache: تم تأمين ملفات النظام الأساسية');
+            console.log('🛡️ Alaisai Cache: تخزين ملفات النظام');
             return cache.addAll(ASSETS_TO_CACHE);
         })
     );
 });
 
-// مرحلة التنشيط: مسح التخزين القديم عند تحديث النظام
+// مرحلة التنشيط: مسح الكاش القديم
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) => {
@@ -34,13 +53,11 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// استراتيجية الاستجابة: جلب الملف من الكاش أولاً، ثم الشبكة
+// استراتيجية الجلب: كاش أولاً ثم الشبكة
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request).then((response) => {
-            // إذا وجد الملف في الكاش أرجعه، وإلا اطلبه من الإنترنت
             return response || fetch(event.request).catch(() => {
-                // في حال انقطاع الإنترنت تماماً عن تطبيق أندرويد
                 if (event.request.mode === 'navigate') {
                     return caches.match('./index.html');
                 }

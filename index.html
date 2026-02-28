@@ -9,25 +9,16 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4cc9f0">
     
+    <!-- CSS: الثيمات والحركات -->
+    <link rel="stylesheet" href="assets/css/themes.css">
+    <link rel="stylesheet" href="assets/css/animations.css">
+    
+    <!-- أنماط مخصصة -->
     <style>
-        /* ========== STYLE.CSS - النسخة الموحدة ========== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-
-        :root {
-            --bg-main: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
-            --glass: rgba(255, 255, 255, 0.1);
-            --glass-heavy: rgba(255, 255, 255, 0.2);
-            --accent: #4cc9f0;
-            --success: #4ade80;
-            --danger: #f72585;
-            --text: #ffffff;
-            --admin-bg: #1e1e26;
-            --code-bg: #1a1a2e;
-            --editor-bg: #282a36;
         }
 
         body {
@@ -36,8 +27,8 @@
             height: 100vh;
             overflow: hidden;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: var(--bg-main);
-            color: var(--text);
+            background: var(--bg-main, linear-gradient(135deg, #1a1a2e, #16213e, #0f3460));
+            color: var(--text-primary, #ffffff);
             user-select: none;
         }
 
@@ -49,16 +40,16 @@
             justify-content: space-between;
             align-items: center;
             padding: 0 15px;
-            border-bottom: 1px solid var(--glass);
+            border-bottom: 1px solid var(--border-light, rgba(255,255,255,0.1));
             z-index: 100;
         }
 
         #sync-indicator {
-            color: var(--danger);
+            color: var(--danger, #f72585);
             transition: 0.5s;
             margin-left: 8px;
         }
-        #sync-indicator.online { color: var(--success); text-shadow: 0 0 10px var(--success); }
+        #sync-indicator.online { color: var(--success, #4ade80); text-shadow: 0 0 10px var(--success); }
 
         .grid-container {
             display: grid;
@@ -68,14 +59,14 @@
             height: calc(100vh - 100px);
             overflow-y: auto;
             scrollbar-width: thin;
-            scrollbar-color: var(--accent) var(--glass);
+            scrollbar-color: var(--primary, #4cc9f0) var(--bg-secondary, #16213e);
         }
 
         .grid-container::-webkit-scrollbar {
             width: 6px;
         }
         .grid-container::-webkit-scrollbar-thumb {
-            background: var(--accent);
+            background: var(--primary, #4cc9f0);
             border-radius: 10px;
         }
 
@@ -90,19 +81,19 @@
         .app-card:active { transform: scale(0.9); }
         .app-card[draggable="true"] { cursor: grab; }
         .app-card:active { cursor: grabbing; }
-        .app-card.drag-over { border: 2px dashed var(--accent); transform: scale(1.1); border-radius: 12px; }
+        .app-card.drag-over { border: 2px dashed var(--primary, #4cc9f0); transform: scale(1.1); border-radius: 12px; }
 
         .icon-box {
             width: 65px;
             height: 65px;
-            background: var(--glass);
+            background: var(--bg-card, rgba(255,255,255,0.05));
             border-radius: 16px;
-            border: 1px solid var(--glass-heavy);
+            border: 1px solid var(--border-light, rgba(255,255,255,0.1));
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 2.2rem;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            box-shadow: var(--shadow-md, 0 4px 8px rgba(0,0,0,0.4));
             backdrop-filter: blur(5px);
         }
 
@@ -111,14 +102,14 @@
             font-size: 0.85rem;
             text-align: center;
             font-weight: 500;
-            color: var(--text);
+            color: var(--text-primary, #ffffff);
             text-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
         /* لوحة الإدارة */
         .admin-panel, .admin-ui {
-            background: var(--admin-bg);
-            color: white;
+            background: var(--bg-secondary, #16213e);
+            color: var(--text-primary, #ffffff);
             padding: 20px;
             border-radius: 20px;
             width: 90%;
@@ -131,21 +122,21 @@
         .admin-item, .admin-row {
             display: flex;
             align-items: center;
-            background: rgba(255,255,255,0.05);
+            background: var(--bg-card, rgba(255,255,255,0.05));
             margin: 10px 0;
             padding: 12px;
             border-radius: 12px;
             gap: 10px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid var(--border-light, rgba(255,255,255,0.1));
         }
 
-        .btn-save-mini { background: #4cc9f0; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-        .btn-save-mini.saved { background: #4ade80; }
+        .btn-save-mini { background: var(--primary, #4cc9f0); border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: white; }
+        .btn-save-mini.saved { background: var(--success, #4ade80); }
         
         .adm-btn {
             background: rgba(76, 201, 240, 0.2);
-            border: 1px solid var(--accent);
-            color: white;
+            border: 1px solid var(--primary, #4cc9f0);
+            color: var(--text-primary, #ffffff);
             padding: 8px 15px;
             border-radius: 8px;
             cursor: pointer;
@@ -153,7 +144,7 @@
             margin: 2px;
         }
         .adm-btn:hover {
-            background: var(--accent);
+            background: var(--primary, #4cc9f0);
             color: black;
         }
 
@@ -173,7 +164,7 @@
         .window-frame {
             width: 95%;
             height: 90%;
-            background: #fff;
+            background: white;
             border-radius: 20px;
             overflow: hidden;
             color: #333;
@@ -189,7 +180,7 @@
             align-items: center;
         }
         .close-btn {
-            background: var(--danger);
+            background: var(--danger, #f72585);
             border: none;
             color: white;
             border-radius: 5px;
@@ -203,7 +194,6 @@
             background: white;
         }
 
-        /* تحسينات إضافية */
         #digital-clock {
             font-family: monospace;
             font-size: 1.1rem;
@@ -220,27 +210,26 @@
             padding: 15px;
             border-radius: 12px;
             min-height: 250px;
-            color: white;
+            color: var(--text-primary, #ffffff);
         }
 
         #admin-view input, #admin-view textarea {
             background: rgba(255,255,255,0.9);
-            border: 1px solid var(--accent);
+            border: 1px solid var(--primary, #4cc9f0);
             border-radius: 5px;
             padding: 5px;
             color: #333;
         }
 
-        /* محرر الأكواد */
         .code-editor {
             width: 100%;
             min-height: 300px;
-            background: var(--editor-bg);
+            background: #282a36;
             color: #f8f8f2;
             font-family: 'Courier New', monospace;
             font-size: 14px;
             padding: 15px;
-            border: 2px solid var(--accent);
+            border: 2px solid var(--primary, #4cc9f0);
             border-radius: 10px;
             direction: ltr;
             text-align: left;
@@ -271,26 +260,26 @@
 
         .file-btn {
             background: none;
-            border: 1px solid var(--accent);
-            color: white;
+            border: 1px solid var(--primary, #4cc9f0);
+            color: var(--text-primary, #ffffff);
             padding: 3px 8px;
             border-radius: 3px;
             cursor: pointer;
             font-size: 12px;
         }
         .file-btn:hover {
-            background: var(--accent);
+            background: var(--primary, #4cc9f0);
             color: black;
         }
 
         .file-btn.delete:hover {
-            background: var(--danger);
+            background: var(--danger, #f72585);
             border-color: var(--danger);
         }
 
         .isolated-lab {
-            background: var(--code-bg);
-            border: 2px dashed var(--accent);
+            background: #1a1a2e;
+            border: 2px dashed var(--primary, #4cc9f0);
             border-radius: 10px;
             padding: 20px;
             margin-top: 20px;
@@ -301,7 +290,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
-            color: var(--accent);
+            color: var(--primary, #4cc9f0);
         }
 
         .lab-content {
@@ -313,7 +302,7 @@
         }
     </style>
 </head>
-<body>
+<body class="theme-dark" data-theme="dark">
 
 <div id="os-root">
     <header id="status-bar">
@@ -342,949 +331,726 @@
     </div>
 </div>
 
-<script>
-    // ========== CORE.JS - النظام الأساسي الموحد ==========
-    // 🛡️ درع الحماية من الأخطاء
-    window.onerror = function(msg, url, line, col, error) {
-        console.warn(`🛡️ Alaisai Shield: تم احتواء خطأ: ${msg}`);
-        return true;
-    };
+<!-- تحميل نواة النظام والوحدات المحسنة (ترتيب مهم) -->
+<!-- أولاً: النواة -->
+<script src="system/core/core.js"></script>
+<!-- ثانياً: قاعدة البيانات والأمان -->
+<script src="system/core/database.js"></script>
+<script src="system/core/security.js"></script>
+<!-- ثالثاً: الأنظمة الأساسية -->
+<script src="system/ui/i18n.js"></script>
+<script src="system/core/api.js"></script>
+<script src="system/core/addons-manager.js"></script>
+<!-- رابعاً: واجهات المستخدم -->
+<script src="system/ui/ui-kit.js"></script>
+<script src="system/ui/components.js"></script>
+<script src="system/ui/file-manager.js"></script>
+<!-- خامساً: المساعدات -->
+<script src="system/ui/validators.js"></script>
+<script src="system/ui/helpers.js"></script>
+<script src="system/ui/formatters.js"></script>
 
-    // 💾 نظام التخزين والنسخ الاحتياطي التلقائي
-    const AUTO_BACKUP_KEY = 'alaisai_auto_backup';
-    
-    // 🧠 النواة الرئيسية
-    const AlaisaiOS = {
-        // قاعدة البيانات المركزية
-        db: (() => {
-            try {
-                return JSON.parse(localStorage.getItem('alaisai_ultra_db')) || {
-                    config: { 
-                        pass: "1234", 
-                        downloads: 1050, 
-                        reports: [{ id: Date.now(), email: "support@alaisai.com", text: "مرحباً بك في نظامك الجديد" }] 
-                    },
+<!-- ===== طبقة التوافق مع النظام القديم مع إضافة المزامنة السحابية والمخزن المحسّن ===== -->
+<script>
+    (function() {
+        // تعريف AlaisaiOS إذا لم يكن موجوداً
+        window.AlaisaiOS = window.AlaisaiOS || {
+            db: {
+                config: { pass: "1234", downloads: 0, reports: [] },
+                registry: []
+            },
+            init: function() {
+                console.log('AlaisaiOS legacy init');
+                this.renderDesktop();
+                this.startClock();
+                this.checkNetwork();
+                this.registerServiceWorker();
+            },
+            renderDesktop: function() {
+                const grid = document.getElementById('app-grid');
+                if (!grid) return;
+                grid.innerHTML = "";
+                const sorted = [...this.db.registry].sort((a,b) => (a.order||0) - (b.order||0));
+                sorted.forEach((app, i) => {
+                    const card = document.createElement('div');
+                    card.className = "app-card";
+                    card.setAttribute('draggable', 'true');
+                    card.innerHTML = `<div class="icon-box">${app.icon}</div><span class="app-name">${app.name}</span>`;
+                    
+                    card.ondragstart = (e) => {
+                        e.dataTransfer.setData('text/plain', i);
+                        this.dragIdx = i;
+                        e.target.style.opacity = '0.5';
+                    };
+                    card.ondragend = (e) => { e.target.style.opacity = '1'; };
+                    card.ondragover = (e) => e.preventDefault();
+                    card.ondrop = (e) => {
+                        e.preventDefault();
+                        const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+                        const toIdx = i;
+                        if (fromIdx === toIdx) return;
+                        const items = [...this.db.registry].sort((a,b) => (a.order||0) - (b.order||0));
+                        const [moved] = items.splice(fromIdx, 1);
+                        items.splice(toIdx, 0, moved);
+                        this.db.registry = items.map((item, idx) => { item.order = idx; return item; });
+                        this.save();
+                        this.renderDesktop();
+                    };
+                    card.onclick = () => this.openApp(app);
+                    grid.appendChild(card);
+                });
+            },
+            openApp: function(app) {
+                const stage = document.getElementById('stage-overlay');
+                const viewport = document.getElementById('stage-viewport');
+                document.getElementById('active-app-title').innerText = app.name;
+                viewport.innerHTML = `<div style="height:100%;">${app.content}</div>`;
+                stage.classList.remove('hidden');
+            },
+            closeStage: function() {
+                document.getElementById('stage-overlay').classList.add('hidden');
+                document.getElementById('stage-viewport').innerHTML = "";
+            },
+            startClock: function() {
+                const update = () => {
+                    const now = new Date();
+                    document.getElementById('digital-clock').innerText = now.toLocaleTimeString('ar-SA', { hour:'2-digit', minute:'2-digit' });
+                };
+                update();
+                setInterval(update, 1000);
+            },
+            checkNetwork: function() {
+                const dot = document.getElementById('sync-indicator');
+                if (dot) {
+                    dot.style.color = navigator.onLine ? "#4ade80" : "#f72585";
+                }
+            },
+            registerServiceWorker: function() {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('./sw.js').catch(console.log);
+                }
+            },
+            save: function() {
+                localStorage.setItem('alaisai_ultra_db', JSON.stringify(this.db));
+            },
+            // المخزن المعزول الجديد مع أيقونة الرادار فقط للمستودع
+            StorageSystem: window.AlaisaiFileManager ? {
+                openRepoExplorer: () => AlaisaiFileManager.openUI('', 'github'),
+                openStorageExplorer: () => {
+                    const content = `
+                        <div class="admin-ui">
+                            <h3>📡 مستكشف المستودع</h3>
+                            <div style="display:flex; gap:20px; justify-content:center; margin:30px 0;">
+                                <div style="text-align:center; cursor:pointer;" onclick="AlaisaiOS.StorageSystem.openRepoExplorer()">
+                                    <div style="font-size:4rem;">📡</div>
+                                    <h4>مستكشف المستودع</h4>
+                                    <p style="font-size:12px;">GitHub / WebDAV</p>
+                                </div>
+                            </div>
+                            <p style="color:#4cc9f0; font-size:12px;">يمكنك الاتصال بأي مستودع GitHub أو تخزين WebDAV</p>
+                        </div>
+                    `;
+                    AlaisaiOS.openApp({ name: 'مستكشف المستودع', content });
+                }
+            } : {
+                openRepoExplorer: () => alert('مدير الملفات غير متاح'),
+                openStorageExplorer: () => alert('مدير الملفات غير متاح')
+            }
+        };
+
+        // تحميل البيانات القديمة
+        try {
+            const saved = localStorage.getItem('alaisai_ultra_db');
+            if (saved) {
+                AlaisaiOS.db = JSON.parse(saved);
+            } else {
+                // بيانات افتراضية
+                AlaisaiOS.db = {
+                    config: { pass: "1234", downloads: 1050, reports: [] },
                     registry: [
                         { id: 'app_1', name: 'الترحيب', icon: '✨', content: '<div style="padding:20px;text-align:center;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:15px;color:white;"><h1>أهلاً بك</h1><p>نظام العيسائي الاحترافي جاهز للعمل.</p><button onclick="alert(\'مرحباً!\')" style="padding:10px 20px;border:none;border-radius:8px;background:#4ade80;color:white;cursor:pointer;">انقر هنا</button></div>', order: 0 },
                         { id: 'app_2', name: 'المتصفح', icon: '🌐', content: '<iframe sandbox="allow-scripts allow-same-origin allow-forms" src="https://www.bing.com" style="width:100%;height:100vh;border:none;"></iframe>', order: 1 },
                         { id: 'app_3', name: 'الملاحظات', icon: '📝', content: '<div style="padding:20px;"><h2>📋 دفتر الملاحظات</h2><textarea id="note-area" style="width:100%;height:300px;padding:15px;border-radius:10px;border:1px solid #ccc;font-size:16px;" placeholder="اكتب ملاحظاتك هنا..."></textarea><button onclick="localStorage.setItem(\'saved_note\', document.getElementById(\'note-area\').value);alert(\'تم الحفظ!\')" style="margin-top:10px;padding:10px 20px;background:#4cc9f0;border:none;border-radius:8px;color:white;">💾 حفظ</button></div>', order: 2 }
                     ]
                 };
-            } catch (e) {
-                return { config: { pass: "1234", downloads: 0, reports: [] }, registry: [] };
             }
-        })(),
-
-        dragIdx: null,
-        backupTimer: null,
-
-        // 🚀 تشغيل النظام
-        init() {
-            this.createAutoBackup();
-            this.renderDesktop();
-            this.startClock();
-            this.checkNetwork();
-            window.addEventListener('online', () => this.checkNetwork());
-            window.addEventListener('offline', () => this.checkNetwork());
-            this.registerServiceWorker();
-            this.save();
-        },
-
-        // 💾 حفظ البيانات
-        save() {
-            localStorage.setItem('alaisai_ultra_db', JSON.stringify(this.db));
-        },
-
-        // ⏰ نسخ احتياطي تلقائي كل 5 دقائق
-        createAutoBackup() {
-            if (this.backupTimer) clearInterval(this.backupTimer);
-            this.backupTimer = setInterval(() => {
-                const backup = {
-                    timestamp: new Date().toISOString(),
-                    data: this.db
-                };
-                localStorage.setItem(AUTO_BACKUP_KEY, JSON.stringify(backup));
-                console.log('✅ تم إنشاء نسخة احتياطية تلقائية');
-            }, 300000); // 5 دقائق
-        },
-
-        // 🖥️ عرض سطح المكتب
-        renderDesktop() {
-            const grid = document.getElementById('app-grid');
-            if (!grid) return;
-            grid.innerHTML = "";
-            const sorted = [...this.db.registry].sort((a, b) => a.order - b.order);
-            
-            sorted.forEach((app, i) => {
-                const card = document.createElement('div');
-                card.className = "app-card";
-                card.setAttribute('draggable', 'true');
-                card.innerHTML = `<div class="icon-box">${app.icon}</div><span class="app-name">${app.name}</span>`;
-                
-                card.ondragstart = (e) => {
-                    e.dataTransfer.setData('text/plain', i);
-                    this.dragIdx = i;
-                    e.target.style.opacity = '0.5';
-                };
-                
-                card.ondragend = (e) => {
-                    e.target.style.opacity = '1';
-                };
-                
-                card.ondragover = (e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                };
-                
-                card.ondrop = (e) => {
-                    e.preventDefault();
-                    const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
-                    const toIdx = i;
-                    if (fromIdx === toIdx) return;
-                    
-                    const items = [...this.db.registry].sort((a, b) => a.order - b.order);
-                    const [moved] = items.splice(fromIdx, 1);
-                    items.splice(toIdx, 0, moved);
-                    
-                    // تحديث الترتيب
-                    this.db.registry = items.map((item, idx) => {
-                        item.order = idx;
-                        return item;
-                    });
-                    
-                    this.save();
-                    this.renderDesktop();
-                };
-
-                card.onclick = () => this.openApp(app);
-                grid.appendChild(card);
-            });
-        },
-
-        // 📱 فتح التطبيق
-        openApp(app) {
-            const stage = document.getElementById('stage-overlay');
-            const viewport = document.getElementById('stage-viewport');
-            document.getElementById('active-app-title').innerText = app.name;
-            
-            // تطهير المحتوى
-            viewport.innerHTML = `<div style="height:100%;">${app.content}</div>`;
-            stage.classList.remove('hidden');
-        },
-
-        // 🚪 إغلاق المسرح
-        closeStage() {
-            document.getElementById('stage-overlay').classList.add('hidden');
-            document.getElementById('stage-viewport').innerHTML = "";
-        },
-
-        // ⏰ الساعة
-        startClock() {
-            const update = () => {
-                const now = new Date();
-                document.getElementById('digital-clock').innerText = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-            };
-            update();
-            setInterval(update, 1000);
-        },
-
-        // 🌐 حالة الشبكة
-        checkNetwork() {
-            const dot = document.getElementById('sync-indicator');
-            if (dot) {
-                dot.style.color = navigator.onLine ? "#4ade80" : "#f72585";
-                dot.title = navigator.onLine ? 'متصل بالإنترنت' : 'غير متصل - وضع العمل دون اتصال نشط';
-            }
-        },
-
-        // 📲 تسجيل Service Worker
-        registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('✅ PWA: النظام جاهز للعمل بدون إنترنت'))
-                    .catch(err => console.log('❌ PWA: فشل تسجيل الخدمة', err));
-            }
-        },
-
-        // ========== نظام التخزين والمجلدات المعزول ==========
-        StorageSystem: {
-            // هيكل المجلدات المعزول
-            structure: (() => {
-                try {
-                    return JSON.parse(localStorage.getItem('alaisai_storage_isolation')) || {
-                        system: {
-                            name: 'النظام',
-                            path: '/system',
-                            files: [
-                                { name: 'config.json', size: '2KB', type: 'json', content: '{\n  "version": "1.0.0",\n  "name": "Alaisai System"\n}' },
-                                { name: 'manifest.json', size: '1KB', type: 'json', content: '{\n  "short_name": "AlaisaiPro",\n  "name": "المنظومة الاحترافية"\n}' },
-                                { name: 'sw.js', size: '4KB', type: 'javascript', content: '// Service Worker\nconst CACHE_NAME = "alaisai-v1";\nself.addEventListener("install", e => {\n  e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(["./"])));\n});' }
-                            ],
-                            folders: []
-                        },
-                        addons: {
-                            name: 'الإضافات',
-                            path: '/addons',
-                            files: [],
-                            folders: []
-                        }
-                    };
-                } catch (e) {
-                    return null;
-                }
-            })(),
-
-            // فتح نافذة المخزن المعزول
-            openStorageExplorer() {
-                const storageContent = `
-                    <div class="admin-ui" style="direction:ltr; text-align:left; max-width:800px; margin:0 auto; background:#1e1e26; color:white;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                            <h2 style="color:#4cc9f0;">📁 مستكشف الملفات المعزول</h2>
-                            <div>
-                                <button onclick="AlaisaiOS.StorageSystem.refresh()" class="adm-btn" style="background:#4cc9f0;">🔄 تحديث</button>
-                                <button onclick="AlaisaiOS.StorageSystem.isolateAddon()" class="adm-btn" style="background:#4ade80;">➕ إضافة معزولة</button>
-                            </div>
-                        </div>
-                        
-                        <div style="display:grid; grid-template-columns:1fr 2fr; gap:20px;">
-                            <!-- الشريط الجانبي للمجلدات -->
-                            <div style="background:#2a2a32; border-radius:10px; padding:15px;">
-                                <h3 style="color:#4cc9f0; margin-bottom:15px;">📂 المجلدات</h3>
-                                <div onclick="AlaisaiOS.StorageSystem.openSystemFolder()" style="padding:10px; background:#1a1a2e; border-radius:8px; margin-bottom:5px; cursor:pointer; display:flex; align-items:center; gap:10px; border:1px solid #4cc9f0;">
-                                    <span>📁</span> <span style="color:white;">/system (النظام) - ملفات قابلة للتعديل</span>
-                                </div>
-                                <div onclick="AlaisaiOS.StorageSystem.navigateTo('addons')" style="padding:10px; background:#1a1a2e; border-radius:8px; margin-bottom:5px; cursor:pointer; display:flex; align-items:center; gap:10px; border:1px solid #4ade80;">
-                                    <span>📁</span> <span style="color:white;">/addons (الإضافات)</span>
-                                </div>
-                                <div id="addon-folders-list" style="margin-top:15px; padding-top:15px; border-top:2px dashed #4cc9f0;">
-                                    <h4 style="color:#4ade80; margin-bottom:10px;">📦 مجلدات الإضافات:</h4>
-                                    <div id="addon-folders-container"></div>
-                                </div>
-                            </div>
-                            
-                            <!-- محتوى المجلد الحالي -->
-                            <div style="background:#2a2a32; border-radius:10px; padding:15px;">
-                                <h3 style="color:#4cc9f0; margin-bottom:15px;" id="current-folder-title">/system</h3>
-                                <div id="folder-contents" style="min-height:200px; background:#1a1a2e; border-radius:8px; padding:10px;">
-                                    ${this.renderFolderContents('system')}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- تحذير الأمان -->
-                        <div style="margin-top:20px; padding:10px; background:#f7258520; border-radius:8px; border-right:3px solid #f72585; text-align:right;">
-                            <p style="color:#f72585; font-size:12px;">
-                                ⚠️ هذا المستكشف معزول تماماً عن نواة النظام. أي تعديل هنا لا يؤثر على استقرار النظام الرئيسي.
-                            </p>
-                        </div>
-                    </div>
-                `;
-                
-                AlaisaiOS.openApp({ 
-                    name: "المستكشف المعزول", 
-                    content: storageContent 
-                });
-                
-                setTimeout(() => this.renderAddonFolders(), 100);
-            },
-
-            // فتح مجلد النظام مع إمكانية تعديل الملفات
-            openSystemFolder() {
-                const data = this.structure;
-                
-                const content = `
-                    <div class="admin-ui" style="direction:ltr; text-align:left; background:#1e1e26; color:white;">
-                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
-                            <button onclick="AlaisaiOS.StorageSystem.openStorageExplorer()" class="adm-btn" style="background:#4cc9f0;">⬅ رجوع</button>
-                            <h3 style="color:#4cc9f0;">📁 مجلد النظام (ملفات قابلة للتعديل)</h3>
-                        </div>
-                        
-                        <div style="background:#2a2a32; border-radius:10px; padding:15px;">
-                            <h4 style="color:#4cc9f0; margin-bottom:15px;">ملفات النظام:</h4>
-                            <div style="background:#1a1a2e; border-radius:8px; padding:10px;">
-                                ${data.system.files.map(f => `
-                                    <div class="file-item" onclick="AlaisaiOS.StorageSystem.openFile('system', '${f.name}')">
-                                        <div style="display:flex; align-items:center; gap:10px;">
-                                            <span>📄</span>
-                                            <span style="color:white;">${f.name}</span>
-                                            <span style="color:#4cc9f0; font-size:12px;">${f.size}</span>
-                                        </div>
-                                        <div class="file-actions">
-                                            <button class="file-btn" onclick="event.stopPropagation(); AlaisaiOS.StorageSystem.openFile('system', '${f.name}')">✏️ تعديل</button>
-                                            <button class="file-btn delete" onclick="event.stopPropagation(); AlaisaiOS.StorageSystem.deleteFile('system', '${f.name}')">🗑 حذف</button>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                            
-                            <div style="margin-top:20px;">
-                                <button onclick="AlaisaiOS.StorageSystem.createNewFile('system')" class="adm-btn" style="background:#4cc9f0;">➕ إنشاء ملف جديد</button>
-                                <button onclick="AlaisaiOS.StorageSystem.saveAllSystemFiles()" class="adm-btn" style="background:#4ade80;">💾 حفظ جميع التغييرات</button>
-                            </div>
-                        </div>
-                        
-                        <!-- بيئة تجربة معزولة كاملة -->
-                        <div class="isolated-lab">
-                            <div class="lab-header">
-                                <h4 style="color:#4cc9f0;">🧪 بيئة التجربة المعزولة</h4>
-                                <div>
-                                    <button onclick="AlaisaiOS.StorageSystem.runIsolatedCode()" class="adm-btn" style="background:#4ade80;">▶️ تشغيل الكود</button>
-                                    <button onclick="AlaisaiOS.StorageSystem.clearIsolatedLab()" class="adm-btn" style="background:#f72585;">🗑 مسح</button>
-                                </div>
-                            </div>
-                            <div style="margin-bottom:10px;">
-                                <textarea id="isolated-code-editor" class="code-editor" placeholder="اكتب كود HTML/JS هنا للتجربة في بيئة معزولة...">${localStorage.getItem('isolated_lab_code') || '<h1>مرحباً في بيئة التجربة</h1>\n<script>\n  document.write("الوقت: " + new Date().toLocaleTimeString());\n<\/script>'}</textarea>
-                            </div>
-                            <div class="lab-content" id="isolated-lab-output">
-                                ${localStorage.getItem('isolated_lab_output') || 'نتيجة التشغيل ستظهر هنا...'}
-                            </div>
-                            <p style="color:#4ade80; font-size:12px; margin-top:10px;">
-                                ⚡ هذه البيئة معزولة تماماً - يمكنك تجربة أي كود بأمان
-                            </p>
-                        </div>
-                    </div>
-                `;
-                
-                AlaisaiOS.openApp({ 
-                    name: "📁 مجلد النظام", 
-                    content: content 
-                });
-            },
-
-            // فتح ملف للتعديل
-            openFile(folder, fileName) {
-                const data = this.structure;
-                const folderData = folder === 'system' ? data.system : data.addons.folders.find(f => f.name === folder);
-                const file = folderData.files.find(f => f.name === fileName);
-                
-                if (!file) return;
-                
-                const content = `
-                    <div class="admin-ui" style="direction:ltr; text-align:left; background:#1e1e26; color:white;">
-                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
-                            <button onclick="AlaisaiOS.StorageSystem.${folder === 'system' ? 'openSystemFolder' : 'openAddonFolder'}('${folder}')" class="adm-btn" style="background:#4cc9f0;">⬅ رجوع</button>
-                            <h3 style="color:#4cc9f0;">✏️ تعديل: ${fileName}</h3>
-                        </div>
-                        
-                        <div style="background:#2a2a32; border-radius:10px; padding:15px;">
-                            <textarea id="file-editor" class="code-editor" style="min-height:400px;">${file.content || ''}</textarea>
-                            
-                            <div style="margin-top:20px; display:flex; gap:10px;">
-                                <button onclick="AlaisaiOS.StorageSystem.saveFile('${folder}', '${fileName}')" class="adm-btn" style="background:#4ade80;">💾 حفظ التغييرات</button>
-                                <button onclick="AlaisaiOS.StorageSystem.copyToLab('${folder}', '${fileName}')" class="adm-btn" style="background:#4cc9f0;">📋 نسخ إلى بيئة التجربة</button>
-                                <button onclick="AlaisaiOS.StorageSystem.${folder === 'system' ? 'openSystemFolder' : 'openAddonFolder'}('${folder}')" class="adm-btn">❌ إلغاء</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                AlaisaiOS.openApp({ 
-                    name: `✏️ ${fileName}`, 
-                    content: content 
-                });
-            },
-
-            // حفظ الملف بعد التعديل
-            saveFile(folder, fileName) {
-                const newContent = document.getElementById('file-editor')?.value;
-                if (!newContent) return;
-                
-                const data = this.structure;
-                const folderData = folder === 'system' ? data.system : data.addons.folders.find(f => f.name === folder);
-                const file = folderData.files.find(f => f.name === fileName);
-                
-                if (file) {
-                    file.content = newContent;
-                    file.size = Math.ceil(newContent.length / 1024) + 'KB';
-                    localStorage.setItem('alaisai_storage_isolation', JSON.stringify(data));
-                    
-                    // حفظ نسخة احتياطية
-                    localStorage.setItem(`file_backup_${fileName}`, newContent);
-                    
-                    alert('✅ تم حفظ الملف بنجاح');
-                    if (folder === 'system') {
-                        this.openSystemFolder();
-                    } else {
-                        this.openAddonFolder(folder);
-                    }
-                }
-            },
-
-            // إنشاء ملف جديد
-            createNewFile(folder) {
-                const fileName = prompt("📄 اسم الملف الجديد (مع الامتداد):", "newfile.js");
-                if (!fileName) return;
-                
-                const data = this.structure;
-                const folderData = folder === 'system' ? data.system : data.addons.folders.find(f => f.name === folder);
-                
-                folderData.files.push({
-                    name: fileName,
-                    size: '1KB',
-                    type: fileName.split('.').pop() || 'unknown',
-                    content: '// ملف جديد\n'
-                });
-                
-                localStorage.setItem('alaisai_storage_isolation', JSON.stringify(data));
-                alert(`✅ تم إنشاء الملف: ${fileName}`);
-                
-                if (folder === 'system') {
-                    this.openSystemFolder();
-                } else {
-                    this.openAddonFolder(folder);
-                }
-            },
-
-            // حذف ملف
-            deleteFile(folder, fileName) {
-                if (confirm(`⚠️ هل أنت متأكد من حذف الملف ${fileName}؟`)) {
-                    const data = this.structure;
-                    const folderData = folder === 'system' ? data.system : data.addons.folders.find(f => f.name === folder);
-                    
-                    folderData.files = folderData.files.filter(f => f.name !== fileName);
-                    localStorage.setItem('alaisai_storage_isolation', JSON.stringify(data));
-                    
-                    alert('✅ تم حذف الملف');
-                    if (folder === 'system') {
-                        this.openSystemFolder();
-                    } else {
-                        this.openAddonFolder(folder);
-                    }
-                }
-            },
-
-            // حفظ جميع ملفات النظام
-            saveAllSystemFiles() {
-                const data = this.structure;
-                localStorage.setItem('alaisai_storage_isolation', JSON.stringify(data));
-                alert('✅ تم حفظ جميع ملفات النظام');
-            },
-
-            // نسخ ملف إلى بيئة التجربة
-            copyToLab(folder, fileName) {
-                const data = this.structure;
-                const folderData = folder === 'system' ? data.system : data.addons.folders.find(f => f.name === folder);
-                const file = folderData.files.find(f => f.name === fileName);
-                
-                if (file && file.content) {
-                    localStorage.setItem('isolated_lab_code', file.content);
-                    alert('✅ تم نسخ المحتوى إلى بيئة التجربة');
-                    
-                    if (folder === 'system') {
-                        this.openSystemFolder();
-                    } else {
-                        this.openAddonFolder(folder);
-                    }
-                }
-            },
-
-            // تشغيل الكود في بيئة التجربة
-            runIsolatedCode() {
-                const code = document.getElementById('isolated-code-editor')?.value;
-                if (!code) return;
-                
-                localStorage.setItem('isolated_lab_code', code);
-                
-                // إنشاء نافذة iframe معزولة لتشغيل الكود
-                const output = document.getElementById('isolated-lab-output');
-                if (output) {
-                    output.innerHTML = `<iframe srcdoc="${this.escapeHtml(code)}" style="width:100%; height:200px; border:none; background:white; border-radius:5px;"></iframe>`;
-                    localStorage.setItem('isolated_lab_output', output.innerHTML);
-                }
-            },
-
-            // مسح بيئة التجربة
-            clearIsolatedLab() {
-                if (document.getElementById('isolated-code-editor')) {
-                    document.getElementById('isolated-code-editor').value = '<h1>بيئة التجربة</h1>\n<script>\n  document.write("أهلاً بك في البيئة المعزولة");\n<\/script>';
-                }
-                const output = document.getElementById('isolated-lab-output');
-                if (output) {
-                    output.innerHTML = 'تم المسح...';
-                }
-                localStorage.removeItem('isolated_lab_code');
-                localStorage.removeItem('isolated_lab_output');
-            },
-
-            // عرض محتويات مجلد
-            renderFolderContents(folder) {
-                const data = this.structure;
-                if (!data) return '<div style="color:#f72585;">❌ خطأ في تحميل البيانات</div>';
-                
-                if (folder === 'system') {
-                    if (!data.system.files || data.system.files.length === 0) {
-                        return '<div style="color:#ccc; padding:20px; text-align:center;">📭 لا توجد ملفات في مجلد النظام</div>';
-                    }
-                    return data.system.files.map(f => `
-                        <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #4cc9f0; color:white;">
-                            <span onclick="AlaisaiOS.StorageSystem.openFile('system', '${f.name}')" style="cursor:pointer;">📄 ${f.name}</span>
-                            <span style="color:#4cc9f0;">${f.size}</span>
-                        </div>
-                    `).join('');
-                } else if (folder === 'addons') {
-                    if (!data.addons.folders || data.addons.folders.length === 0) {
-                        return '<div style="color:#ccc; padding:20px; text-align:center;">📭 لا توجد إضافات معزولة بعد</div>';
-                    }
-                    return data.addons.folders.map(folder => `
-                        <div style="padding:10px; border-bottom:1px solid #4ade80; cursor:pointer;" onclick="AlaisaiOS.StorageSystem.openAddonFolder('${folder.name}')">
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <span>📁</span>
-                                <span style="color:white; font-weight:bold;">${folder.name}</span>
-                                <span style="color:#4ade80; font-size:12px;">(${folder.files?.length || 0} ملف)</span>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            },
-
-            // فتح مجلد إضافة معينة
-            openAddonFolder(folderName) {
-                const data = this.structure;
-                const folder = data.addons.folders.find(f => f.name === folderName);
-                
-                if (!folder) return;
-                
-                const content = `
-                    <div class="admin-ui" style="direction:ltr; text-align:left; background:#1e1e26; color:white;">
-                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
-                            <button onclick="AlaisaiOS.StorageSystem.openStorageExplorer()" class="adm-btn" style="background:#4cc9f0;">⬅ رجوع</button>
-                            <h3 style="color:#4cc9f0;">📁 ${folderName}</h3>
-                        </div>
-                        
-                        <div style="background:#2a2a32; border-radius:10px; padding:15px;">
-                            <h4 style="color:#4ade80; margin-bottom:15px;">ملفات الإضافة:</h4>
-                            <div style="background:#1a1a2e; border-radius:8px; padding:10px;">
-                                ${!folder.files || folder.files.length === 0 ? 
-                                    '<div style="color:#ccc; padding:20px; text-align:center;">📭 لا توجد ملفات</div>' : 
-                                    folder.files.map(f => `
-                                        <div class="file-item" onclick="AlaisaiOS.StorageSystem.openFile('${folderName}', '${f.name}')">
-                                            <div style="display:flex; align-items:center; gap:10px;">
-                                                <span>📄</span>
-                                                <span style="color:white;">${f.name}</span>
-                                                <span style="color:#4ade80; font-size:12px;">${f.size}</span>
-                                            </div>
-                                            <div class="file-actions">
-                                                <button class="file-btn" onclick="event.stopPropagation(); AlaisaiOS.StorageSystem.openFile('${folderName}', '${f.name}')">✏️ تعديل</button>
-                                                <button class="file-btn delete" onclick="event.stopPropagation(); AlaisaiOS.StorageSystem.deleteFile('${folderName}', '${f.name}')">🗑 حذف</button>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                            </div>
-                            
-                            <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
-                                <button onclick="AlaisaiOS.StorageSystem.createNewFile('${folderName}')" class="adm-btn" style="background:#4cc9f0;">➕ إضافة ملف</button>
-                                <button onclick="AlaisaiOS.StorageSystem.deleteAddon('${folderName}')" class="adm-btn" style="background:#f72585;">🗑 حذف الإضافة</button>
-                            </div>
-                        </div>
-                        
-                        <!-- منطقة تجريب آمنة للإضافة -->
-                        <div class="isolated-lab">
-                            <div class="lab-header">
-                                <h4 style="color:#4cc9f0;">🧪 بيئة تجربة معزولة للإضافة</h4>
-                                <button onclick="AlaisaiOS.StorageSystem.runIsolatedCode()" class="adm-btn" style="background:#4ade80;">▶️ تشغيل</button>
-                            </div>
-                            <textarea id="isolated-code-editor" class="code-editor" placeholder="اكتب كود HTML/JS هنا للتجربة...">${localStorage.getItem('isolated_lab_code') || '// جرب كود الإضافة هنا'}</textarea>
-                            <div class="lab-content" id="isolated-lab-output" style="margin-top:10px;">
-                                ${localStorage.getItem('isolated_lab_output') || 'نتيجة التشغيل...'}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                AlaisaiOS.openApp({ 
-                    name: `📦 ${folderName}`, 
-                    content: content 
-                });
-            },
-
-            // إضافة إضافة جديدة بشكل معزول
-            isolateAddon() {
-                const addonName = prompt("🔧 أدخل اسم الإضافة الجديدة (بالإنجليزية):", "my-addon");
-                if (!addonName) return;
-                
-                const safeName = addonName.replace(/[^a-zA-Z0-9-_]/g, '');
-                if (safeName.length < 1) {
-                    alert("❌ اسم غير صالح! استخدم أحرف إنجليزية وأرقام فقط");
-                    return;
-                }
-                
-                const newAddon = {
-                    name: safeName,
-                    path: `/addons/${safeName}`,
-                    files: [
-                        { name: 'manifest.json', size: '1KB', type: 'json', content: '{\n  "name": "'+safeName+'",\n  "version": "1.0.0",\n  "description": "إضافة معزولة"\n}' },
-                        { name: 'main.js', size: '2KB', type: 'javascript', content: '// كود الإضافة المعزولة\nfunction init() {\n  console.log("الإضافة تعمل");\n}\n\ninit();' },
-                        { name: 'style.css', size: '1KB', type: 'css', content: '/* أنماط الإضافة */\n.addon-container {\n  padding: 10px;\n  background: #f0f0f0;\n}' }
-                    ],
-                    isolated: true
-                };
-                
-                if (!this.structure.addons.folders) {
-                    this.structure.addons.folders = [];
-                }
-                
-                this.structure.addons.folders.push(newAddon);
-                localStorage.setItem(`addon_${safeName}_isolated`, JSON.stringify(newAddon));
-                localStorage.setItem('alaisai_storage_isolation', JSON.stringify(this.structure));
-                
-                alert(`✅ تم إنشاء مجلد معزول للإضافة: ${safeName}`);
-                this.openStorageExplorer();
-            },
-
-            // عرض مجلدات الإضافات
-            renderAddonFolders() {
-                const container = document.getElementById('addon-folders-container');
-                if (!container || !this.structure.addons.folders) return;
-                
-                if (this.structure.addons.folders.length === 0) {
-                    container.innerHTML = '<div style="color:#ccc; padding:10px; text-align:center;">لا توجد إضافات</div>';
-                    return;
-                }
-                
-                container.innerHTML = this.structure.addons.folders.map(folder => `
-                    <div onclick="AlaisaiOS.StorageSystem.openAddonFolder('${folder.name}')" style="padding:8px; background:#1a1a2e; border-radius:5px; margin-bottom:5px; cursor:pointer; display:flex; align-items:center; gap:8px; border:1px solid #4ade80;">
-                        <span>📦</span>
-                        <span style="color:white; font-size:13px;">${folder.name}</span>
-                        <span style="color:#4ade80; font-size:11px; margin-right:auto;">معزول</span>
-                    </div>
-                `).join('');
-            },
-
-            // حذف إضافة
-            deleteAddon(addonName) {
-                if (confirm(`⚠️ هل أنت متأكد من حذف الإضافة ${addonName}؟\nهذا الإجراء معزول ولن يؤثر على النظام.`)) {
-                    this.structure.addons.folders = this.structure.addons.folders.filter(f => f.name !== addonName);
-                    localStorage.removeItem(`addon_${addonName}_isolated`);
-                    localStorage.setItem('alaisai_storage_isolation', JSON.stringify(this.structure));
-                    alert('✅ تم حذف الإضافة بنجاح');
-                    this.openStorageExplorer();
-                }
-            },
-
-            refresh() {
-                this.openStorageExplorer();
-            },
-
-            navigateTo(path) {
-                this.openStorageExplorer();
-            },
-
-            // دالة مساعدة لتحويل النص الآمن
-            escapeHtml(text) {
-                return text.replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
-            }
+        } catch (e) {
+            console.warn('Failed to load legacy DB', e);
         }
-    };
 
-    // ========== لوحة الإدارة المتطورة ==========
-    const Admin = {
-        requestAccess() {
-            const p = prompt("🔐 وضع المصمم المالك: أدخل كلمة المرور");
-            if (p === AlaisaiOS.db.config.pass) {
-                this.openDashboard();
-            } else if (p !== null) {
-                alert("❌ كلمة مرور خاطئة!");
-            }
-        },
+        // ========== نظام المزامنة السحابية المحترف (يدمج كلاً من AlaisaiOS.db.registry و AlaisaiAddons) ==========
+        const CloudSync = {
+            status: function(msg, isError = false) {
+                const el = document.getElementById('sync-status');
+                if (el) el.innerHTML = msg;
+                if (isError) console.error(msg);
+                else console.log(msg);
+            },
 
-        openDashboard() {
-            const content = `
-                <div class="admin-ui">
-                    <h2 style="border-bottom:2px solid #4cc9f0; padding-bottom:10px;">🛠 لوحة التحكم المركزية</h2>
-                    <div style="display:flex; gap:5px; margin-bottom:15px; flex-wrap:wrap;">
-                        <button class="adm-btn" onclick="Admin.renderTab('layout')">📱 الواجهة</button>
-                        <button class="adm-btn" onclick="Admin.renderTab('msg')">📩 المراسلة</button>
-                        <button class="adm-btn" onclick="Admin.renderTab('sys')">⚙️ النظام</button>
-                        <button class="adm-btn" onclick="Admin.renderTab('backup')">💾 النسخ الاحتياطي</button>
-                        <button class="adm-btn" onclick="Admin.renderTab('storage')" style="background:#4cc9f0; color:black;">📁 المخزن المعزول</button>
-                    </div>
-                    <div id="admin-view" style="background:rgba(255,255,255,0.1); padding:15px; border-radius:12px; min-height:250px;"></div>
-                </div>
-            `;
-            AlaisaiOS.openApp({ name: "إدارة النظام", content: content });
-            setTimeout(() => this.renderTab('layout'), 100);
-        },
+            upload: async function() {
+                const provider = document.getElementById('cloud-provider')?.value;
+                if (!provider) return;
+                this.status('⏳ جاري رفع التطبيقات والإضافات...');
+                
+                if (provider === 'github') {
+                    await this.uploadToGitHub();
+                } else if (provider === 'webdav') {
+                    await this.uploadToWebDAV();
+                } else {
+                    this.status('❌ هذا المزود غير مدعوم بعد', true);
+                }
+            },
 
-        renderTab(tab) {
-            const view = document.getElementById('admin-view');
-            if (!view) return;
-            
-            if (tab === 'layout') {
-                let list = "<h4>📱 تعديل الأزرار (اسحب للترتيب):</h4>";
-                AlaisaiOS.db.registry.forEach((app, i) => {
-                    list += `
-                        <div class="admin-row" draggable="true" ondragstart="Admin.drag(${i})" ondrop="Admin.drop(${i})" ondragover="event.preventDefault()">
-                            <input type="text" id="in_${app.id}" value="${app.name.replace(/"/g, '&quot;')}" style="width:80px; margin-left:5px;">
-                            <button onclick="Admin.saveName('${app.id}')" id="sav_${app.id}" class="btn-save-mini">☑️</button>
-                            <button onclick="Admin.editIcon('${app.id}')" style="margin:0 5px;background:rgba(76,201,240,0.2);border:none;border-radius:5px;padding:5px;">${app.icon}</button>
-                            <button onclick="Admin.deleteApp('${app.id}')" style="background:#f72585; color:white; border:none; border-radius:4px; padding:5px 10px;">🗑</button>
-                        </div>
-                    `;
-                });
-                list += `<button onclick="Admin.addNew()" style="width:100%; margin-top:10px; background:#4ade80; border:none; padding:10px; border-radius:8px; color:white; font-weight:bold;">➕ إضافة تطبيق جديد</button>`;
-                view.innerHTML = list;
-            }
-            else if (tab === 'msg') {
-                view.innerHTML = `
-                    <h4>📩 التقارير والمراسلة:</h4>
-                    <p>إجمالي الزيارات: <b>${AlaisaiOS.db.config.downloads}</b></p>
-                    <div style="max-height:150px; overflow-y:auto; background:rgba(255,255,255,0.2); padding:10px; border-radius:8px;">
-                        ${AlaisaiOS.db.config.reports.map(r => `
-                            <div style="border-bottom:1px solid rgba(255,255,255,0.1); padding:5px 0;">
-                                <small>${r.email}</small> 
-                                <button onclick="Admin.copy('${r.email}')" class="btn-save-mini">نسخ</button>
-                                <p style="margin:5px 0;">${r.text}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <input type="email" id="reply_mail" placeholder="إيميل المستلم" style="width:100%; margin-top:10px; padding:8px;">
-                    <textarea id="reply_msg" placeholder="اكتب ردك هنا..." style="width:100%; height:50px; margin-top:5px; padding:8px;"></textarea>
-                    <button onclick="alert('✅ تم إرسال الرد بنجاح');" style="width:100%; background:#4cc9f0; border:none; color:white; padding:8px; margin-top:5px; border-radius:5px;">إرسال الرد</button>
-                `;
-            }
-            else if (tab === 'sys') {
-                view.innerHTML = `
-                    <h4>⚙️ أدوات النظام المتقدمة:</h4>
-                    <button class="adm-btn" onclick="Admin.changePass()">🔐 تغيير كلمة المرور</button>
-                    <button class="adm-btn" onclick="Admin.exportData()">📥 تصدير النظام (Backup)</button>
-                    <button class="adm-btn" onclick="Admin.importData()">📤 استيراد نسخة احتياطية</button>
-                    <button class="adm-btn" onclick="Admin.resetSystem()">🔄 إعادة ضبط المصنع</button>
-                    <button class="adm-btn" onclick="Admin.cloudSync()" id="sync_btn">☁️ ربط سحابي</button>
-                `;
-            }
-            else if (tab === 'backup') {
-                const autoBackup = localStorage.getItem(AUTO_BACKUP_KEY);
-                let backupInfo = 'لا توجد نسخة احتياطية';
-                if (autoBackup) {
+            download: async function() {
+                const provider = document.getElementById('cloud-provider')?.value;
+                if (!provider) return;
+                this.status('⏳ جاري سحب التطبيقات والإضافات...');
+                
+                if (provider === 'github') {
+                    await this.downloadFromGitHub();
+                } else if (provider === 'webdav') {
+                    await this.downloadFromWebDAV();
+                } else {
+                    this.status('❌ هذا المزود غير مدعوم بعد', true);
+                }
+            },
+
+            // جمع جميع العناصر (من AlaisaiOS.db.registry و AlaisaiAddons) مع تجنب التكرار
+            getAllItems: function() {
+                const items = [];
+                const seenIds = new Set();
+
+                // إضافة من registry القديم
+                if (AlaisaiOS.db.registry) {
+                    AlaisaiOS.db.registry.forEach(app => {
+                        const id = app.id || `app_${Date.now()}_${Math.random()}`;
+                        if (!seenIds.has(id)) {
+                            seenIds.add(id);
+                            items.push({
+                                id: id,
+                                name: app.name || 'تطبيق',
+                                icon: app.icon || '📦',
+                                content: app.content || '',
+                                version: '1.0.0',
+                                author: 'المالك',
+                                script: '',
+                                styles: '',
+                                source: 'registry'
+                            });
+                        }
+                    });
+                }
+
+                // إضافة من AlaisaiAddons (إذا كان موجوداً)
+                if (window.AlaisaiAddons && typeof AlaisaiAddons.listAddons === 'function') {
+                    const addons = AlaisaiAddons.listAddons();
+                    addons.forEach(addon => {
+                        if (!seenIds.has(addon.id)) {
+                            seenIds.add(addon.id);
+                            items.push({
+                                id: addon.id,
+                                name: addon.name || 'إضافة',
+                                icon: addon.icon || '📦',
+                                content: addon.content || '',
+                                version: addon.version || '1.0.0',
+                                author: addon.author || 'غير معروف',
+                                script: addon.script || '',
+                                styles: addon.styles || '',
+                                source: 'addons'
+                            });
+                        }
+                    });
+                }
+
+                return items;
+            },
+
+            // إضافة عنصر إلى النظام (سواء registry أو addons) مع تجنب التكرار
+            addItemToSystem: function(item) {
+                // التأكد من عدم وجود تطبيق بنفس الاسم أو id في registry
+                if (!AlaisaiOS.db.registry.find(a => a.id === item.id || a.name === item.name)) {
+                    // إضافة إلى registry القديم (كبداية)
+                    const newApp = {
+                        id: item.id,
+                        name: item.name,
+                        icon: item.icon || '📦',
+                        content: item.content || '',
+                        order: AlaisaiOS.db.registry.length
+                    };
+                    AlaisaiOS.db.registry.push(newApp);
+                }
+
+                // إضافة إلى AlaisaiAddons إذا كان متاحاً
+                if (window.AlaisaiAddons && typeof AlaisaiAddons.addAddon === 'function') {
+                    // نستخدم try/catch لنتجنب أي خطأ
                     try {
-                        const backup = JSON.parse(autoBackup);
-                        backupInfo = `آخر نسخة: ${new Date(backup.timestamp).toLocaleString('ar-SA')}`;
+                        AlaisaiAddons.addAddon(item).catch(() => {});
                     } catch (e) {}
                 }
-                view.innerHTML = `
-                    <h4>💾 النسخ الاحتياطي التلقائي</h4>
-                    <p>${backupInfo}</p>
-                    <button class="adm-btn" onclick="Admin.restoreAutoBackup()">↩️ استعادة آخر نسخة</button>
-                    <button class="adm-btn" onclick="Admin.exportData()">📥 نسخة يدوية</button>
-                `;
-            }
-            else if (tab === 'storage') {
-                view.innerHTML = `
-                    <div style="text-align:center; padding:20px;">
-                        <h4 style="color:#4cc9f0; margin-bottom:20px;">📁 المخزن المعزول للنظام</h4>
-                        <p style="margin-bottom:20px;">هذا المخزن معزول تماماً عن نواة النظام الرئيسي</p>
-                        
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
-                            <div style="background:rgba(76,201,240,0.1); border:1px solid #4cc9f0; border-radius:10px; padding:15px; cursor:pointer;" onclick="AlaisaiOS.StorageSystem.openSystemFolder()">
-                                <div style="font-size:3rem; margin-bottom:10px;">📁</div>
-                                <h5 style="color:#4cc9f0;">ملفات النظام</h5>
-                                <p style="font-size:12px;">فتح وتعديل ملفات النظام الأساسية</p>
-                            </div>
-                            
-                            <div style="background:rgba(74,222,128,0.1); border:1px solid #4ade80; border-radius:10px; padding:15px; cursor:pointer;" onclick="AlaisaiOS.StorageSystem.isolateAddon()">
-                                <div style="font-size:3rem; margin-bottom:10px;">➕</div>
-                                <h5 style="color:#4ade80;">إضافة معزولة</h5>
-                                <p style="font-size:12px;">إنشاء إضافة جديدة في مجلد منفصل</p>
-                            </div>
-                        </div>
-                        
-                        <div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:15px;">
-                            <h6 style="margin-bottom:10px;">📊 معلومات المخزن:</h6>
-                            <div style="display:flex; justify-content:space-between; font-size:13px;">
-                                <span>عدد الإضافات: ${AlaisaiOS.StorageSystem.structure?.addons?.folders?.length || 0}</span>
-                                <span>ملفات النظام: ${AlaisaiOS.StorageSystem.structure?.system?.files?.length || 0}</span>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-top:20px; padding:10px; background:#f7258520; border-radius:8px; border-right:3px solid #f72585; text-align:right;">
-                            <p style="color:#f72585; font-size:12px;">
-                                ⚠️ هذا القسم معزول تماماً - أي تعديل هنا لا يؤثر على استقرار النظام
-                            </p>
-                        </div>
-                    </div>
-                `;
-            }
-        },
+            },
 
-        saveName(id) {
-            const app = AlaisaiOS.db.registry.find(a => a.id === id);
-            if (app) {
-                app.name = document.getElementById('in_'+id).value;
-                AlaisaiOS.save();
-                AlaisaiOS.renderDesktop();
-                const b = document.getElementById('sav_'+id);
-                b.innerText = "✅";
-                b.style.background = "#4ade80";
-                setTimeout(() => { b.innerText = "☑️"; b.style.background = "#4cc9f0"; }, 1500);
-            }
-        },
+            // ===== GitHub =====
+            uploadToGitHub: async function() {
+                const repo = document.getElementById('github-repo')?.value.trim();
+                const token = document.getElementById('github-token')?.value.trim();
+                const branch = document.getElementById('github-branch')?.value || 'main';
+                if (!repo || !token) {
+                    this.status('❌ الرجاء إدخال المستودع والتوكن', true);
+                    return;
+                }
+                try {
+                    if (!window.AlaisaiFileManager) {
+                        this.status('❌ نظام إدارة الملفات غير متاح', true);
+                        return;
+                    }
+                    
+                    AlaisaiFileManager.setToken(token);
+                    const items = this.getAllItems();
+                    
+                    if (items.length === 0) {
+                        this.status('⚠️ لا توجد تطبيقات أو إضافات لرفعها');
+                        return;
+                    }
+                    
+                    let successCount = 0;
+                    for (const item of items) {
+                        const fileName = `addons/${item.id}.json`;
+                        const content = JSON.stringify(item, null, 2);
+                        const saved = await AlaisaiFileManager.saveGitHubFile(fileName, content, `رفع ${item.name}`);
+                        if (saved) successCount++;
+                    }
+                    this.status(`✅ تم رفع ${successCount} عنصر بنجاح إلى GitHub`);
+                } catch (e) {
+                    this.status('❌ فشل الرفع: ' + e.message, true);
+                }
+            },
 
-        editIcon(id) {
-            const app = AlaisaiOS.db.registry.find(a => a.id === id);
-            const icon = prompt("أدخل الأيقونة (Emoji):", app.icon);
-            if (icon) {
-                app.icon = icon;
-                AlaisaiOS.save();
-                AlaisaiOS.renderDesktop();
-                this.renderTab('layout');
-            }
-        },
+            downloadFromGitHub: async function() {
+                const repo = document.getElementById('github-repo')?.value.trim();
+                const token = document.getElementById('github-token')?.value.trim();
+                const branch = document.getElementById('github-branch')?.value || 'main';
+                if (!repo || !token) {
+                    this.status('❌ الرجاء إدخال المستودع والتوكن', true);
+                    return;
+                }
+                try {
+                    if (!window.AlaisaiFileManager) {
+                        this.status('❌ نظام إدارة الملفات غير متاح', true);
+                        return;
+                    }
+                    
+                    AlaisaiFileManager.setToken(token);
+                    const files = await AlaisaiFileManager.listGitHubContents('addons');
+                    let successCount = 0;
+                    
+                    for (const file of files) {
+                        if (file.type === 'file' && file.name.endsWith('.json')) {
+                            const fileData = await AlaisaiFileManager.getGitHubFileContent(file.path);
+                            if (fileData) {
+                                try {
+                                    const item = JSON.parse(fileData.content);
+                                    this.addItemToSystem(item);
+                                    successCount++;
+                                } catch (e) {
+                                    console.warn('ملف غير صالح:', file.name);
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (successCount > 0) {
+                        AlaisaiOS.save();
+                        AlaisaiOS.renderDesktop();
+                        this.status(`✅ تم سحب ${successCount} عنصر بنجاح من GitHub`);
+                    } else {
+                        this.status('⚠️ لم يتم العثور على عناصر جديدة');
+                    }
+                } catch (e) {
+                    this.status('❌ فشل السحب: ' + e.message, true);
+                }
+            },
 
-        deleteApp(id) {
-            if (confirm("⚠️ حذف هذا التطبيق نهائياً؟")) {
-                AlaisaiOS.db.registry = AlaisaiOS.db.registry.filter(a => a.id !== id);
-                AlaisaiOS.save();
-                AlaisaiOS.renderDesktop();
-                this.renderTab('layout');
-            }
-        },
+            // ===== WebDAV =====
+            uploadToWebDAV: async function() {
+                const url = document.getElementById('webdav-url')?.value.trim();
+                const user = document.getElementById('webdav-user')?.value.trim();
+                const pass = document.getElementById('webdav-pass')?.value.trim();
 
-        addNew() {
-            const name = prompt("اسم التطبيق الجديد:");
-            const code = prompt("ألصق كود HTML/JS هنا:");
-            if (name && code) {
-                AlaisaiOS.db.registry.push({
-                    id: 'app_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-                    name: name,
-                    icon: '📦',
-                    content: code,
-                    order: AlaisaiOS.db.registry.length
-                });
-                AlaisaiOS.save();
-                AlaisaiOS.renderDesktop();
-                this.renderTab('layout');
-            }
-        },
+                if (!url || !user || !pass) {
+                    this.status('❌ الرجاء إدخال عنوان URL واسم المستخدم وكلمة المرور', true);
+                    return;
+                }
 
-        exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(AlaisaiOS.db, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", `alaisai_backup_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-        },
+                const baseUrl = url.endsWith('/') ? url : url + '/';
+                const items = this.getAllItems();
 
-        importData() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = e => {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                reader.onload = readerEvent => {
+                if (items.length === 0) {
+                    this.status('⚠️ لا توجد تطبيقات أو إضافات لرفعها');
+                    return;
+                }
+
+                this.status(`⏳ جاري رفع ${items.length} عنصر إلى WebDAV...`);
+                let successCount = 0;
+
+                for (const item of items) {
+                    const fileName = `${item.id}.json`;
+                    const fileUrl = baseUrl + fileName;
+                    const content = JSON.stringify(item, null, 2);
+
                     try {
-                        const content = JSON.parse(readerEvent.target.result);
-                        if (content.registry && content.config) {
-                            AlaisaiOS.db = content;
-                            AlaisaiOS.save();
-                            alert('✅ تم استيراد النسخة بنجاح، سيتم إعادة التحميل');
-                            location.reload();
+                        const response = await fetch(fileUrl, {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': 'Basic ' + btoa(user + ':' + pass),
+                                'Content-Type': 'application/json',
+                            },
+                            body: content
+                        });
+
+                        if (response.ok) {
+                            successCount++;
                         } else {
-                            alert('❌ ملف غير صالح');
+                            console.error(`❌ فشل رفع ${fileName}: ${response.status}`);
                         }
                     } catch (err) {
-                        alert('❌ خطأ في قراءة الملف');
+                        console.error(`❌ خطأ في رفع ${fileName}:`, err);
                     }
-                };
-                reader.readAsText(file);
-            };
-            input.click();
-        },
+                }
 
-        restoreAutoBackup() {
-            try {
-                const backup = JSON.parse(localStorage.getItem(AUTO_BACKUP_KEY));
-                if (backup && backup.data) {
-                    AlaisaiOS.db = backup.data;
+                if (successCount > 0) {
+                    this.status(`✅ تم رفع ${successCount} عنصر بنجاح إلى WebDAV`);
+                } else {
+                    this.status('❌ فشل رفع جميع العناصر. تحقق من الرابط والبيانات.', true);
+                }
+            },
+
+            downloadFromWebDAV: async function() {
+                const url = document.getElementById('webdav-url')?.value.trim();
+                const user = document.getElementById('webdav-user')?.value.trim();
+                const pass = document.getElementById('webdav-pass')?.value.trim();
+
+                if (!url || !user || !pass) {
+                    this.status('❌ الرجاء إدخال عنوان URL واسم المستخدم وكلمة المرور', true);
+                    return;
+                }
+
+                const baseUrl = url.endsWith('/') ? url : url + '/';
+                this.status('⏳ جاري جلب قائمة الملفات من WebDAV...');
+
+                try {
+                    const response = await fetch(baseUrl, {
+                        method: 'PROPFIND',
+                        headers: {
+                            'Authorization': 'Basic ' + btoa(user + ':' + pass),
+                            'Depth': '1'
+                        }
+                    });
+
+                    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+
+                    const text = await response.text();
+                    const parser = new DOMParser();
+                    const xml = parser.parseFromString(text, 'application/xml');
+                    const responses = xml.querySelectorAll('response');
+
+                    let successCount = 0;
+
+                    for (const resp of responses) {
+                        const href = resp.querySelector('href')?.textContent;
+                        if (!href) continue;
+                        const fileName = href.split('/').pop();
+                        if (!fileName || fileName === '' || fileName.endsWith('/')) continue;
+                        if (!fileName.endsWith('.json')) continue;
+
+                        const fileUrl = baseUrl + fileName;
+                        const fileResp = await fetch(fileUrl, {
+                            headers: { 'Authorization': 'Basic ' + btoa(user + ':' + pass) }
+                        });
+
+                        if (fileResp.ok) {
+                            const content = await fileResp.text();
+                            try {
+                                const item = JSON.parse(content);
+                                this.addItemToSystem(item);
+                                successCount++;
+                            } catch (e) {
+                                console.warn('ملف غير صالح:', fileName);
+                            }
+                        }
+                    }
+
+                    if (successCount > 0) {
+                        AlaisaiOS.save();
+                        AlaisaiOS.renderDesktop();
+                        this.status(`✅ تم سحب ${successCount} عنصر بنجاح من WebDAV`);
+                    } else {
+                        this.status('⚠️ لم يتم العثور على عناصر JSON في WebDAV');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    this.status('❌ فشل السحب من WebDAV: ' + err.message, true);
+                }
+            }
+        };
+
+        // Admin المحسّن مع إضافة زر استعادة آخر نسخة
+        window.Admin = {
+            requestAccess: function() {
+                const p = prompt("🔐 وضع المصمم المالك: أدخل كلمة المرور");
+                if (p === AlaisaiOS.db.config.pass) {
+                    this.openDashboard();
+                } else if (p !== null) {
+                    alert("❌ كلمة مرور خاطئة!");
+                }
+            },
+            openDashboard: function() {
+                const content = `
+                    <div class="admin-ui">
+                        <h2 style="border-bottom:2px solid #4cc9f0; padding-bottom:10px;">🛠 لوحة التحكم المركزية</h2>
+                        <div style="display:flex; gap:5px; margin-bottom:15px; flex-wrap:wrap;">
+                            <button class="adm-btn" onclick="Admin.renderTab('layout')">📱 الواجهة</button>
+                            <button class="adm-btn" onclick="Admin.renderTab('msg')">📩 المراسلة</button>
+                            <button class="adm-btn" onclick="Admin.renderTab('sys')">⚙️ النظام</button>
+                            <button class="adm-btn" onclick="Admin.renderTab('backup')">💾 النسخ الاحتياطي</button>
+                            <button class="adm-btn" onclick="Admin.renderTab('storage')" style="background:#4cc9f0;">📡 مستكشف المستودع</button>
+                            <button class="adm-btn" onclick="Admin.renderTab('cloud')" style="background:#4ade80;">☁️ المزامنة السحابية</button>
+                        </div>
+                        <div id="admin-view" style="background:rgba(255,255,255,0.1); padding:15px; border-radius:12px; min-height:250px;"></div>
+                    </div>
+                `;
+                AlaisaiOS.openApp({ name: "إدارة النظام", content: content });
+                setTimeout(() => this.renderTab('layout'), 100);
+            },
+            renderTab: function(tab) {
+                const view = document.getElementById('admin-view');
+                if (!view) return;
+                
+                if (tab === 'layout') {
+                    let list = "<h4>📱 تعديل الأزرار (اسحب للترتيب):</h4>";
+                    AlaisaiOS.db.registry.forEach((app, i) => {
+                        list += `
+                            <div class="admin-row" draggable="true" ondragstart="Admin.drag(${i})" ondrop="Admin.drop(${i})" ondragover="event.preventDefault()">
+                                <input type="text" id="in_${app.id}" value="${app.name.replace(/"/g, '&quot;')}" style="width:80px; margin-left:5px;">
+                                <button onclick="Admin.saveName('${app.id}')" id="sav_${app.id}" class="btn-save-mini">☑️</button>
+                                <button onclick="Admin.editIcon('${app.id}')" style="margin:0 5px;background:rgba(76,201,240,0.2);border:none;border-radius:5px;padding:5px;">${app.icon}</button>
+                                <button onclick="Admin.deleteApp('${app.id}')" style="background:#f72585; color:white; border:none; border-radius:4px; padding:5px 10px;">🗑</button>
+                            </div>
+                        `;
+                    });
+                    list += `<button onclick="Admin.addNew()" style="width:100%; margin-top:10px; background:#4ade80; border:none; padding:10px; border-radius:8px; color:white; font-weight:bold;">➕ إضافة تطبيق جديد</button>`;
+                    view.innerHTML = list;
+                }
+                else if (tab === 'msg') {
+                    view.innerHTML = `
+                        <h4>📩 التقارير والمراسلة:</h4>
+                        <p>إجمالي الزيارات: <b>${AlaisaiOS.db.config.downloads}</b></p>
+                        <div style="max-height:150px; overflow-y:auto; background:rgba(255,255,255,0.2); padding:10px; border-radius:8px;">
+                            ${(AlaisaiOS.db.config.reports || []).map(r => `
+                                <div style="border-bottom:1px solid rgba(255,255,255,0.1); padding:5px 0;">
+                                    <small>${r.email}</small> 
+                                    <button onclick="Admin.copy('${r.email}')" class="btn-save-mini">نسخ</button>
+                                    <p style="margin:5px 0;">${r.text}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <input type="email" id="reply_mail" placeholder="إيميل المستلم" style="width:100%; margin-top:10px; padding:8px;">
+                        <textarea id="reply_msg" placeholder="اكتب ردك هنا..." style="width:100%; height:50px; margin-top:5px; padding:8px;"></textarea>
+                        <button onclick="alert('✅ تم إرسال الرد بنجاح');" style="width:100%; background:#4cc9f0; border:none; color:white; padding:8px; margin-top:5px; border-radius:5px;">إرسال الرد</button>
+                    `;
+                }
+                else if (tab === 'sys') {
+                    view.innerHTML = `
+                        <h4>⚙️ أدوات النظام المتقدمة:</h4>
+                        <button class="adm-btn" onclick="Admin.changePass()">🔐 تغيير كلمة المرور</button>
+                        <button class="adm-btn" onclick="Admin.exportData()">📥 تصدير النظام (Backup)</button>
+                        <button class="adm-btn" onclick="Admin.importData()">📤 استيراد نسخة احتياطية</button>
+                        <button class="adm-btn" onclick="Admin.resetSystem()">🔄 إعادة ضبط المصنع</button>
+                    `;
+                }
+                else if (tab === 'backup') {
+                    view.innerHTML = `
+                        <h4>💾 النسخ الاحتياطي</h4>
+                        <button class="adm-btn" onclick="Admin.exportData()">📥 نسخة يدوية</button>
+                        <button class="adm-btn" onclick="Admin.restoreAutoBackup()" style="background:#4cc9f0;">🔄 استعادة آخر نسخة تلقائية</button>
+                    `;
+                }
+                else if (tab === 'storage') {
+                    view.innerHTML = `
+                        <h4>📡 مستكشف المستودع</h4>
+                        <div style="display:flex; gap:20px; justify-content:center; margin:20px 0;">
+                            <div style="text-align:center; cursor:pointer;" onclick="AlaisaiOS.StorageSystem.openRepoExplorer()">
+                                <div style="font-size:4rem;">📡</div>
+                                <h5>مستكشف المستودع</h5>
+                                <p style="font-size:12px;">GitHub / WebDAV</p>
+                            </div>
+                        </div>
+                        <p style="color:#4cc9f0; font-size:12px;">يمكنك الاتصال بأي مستودع GitHub أو تخزين WebDAV</p>
+                    `;
+                }
+                else if (tab === 'cloud') {
+                    view.innerHTML = `
+                        <h4>☁️ المزامنة السحابية</h4>
+                        <div style="background:rgba(0,0,0,0.2); padding:15px; border-radius:10px;">
+                            <p style="margin-bottom:10px;">اختر خدمة التخزين السحابي:</p>
+                            <select id="cloud-provider" style="width:100%; padding:8px; margin-bottom:10px; border-radius:5px;">
+                                <option value="github">GitHub (مستودع المشروع)</option>
+                                <option value="webdav">WebDAV (Nextcloud, ownCloud)</option>
+                            </select>
+                            
+                            <div id="github-settings">
+                                <input type="text" id="github-repo" placeholder="المستودع (مثلاً: username/repo)" value="alsamayoanwww-cyber/Alaisai_OS_Pro" style="width:100%; padding:8px; margin-bottom:5px; border-radius:5px;">
+                                <input type="text" id="github-token" placeholder="Personal Access Token" style="width:100%; padding:8px; margin-bottom:5px; border-radius:5px;">
+                                <select id="github-branch" style="width:100%; padding:8px; margin-bottom:10px; border-radius:5px;">
+                                    <option value="main">main</option>
+                                    <option value="master">master</option>
+                                </select>
+                            </div>
+                            
+                            <div id="webdav-settings" style="display:none;">
+                                <input type="text" id="webdav-url" placeholder="WebDAV URL" style="width:100%; padding:8px; margin-bottom:5px; border-radius:5px;">
+                                <input type="text" id="webdav-user" placeholder="اسم المستخدم" style="width:100%; padding:8px; margin-bottom:5px; border-radius:5px;">
+                                <input type="password" id="webdav-pass" placeholder="كلمة المرور" style="width:100%; padding:8px; margin-bottom:10px; border-radius:5px;">
+                            </div>
+                            
+                            <div style="display:flex; gap:10px; margin-top:15px;">
+                                <button class="adm-btn" onclick="Admin.cloudSync.upload()" style="background:#4ade80;">⬆️ رفع التطبيقات والإضافات</button>
+                                <button class="adm-btn" onclick="Admin.cloudSync.download()" style="background:#4cc9f0;">⬇️ سحب التطبيقات والإضافات</button>
+                            </div>
+                            
+                            <div id="sync-status" style="margin-top:15px; padding:10px; background:#1a1a2e; border-radius:5px; min-height:50px;">
+                                الحالة: جاهز
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('cloud-provider').onchange = function() {
+                        document.getElementById('github-settings').style.display = this.value === 'github' ? 'block' : 'none';
+                        document.getElementById('webdav-settings').style.display = this.value === 'webdav' ? 'block' : 'none';
+                    };
+                }
+            },
+            
+            // دوال الإدارة
+            saveName: function(id) {
+                const app = AlaisaiOS.db.registry.find(a => a.id === id);
+                if (app) {
+                    app.name = document.getElementById('in_'+id).value;
                     AlaisaiOS.save();
-                    alert('✅ تم استعادة آخر نسخة احتياطية');
+                    AlaisaiOS.renderDesktop();
+                }
+            },
+            editIcon: function(id) {
+                const app = AlaisaiOS.db.registry.find(a => a.id === id);
+                const icon = prompt("أدخل الأيقونة:", app.icon);
+                if (icon) {
+                    app.icon = icon;
+                    AlaisaiOS.save();
+                    AlaisaiOS.renderDesktop();
+                    this.renderTab('layout');
+                }
+            },
+            deleteApp: function(id) {
+                if (confirm("حذف؟")) {
+                    AlaisaiOS.db.registry = AlaisaiOS.db.registry.filter(a => a.id !== id);
+                    AlaisaiOS.save();
+                    AlaisaiOS.renderDesktop();
+                    this.renderTab('layout');
+                }
+            },
+            addNew: function() {
+                const name = prompt("اسم التطبيق:");
+                const code = prompt("كود HTML/JS:");
+                if (name && code) {
+                    AlaisaiOS.db.registry.push({
+                        id: 'app_' + Date.now(),
+                        name: name,
+                        icon: '📦',
+                        content: code,
+                        order: AlaisaiOS.db.registry.length
+                    });
+                    AlaisaiOS.save();
+                    AlaisaiOS.renderDesktop();
+                    this.renderTab('layout');
+                }
+            },
+            exportData: function() {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(AlaisaiOS.db, null, 2));
+                const a = document.createElement('a');
+                a.href = dataStr;
+                a.download = `backup_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+            },
+            importData: function() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = e => {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        try {
+                            const content = JSON.parse(e.target.result);
+                            if (content.registry) {
+                                AlaisaiOS.db = content;
+                                AlaisaiOS.save();
+                                location.reload();
+                            }
+                        } catch (err) { alert('ملف غير صالح'); }
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
+            },
+            resetSystem: function() {
+                if (confirm('إعادة ضبط؟')) {
+                    localStorage.removeItem('alaisai_ultra_db');
                     location.reload();
                 }
-            } catch (e) {
-                alert('❌ لا توجد نسخة احتياطية صالحة');
-            }
-        },
+            },
+            changePass: function() {
+                const n = prompt("كلمة المرور الجديدة:");
+                if (n) {
+                    AlaisaiOS.db.config.pass = n;
+                    AlaisaiOS.save();
+                    alert("✅ تم التغيير");
+                }
+            },
+            restoreAutoBackup: function() {
+                try {
+                    const backup = JSON.parse(localStorage.getItem('alaisai_auto_backup'));
+                    if (backup && backup.data) {
+                        AlaisaiOS.db = backup.data;
+                        AlaisaiOS.save();
+                        alert('✅ تم استعادة آخر نسخة احتياطية تلقائية');
+                        location.reload();
+                    } else {
+                        alert('❌ لا توجد نسخة احتياطية صالحة');
+                    }
+                } catch (e) {
+                    alert('❌ فشل استعادة النسخة');
+                }
+            },
+            copy: function(t) {
+                navigator.clipboard.writeText(t).then(() => alert("✅ تم النسخ!"));
+            },
+            drag: function(i) { this.adminDragIdx = i; },
+            drop: function(target) {
+                const items = AlaisaiOS.db.registry;
+                if (this.adminDragIdx !== null && this.adminDragIdx !== target) {
+                    const [moved] = items.splice(this.adminDragIdx, 1);
+                    items.splice(target, 0, moved);
+                    items.forEach((item, idx) => item.order = idx);
+                    AlaisaiOS.save();
+                    AlaisaiOS.renderDesktop();
+                    this.renderTab('layout');
+                }
+            },
+            cloudSync: CloudSync
+        };
 
-        resetSystem() {
-            if (confirm('⚠️ تحذير! سيتم حذف جميع البيانات وإعادة النظام للإعدادات الافتراضية. هل أنت متأكد؟')) {
-                localStorage.removeItem('alaisai_ultra_db');
-                localStorage.removeItem(AUTO_BACKUP_KEY);
-                alert('✅ تم إعادة ضبط النظام');
-                location.reload();
-            }
-        },
-
-        cloudSync() {
-            const btn = document.getElementById('sync_btn');
-            if (btn) {
-                btn.innerText = "⏳ جاري الربط...";
-                btn.disabled = true;
-                setTimeout(() => {
-                    btn.innerText = "☁️ تم الربط بنجاح";
-                    btn.style.background = "#4ade80";
-                    btn.disabled = false;
-                    setTimeout(() => {
-                        btn.style.background = "";
-                        btn.innerText = "☁️ ربط سحابي";
-                    }, 3000);
-                }, 2000);
-            }
-        },
-
-        changePass() {
-            const n = prompt("كلمة المرور الجديدة:");
-            if (n) {
-                AlaisaiOS.db.config.pass = n;
-                AlaisaiOS.save();
-                alert("✅ تم تغيير كلمة المرور بنجاح");
-            }
-        },
-
-        copy(t) {
-            navigator.clipboard.writeText(t).then(() => alert("✅ تم النسخ!"));
-        },
-
-        adminDragIdx: null,
-        drag(i) {
-            this.adminDragIdx = i;
-        },
-        drop(target) {
-            const items = AlaisaiOS.db.registry;
-            if (this.adminDragIdx !== null && this.adminDragIdx !== target) {
-                const [moved] = items.splice(this.adminDragIdx, 1);
-                items.splice(target, 0, moved);
-                items.forEach((item, idx) => item.order = idx);
-                AlaisaiOS.save();
-                AlaisaiOS.renderDesktop();
-                this.renderTab('layout');
-            }
-        }
-    };
-
-    // ربط المتغيرات العامة
-    window.AlaisaiOS = AlaisaiOS;
-    window.Admin = Admin;
-
-    // بدء التشغيل
-    window.onload = () => AlaisaiOS.init();
+        // بدء التشغيل
+        window.onload = () => AlaisaiOS.init();
+    })();
 </script>
-
-<!-- تسجيل Service Worker -->
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('✅ PWA: النظام جاهز للعمل بدون إنترنت'))
-                .catch(err => console.log('❌ PWA: فشل تسجيل الخدمة', err));
-        });
-    }
-</script>
-
 </body>
 </html>
