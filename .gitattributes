@@ -1,0 +1,13 @@
+*.png binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+
+*.js text
+*.css text
+*.html text
+*.json text
+*.md text
+*.txt text
