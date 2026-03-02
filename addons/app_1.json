@@ -1,0 +1,11 @@
+{
+  "id": "app_1",
+  "name": "الترحيب",
+  "icon": "✨",
+  "content": "<div style=\"padding:20px;text-align:center;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:15px;color:white;\"><h1>أهلاً بك</h1><p>نظام العيسائي الاحترافي جاهز للعمل.</p><button onclick=\"alert('مرحباً!')\" style=\"padding:10px 20px;border:none;border-radius:8px;background:#4ade80;color:white;cursor:pointer;\">انقر هنا</button></div>",
+  "version": "1.0.0",
+  "author": "المالك",
+  "script": "",
+  "styles": "",
+  "source": "registry"
+}
