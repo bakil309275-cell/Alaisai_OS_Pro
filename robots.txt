@@ -1,1 +1,3 @@
-User-agent: *\nAllow: /
+User-agent: *
+Allow: /
+Sitemap: https://bakil309275-cell.github.io/Alaisai_OS_Pro/sitemap.xml
