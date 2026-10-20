@@ -1,0 +1,72 @@
+{
+  "version": "1.0.0",
+  "basePath": "/",
+  "routes": {
+    "/": {
+      "component": "home",
+      "title": "الرئيسية",
+      "auth": false,
+      "layout": "default"
+    },
+    "/apps": {
+      "component": "app-manager",
+      "title": "التطبيقات",
+      "auth": true,
+      "permissions": ["view:apps"],
+      "layout": "default"
+    },
+    "/settings": {
+      "component": "settings-panel",
+      "title": "الإعدادات",
+      "auth": true,
+      "permissions": ["manage:settings"],
+      "layout": "admin"
+    },
+    "/admin": {
+      "component": "admin-dashboard",
+      "title": "لوحة الإدارة",
+      "auth": true,
+      "permissions": ["access:admin"],
+      "layout": "admin"
+    },
+    "/profile/:id": {
+      "component": "user-profile",
+      "title": "الملف الشخصي",
+      "auth": true,
+      "dynamic": true,
+      "layout": "default"
+    },
+    "/addons/:name": {
+      "component": "addon-viewer",
+      "title": "الإضافة",
+      "auth": true,
+      "dynamic": true,
+      "layout": "addon"
+    }
+  },
+  "middleware": [
+    {
+      "name": "auth",
+      "enabled": true,
+      "priority": 1
+    },
+    {
+      "name": "logger",
+      "enabled": true,
+      "priority": 2
+    },
+    {
+      "name": "rateLimiter",
+      "enabled": true,
+      "priority": 3
+    }
+  ],
+  "notFound": {
+    "component": "404",
+    "title": "الصفحة غير موجودة"
+  },
+  "error": {
+    "component": "error",
+    "title": "خطأ في النظام"
+  }
+}{}

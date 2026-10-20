@@ -1,0 +1,62 @@
+{
+  "version": "1.0.0",
+  "system": {
+    "name": "Alaisai OS",
+    "version": "2.0.0",
+    "build": "2026.02",
+    "environment": "production",
+    "debug": false,
+    "maintenance": false
+  },
+  "appearance": {
+    "theme": "dark",
+    "primaryColor": "#4cc9f0",
+    "accentColor": "#f72585",
+    "fontSize": "medium",
+    "animations": true,
+    "compactMode": false,
+    "customCSS": ""
+  },
+  "language": {
+    "default": "ar",
+    "fallback": "en",
+    "rtl": true,
+    "datetime": "ar-SA"
+  },
+  "security": {
+    "sessionTimeout": 3600,
+    "maxLoginAttempts": 5,
+    "lockoutDuration": 900,
+    "twoFactorAuth": false,
+    "passwordPolicy": {
+      "minLength": 8,
+      "requireNumbers": true,
+      "requireSpecialChars": true,
+      "requireUppercase": false
+    }
+  },
+  "storage": {
+    "maxBackups": 10,
+    "autoBackup": true,
+    "backupInterval": 300,
+    "compression": true
+  },
+  "performance": {
+    "lazyLoad": true,
+    "cacheSize": 50,
+    "prefetch": true,
+    "workers": 2
+  },
+  "features": {
+    "pwa": true,
+    "offlineMode": true,
+    "notifications": true,
+    "analytics": false,
+    "developerMode": false
+  },
+  "updates": {
+    "autoCheck": true,
+    "checkInterval": 86400,
+    "channel": "stable"
+  }
+}{}

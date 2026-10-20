@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "plugins": {
+    "enabled": [
+      "core-system",
+      "file-manager"
+    ],
+    "disabled": [
+      "analytics",
+      "backup-scheduler"
+    ],
+    "registry": {
+      "core-system": {
+        "name": "النظام الأساسي",
+        "version": "2.0.0",
+        "author": "Alaisai",
+        "enabled": true,
+        "dependencies": [],
+        "settings": {
+          "debug": false,
+          "logLevel": "info"
+        }
+      },
+      "file-manager": {
+        "name": "مدير الملفات",
+        "version": "1.5.0",
+        "author": "Alaisai",
+        "enabled": true,
+        "dependencies": ["core-system"],
+        "settings": {
+          "maxUploadSize": 10485760,
+          "allowedTypes": ["jpg", "png", "pdf", "txt"]
+        }
+      },
+      "analytics": {
+        "name": "الإحصائيات",
+        "version": "1.2.0",
+        "author": "Alaisai",
+        "enabled": false,
+        "dependencies": ["core-system"],
+        "settings": {
+          "trackPageViews": true,
+          "trackEvents": true
+        }
+      }
+    }
+  },
+  "hooks": {
+    "beforeLoad": [],
+    "afterLoad": [],
+    "beforeUnload": []
+  },
+  "permissions": {
+    "install": ["admin"],
+    "uninstall": ["admin"],
+    "configure": ["admin", "manager"]
+  }
+}{}
