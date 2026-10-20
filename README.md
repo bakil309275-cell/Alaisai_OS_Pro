@@ -1,63 +1,38 @@
-# 🚀 Alaisai OS Pro
+# العيسائي برو (Alaisai OS Pro)
 
-**نظام تشغيل متكامل يعمل على المتصفح مع مخزن معزول ولوحة إدارة متطورة**
+سطح مكتب تطبيقات يعمل في المتصفح ودون اتصال (PWA)، بياناتك عندك وحدك.
 
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/bakil309275-cell/Alaisai_OS_Pro)](https://github.com/bakil309275-cell/Alaisai_OS_Pro/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/bakil309275-cell/Alaisai_OS_Pro)](https://github.com/bakil309275-cell/Alaisai_OS_Pro/issues)
-
----
-
-## 📊 **نتائج PageSpeed Insights**
-
-| المقياس | الدرجة | التقييم |
-|---------|--------|---------|
-| **⚡ الأداء** | 100 | 🏆 **ممتاز** |
-| **♿ إمكانية الوصول** | 100 | 🏆 **ممتاز** |
-| **🔍 تحسين محركات البحث (SEO)** | 100 | 🏆 **ممتاز** |
-| **🛠️ أفضل الممارسات** | 96 | 🏆 **ممتاز** |
-
-![PageSpeed Score](https://img.shields.io/badge/PageSpeed-100%25-brightgreen)
-
----
-
-## ✨ **المميزات الرئيسية**
-
-- ✅ **واجهة سطح مكتب عربية** - تصميم أنيق وسهل الاستخدام
-- ✅ **مخزن معزول** - نظام متكامل لإدارة الملفات
-- ✅ **دعم GitHub و WebDAV** - مزامنة سحابية حقيقية
-- ✅ **نظام إضافات متطور** - قابل للتوسع بلا حدود
-- ✅ **PWA للعمل دون إنترنت** - يعمل في أي وقت
-- ✅ **مدير ملفات متقدم** - نسخ، قص، لصق، سحب وإفلات
-- ✅ **لوحة إدارة شاملة** - تحكم كامل بالنظام
-
----
-
-## 🚀 **كيفية البدء**
-
-### 📱 **عبر الإنترنت (الموقع المنشور)**
-**كلمة المرور الافتراضية:** `1234`
-
-### 💻 **محلياً (على جهازك)**
+## التشغيل
 ```bash
-# استنساخ المستودع
-git clone https://github.com/bakil309275-cell/Alaisai_OS_Pro.git
+python3 -m http.server 8765   # ثم افتح http://localhost:8765
+```
+(ميزات التشفير وService Worker تتطلب HTTPS أو localhost.)
 
-# الدخول للمجلد
-cd Alaisai_OS_Pro
+## الميزات
+- **الإضافات الحقيقية**: مجلد (`manifest.json` + `index.html` + `main.js` + `style.css`) يتحوّل إلى تطبيق على سطح المكتب يعمل في بيئة معزولة، ويستخدم واجهة `Alaisai` (`toast/get/set/remove/keys`). تصدير/استيراد كملف `.alaisai-addon.json`.
+- **متجر الإضافات**: `catalog/` (4 إضافات جاهزة). أضف إضافة جديدة في `catalog/src/<id>/` ثم `node tools/build-catalog.mjs`، فتصل لكل المستخدمين مع تحديثاتها.
+- **مزامنة GitHub**: نسخة مشفّرة (AES-GCM) في مستودع خاص، يدوية أو تلقائية، مع كشف التعارضات.
+- **الأمان**: كلمة مرور مجزّأة، sandbox لكل تطبيق، نسخ احتياطي دوّار ومشفّر.
+- **PWA/المتاجر**: انظر [`STORE_GUIDE.md`](STORE_GUIDE.md).
 
-# تشغيل خادم محلي
-npx http-server -p 8080
-📁 Alaisai_OS_Pro/
-├── 📄 index.html          # الصفحة الرئيسية
-├── 📄 manifest.json        # ملف PWA
-├── 📄 sw.js                # Service Worker
-├── 📄 robots.txt           # تحسين محركات البحث
-├── 📁 assets/              # الموارد الثابتة
-│   ├── 📁 images/          # الأيقونات
-│   └── 📁 css/             # الأنماط
-└── 📁 system/              # ملفات النظام
-    ├── 📁 core/            # النواة
-    ├── 📁 ui/              # واجهات المستخدم
-    ├── 📁 utils/           # أدوات مساعدة
-    └── 📁 config/          # إعدادات
+## كتابة إضافة
+```js
+// main.js داخل الإضافة
+const n = ((await Alaisai.get("opens")) || 0) + 1;   // تخزين خاص بالإضافة (256KB)
+await Alaisai.set("opens", n);
+Alaisai.toast("أهلاً");                               // إشعار
+Alaisai.env.theme;                                    // "dark" | "light"
+```
+متغيرات CSS جاهزة: `--bg --fg --muted --card --line --accent --accent-fg --danger`.
+
+## الاختبارات
+```bash
+node tests/run.mjs                      # وحدات
+python3 -m http.server 8765 &           # ثم:
+python3 tests/e2e.py                    # المتصفح: الأساسيات والأمان
+python3 tests/e2e2.py                   # الإضافات والمتجر والمزامنة (GitHub وهمي)
+python3 tests/audit.py                  # تثبيت، SEO، وصول، أداء
+```
+
+## الهيكل
+`index.html` · `assets/{css,fonts,images,screenshots}` · `src/*.js` · `catalog/` · `tools/` · `store/` · `tests/` · `.github/workflows/`

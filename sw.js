@@ -1,67 +1,82 @@
-/**
- * Alaisai OS - Service Worker 2026 (محسّن)
- * وظيفة الملف: ضمان العمل بدون إنترنت وتخزين ملفات النظام
- */
-
-const CACHE_NAME = 'alaisai-ultra-v2';
-const ASSETS_TO_CACHE = [
-    './',
-    './index.html',
-    './manifest.json',
-    './assets/images/icon-72.png',
-    './assets/images/icon-128.png',
-    './assets/images/icon-144.png',
-    './assets/images/icon-152.png',
-    './assets/images/icon-192.png',
-    './assets/images/icon-384.png',
-    './assets/images/icon-512.png',
-    './assets/css/themes.css',
-    './assets/css/animations.css',
-    './system/core/core.js',
-    './system/core/database.js',
-    './system/core/security.js',
-    './system/core/api.js',
-    './system/core/addons-manager.js',
-    './system/ui/i18n.js',
-    './system/ui/ui-kit.js',
-    './system/ui/components.js',
-    './system/ui/file-manager.js',
-    './system/ui/validators.js',
-    './system/ui/helpers.js',
-    './system/ui/formatters.js'
+/* Alaisai OS - Service Worker
+ * غيّر VERSION عند كل إصدار ليصل التحديث للمستخدمين. */
+const VERSION = '2.1.0';
+const BUILD = 'dev'; // يستبدله سير العمل برمز الإيداع عند النشر ليصل التحديث للجميع
+const CACHE = `alaisai-${VERSION}-${BUILD}`;
+const CORE = [
+  './',
+  './index.html',
+  './manifest.json',
+  './favicon.ico',
+  './assets/css/app.css',
+  './assets/fonts/tajawal-400.woff2',
+  './assets/fonts/tajawal-500.woff2',
+  './assets/fonts/tajawal-700.woff2',
+  './src/theme-boot.js',
+  './src/version.js',
+  './src/ui.js',
+  './src/security.js',
+  './src/storage.js',
+  './src/apps.js',
+  './src/addons.js',
+  './src/catalog.js',
+  './src/sync.js',
+  './src/explorer.js',
+  './src/admin.js',
+  './src/main.js',
+  './assets/images/icon-192.png',
+  './assets/images/icon-512.png',
+  './assets/images/apple-touch-icon.png',
+  './privacy.html',
+  './terms.html',
+  './catalog/index.json',
+  './catalog/addons/calculator.alaisai-addon.json',
+  './catalog/addons/timer.alaisai-addon.json',
+  './catalog/addons/todo.alaisai-addon.json',
+  './catalog/addons/tasbih.alaisai-addon.json',
 ];
 
-// مرحلة التثبيت
 self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            console.log('🛡️ Alaisai Cache: تخزين ملفات النظام');
-            return cache.addAll(ASSETS_TO_CACHE);
-        })
-    );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    // إضافة كل ملف على حدة: فشل ملف واحد لا يُفشل التثبيت كله
+    await Promise.allSettled(CORE.map((u) => cache.add(new Request(u, { cache: 'reload' }))));
+  })());
 });
 
-// مرحلة التنشيط: مسح الكاش القديم
 self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((keys) => {
-            return Promise.all(
-                keys.filter(key => key !== CACHE_NAME)
-                    .map(key => caches.delete(key))
-            );
-        })
-    );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+    await self.clients.claim();
+  })());
 });
 
-// استراتيجية الجلب: كاش أولاً ثم الشبكة
+self.addEventListener('message', (e) => { if (e.data === 'SKIP_WAITING') self.skipWaiting(); });
+
+async function staleWhileRevalidate(req, cacheName) {
+  const cache = await caches.open(cacheName);
+  const hit = await cache.match(req);
+  const net = fetch(req).then((res) => { if (res && (res.ok || res.type === 'opaque')) cache.put(req, res.clone()); return res; }).catch(() => null);
+  return hit || (await net) || Response.error();
+}
+
 self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request).then((response) => {
-            return response || fetch(event.request).catch(() => {
-                if (event.request.mode === 'navigate') {
-                    return caches.match('./index.html');
-                }
-            });
-        })
-    );
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+
+  if (url.origin !== location.origin) return; // باقي الطلبات الخارجية (المتصفح المدمج...) لا نتدخل فيها
+
+  // التنقل: الشبكة أولاً ثم الكاش (لتصل التحديثات)، ومنه صفحة index دون اتصال
+  if (req.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        const res = await fetch(req);
+        const c = await caches.open(CACHE); c.put('./index.html', res.clone()); return res;
+      } catch (_) { return (await caches.match('./index.html')) || Response.error(); }
+    })());
+    return;
+  }
+  event.respondWith(staleWhileRevalidate(req, CACHE));
 });
