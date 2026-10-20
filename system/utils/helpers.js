@@ -1,21 +1,30 @@
 /**
  * Alaisai Helpers - دوال مساعدة عامة
- * @version 2.0.0
+ * @version 1.0.0
  */
 
 const AlaisaiHelpers = {
-    version: '2.0.0',
+    version: '1.0.0',
     
-    // تنسيق التاريخ مع i18n
+    // تنسيق التاريخ
     formatDate(date, format = 'short') {
         const d = new Date(date);
-        if (window.AlaisaiI18n) {
-            const locale = AlaisaiI18n.locale;
-            if (format === 'short') return d.toLocaleDateString(locale === 'ar' ? 'ar-SA' : locale);
-            if (format === 'long') return d.toLocaleDateString(locale === 'ar' ? 'ar-SA' : locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            if (format === 'time') return d.toLocaleTimeString(locale === 'ar' ? 'ar-SA' : locale);
-            if (format === 'full') return d.toLocaleString(locale === 'ar' ? 'ar-SA' : locale);
+        
+        if (format === 'short') {
+            return d.toLocaleDateString('ar-SA');
+        } else if (format === 'long') {
+            return d.toLocaleDateString('ar-SA', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        } else if (format === 'time') {
+            return d.toLocaleTimeString('ar-SA');
+        } else if (format === 'full') {
+            return d.toLocaleString('ar-SA');
         }
+        
         return d.toISOString();
     },
     
@@ -24,12 +33,13 @@ const AlaisaiHelpers = {
         return prefix + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     },
     
-    // نسخ نص
+    // نسخ نص إلى الحافظة
     async copyToClipboard(text) {
         try {
             await navigator.clipboard.writeText(text);
             return true;
-        } catch {
+        } catch (err) {
+            // طريقة بديلة
             const textarea = document.createElement('textarea');
             textarea.value = text;
             document.body.appendChild(textarea);
@@ -51,22 +61,27 @@ const AlaisaiHelpers = {
         URL.revokeObjectURL(url);
     },
     
+    // تحميل JSON
+    downloadJSON(data, filename = 'data.json') {
+        this.downloadFile(JSON.stringify(data, null, 2), filename, 'application/json');
+    },
+    
     // قراءة ملف
     readFile(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = (e) => resolve(e.target.result);
-            reader.onerror = reject;
+            reader.onerror = (e) => reject(e);
             reader.readAsText(file);
         });
     },
     
-    // تأخير
+    // تأخير (sleep)
     sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     },
     
-    // إزالة التكرار
+    // إزالة التكرار من مصفوفة
     uniqueArray(arr) {
         return [...new Set(arr)];
     },
@@ -76,60 +91,68 @@ const AlaisaiHelpers = {
         return Object.assign({}, ...objects);
     },
     
-    // اقتطاع نص مع مراعاة العربية
+    // التحقق من بريد إلكتروني
+    isValidEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    },
+    
+    // التحقق من رابط
+    isValidUrl(url) {
+        try {
+            new URL(url);
+            return true;
+        } catch {
+            return false;
+        }
+    },
+    
+    // اقتطاع نص
     truncateText(text, maxLength = 100, suffix = '...') {
         if (text.length <= maxLength) return text;
         return text.substr(0, maxLength) + suffix;
     },
     
-    // تحويل النص إلى slug (يدعم العربية)
+    // تحويل النص إلى slugs (للروابط)
     slugify(text) {
-        // تحويل الحروف العربية إلى ما يشبه الحروف اللاتينية (اختياري) أو استبدال المسافات
-        const arabicToLatin = {
-            'أ': 'a', 'إ': 'e', 'آ': 'a', 'ا': 'a', 'ب': 'b', 'ت': 't', 'ث': 'th',
-            'ج': 'j', 'ح': 'h', 'خ': 'kh', 'د': 'd', 'ذ': 'dh', 'ر': 'r', 'ز': 'z',
-            'س': 's', 'ش': 'sh', 'ص': 's', 'ض': 'd', 'ط': 't', 'ظ': 'z', 'ع': 'a',
-            'غ': 'gh', 'ف': 'f', 'ق': 'q', 'ك': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n',
-            'ه': 'h', 'و': 'w', 'ي': 'y', 'ة': 'h', 'ى': 'a'
-        };
-        
-        let slug = text
+        return text
             .toString()
             .toLowerCase()
             .trim()
             .replace(/\s+/g, '-')
-            .replace(/[^\w\-]+/g, (match) => {
-                // إذا كانت أحرف عربية، نحولها
-                return match.split('').map(c => arabicToLatin[c] || '').join('');
-            })
-            .replace(/\-\-+/g, '-')
-            .replace(/^-+/, '')
-            .replace(/-+$/, '');
-        
-        return slug || 'slug';
+            .replace(/[^\w\-]+/g, '')
+            .replace(/\-\-+/g, '-');
     },
     
     // الحصول على معلمات URL
     getUrlParams() {
         const params = new URLSearchParams(window.location.search);
-        return Object.fromEntries(params.entries());
+        const result = {};
+        for (const [key, value] of params) {
+            result[key] = value;
+        }
+        return result;
     },
     
-    // تخزين مع انتهاء صلاحية
+    // تخزين في localStorage مع انتهاء صلاحية
     setWithExpiry(key, value, ttlMinutes) {
+        const now = new Date();
         const item = {
-            value,
-            expiry: Date.now() + ttlMinutes * 60 * 1000
+            value: value,
+            expiry: now.getTime() + (ttlMinutes * 60 * 1000)
         };
         localStorage.setItem(key, JSON.stringify(item));
     },
     
+    // قراءة من localStorage مع صلاحية
     getWithExpiry(key) {
         const itemStr = localStorage.getItem(key);
         if (!itemStr) return null;
+        
         try {
             const item = JSON.parse(itemStr);
-            if (Date.now() > item.expiry) {
+            const now = new Date();
+            if (now.getTime() > item.expiry) {
                 localStorage.removeItem(key);
                 return null;
             }
@@ -139,7 +162,7 @@ const AlaisaiHelpers = {
         }
     },
     
-    // تجميع مصفوفة
+    // تجميع مصفوفة حسب حقل
     groupBy(array, key) {
         return array.reduce((result, item) => {
             (result[item[key]] = result[item[key]] || []).push(item);
@@ -147,40 +170,52 @@ const AlaisaiHelpers = {
         }, {});
     },
     
-    // ترتيب مصفوفة
+    // ترتيب مصفوفة حسب حقل
     sortBy(array, key, order = 'asc') {
         return [...array].sort((a, b) => {
             let aVal = a[key];
             let bVal = b[key];
+            
             if (typeof aVal === 'string') aVal = aVal.toLowerCase();
             if (typeof bVal === 'string') bVal = bVal.toLowerCase();
-            if (order === 'asc') return aVal > bVal ? 1 : -1;
-            else return aVal < bVal ? 1 : -1;
+            
+            if (order === 'asc') {
+                return aVal > bVal ? 1 : -1;
+            } else {
+                return aVal < bVal ? 1 : -1;
+            }
         });
     },
     
-    // تصفية مصفوفة
+    // تصفية مصفوفة حسب نص
     filterBy(array, searchTerm, fields = ['name']) {
         if (!searchTerm) return array;
+        
         const term = searchTerm.toLowerCase();
-        return array.filter(item => fields.some(field => {
-            const value = item[field];
-            return value && value.toString().toLowerCase().includes(term);
-        }));
+        
+        return array.filter(item => {
+            return fields.some(field => {
+                const value = item[field];
+                return value && value.toString().toLowerCase().includes(term);
+            });
+        });
     },
     
-    // تنسيق حجم الملف
+    // حجم الملف بالتنسيق المناسب
     formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
+        
         const k = 1024;
         const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
+        
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     },
     
     // إنشاء عنصر HTML
     createElement(tag, attributes = {}, children = []) {
         const element = document.createElement(tag);
+        
         for (const [key, value] of Object.entries(attributes)) {
             if (key === 'style' && typeof value === 'object') {
                 Object.assign(element.style, value);
@@ -190,6 +225,7 @@ const AlaisaiHelpers = {
                 element.setAttribute(key, value);
             }
         }
+        
         for (const child of children) {
             if (typeof child === 'string') {
                 element.appendChild(document.createTextNode(child));
@@ -197,10 +233,11 @@ const AlaisaiHelpers = {
                 element.appendChild(child);
             }
         }
+        
         return element;
     },
     
-    // إزالة HTML
+    // إزالة علامات HTML
     stripHtml(html) {
         const tmp = document.createElement('div');
         tmp.innerHTML = html;
@@ -208,9 +245,5 @@ const AlaisaiHelpers = {
     }
 };
 
-if (window.AlaisaiCore) {
-    AlaisaiCore.registerModule('AlaisaiHelpers', AlaisaiHelpers);
-}
-
 window.AlaisaiHelpers = AlaisaiHelpers;
-console.log('🛠️ Alaisai Helpers جاهز للعمل');
+console.log('🛠️ Alaisai Helpers جاهز للعمل');// Alaisai Helpers
