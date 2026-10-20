@@ -1,0 +1,19 @@
+{
+  "packageId": "com.alaisai.os",
+  "host": "YOUR-DOMAIN.com",
+  "name": "العيسائي برو",
+  "launcherName": "العيسائي",
+  "display": "standalone",
+  "themeColor": "#1a1a2e",
+  "navigationColor": "#1a1a2e",
+  "backgroundColor": "#0b1124",
+  "enableNotifications": false,
+  "startUrl": "/index.html",
+  "iconUrl": "https://YOUR-DOMAIN.com/assets/images/icon-512.png",
+  "maskableIconUrl": "https://YOUR-DOMAIN.com/assets/images/maskable-512.png",
+  "webManifestUrl": "https://YOUR-DOMAIN.com/manifest.json",
+  "appVersionName": "2.1.0",
+  "appVersion": "1",
+  "signingKey": { "path": "./android.keystore", "alias": "alaisai" },
+  "fallbackType": "customtabs"
+}
