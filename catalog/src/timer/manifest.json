@@ -1,0 +1,8 @@
+{
+  "id": "timer",
+  "name": "المؤقّت",
+  "icon": "⏱️",
+  "version": "1.0.0",
+  "description": "ساعة إيقاف مع اللفّات، ومؤقّت تنازلي",
+  "author": "Alaisai"
+}

@@ -1,1 +1,16 @@
-
+<main class="t" aria-label="المؤقّت">
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-sw" aria-selected="true" aria-controls="p-sw">ساعة الإيقاف</button>
+    <button role="tab" id="tab-cd" aria-selected="false" aria-controls="p-cd">مؤقّت تنازلي</button>
+  </div>
+  <section id="p-sw" role="tabpanel" aria-labelledby="tab-sw">
+    <output id="sw" class="big" dir="ltr">00:00.00</output>
+    <div class="row"><button id="sw-go" class="primary">ابدأ</button><button id="sw-lap" disabled>لفّة</button><button id="sw-reset">تصفير</button></div>
+    <ol id="laps" class="laps" dir="ltr"></ol>
+  </section>
+  <section id="p-cd" role="tabpanel" aria-labelledby="tab-cd" hidden>
+    <output id="cd" class="big" dir="ltr" role="timer">05:00</output>
+    <div class="row"><label>دقائق <input id="min" type="number" min="0" max="999" value="5"></label><label>ثوانٍ <input id="sec" type="number" min="0" max="59" value="0"></label></div>
+    <div class="row"><button id="cd-go" class="primary">ابدأ</button><button id="cd-reset">إعادة</button></div>
+  </section>
+</main>
