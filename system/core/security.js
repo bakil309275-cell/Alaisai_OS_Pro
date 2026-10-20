@@ -1,65 +1,34 @@
 /**
- * Alaisai Security - نظام الأمان والحماية المتقدم
- * @version 2.0.0
+ * Alaisai Security - نظام الأمان والحماية
+ * @version 1.4.0
  */
 
 const AlaisaiSecurity = {
-    version: '2.0.0',
-    permissions: new Map(),      // صلاحيات الأدوار (في الذاكرة)
-    roles: new Map(),            // الأدوار (في الذاكرة)
-    sessions: new Map(),         // الجلسات النشطة (في الذاكرة)
-    rateLimits: new Map(),       // محدد الطلبات
-    initialized: false,
-    
-    // تهيئة النظام (تحميل البيانات من IndexedDB)
-    async init() {
-        if (this.initialized) return this;
-        
-        // تحميل الأدوار والصلاحيات من قاعدة البيانات
-        if (window.AlaisaiDB) {
-            const rolesData = await AlaisaiDB.getAll('roles').catch(() => []);
-            rolesData.forEach(role => this.roles.set(role.name, role));
-            
-            const usersData = await AlaisaiDB.getAll('users').catch(() => []);
-            usersData.forEach(user => this.permissions.set(user.id, user));
-        }
-        
-        // إنشاء أدوار افتراضية إذا لم توجد
-        if (this.roles.size === 0) {
-            this.createRole('admin', ['*']);
-            this.createRole('user', ['read', 'write:own']);
-            this.createRole('guest', ['read']);
-        }
-        
-        this.initialized = true;
-        console.log('🛡️ Alaisai Security جاهز للعمل');
-        return this;
-    },
+    version: '1.4.0',
+    permissions: new Map(),
+    roles: new Map(),
+    sessions: new Map(),
+    tokens: new Map(),
+    rateLimits: new Map(),
     
     // إنشاء دور جديد
     createRole(name, permissions = []) {
-        const role = {
+        this.roles.set(name, {
             name,
             permissions: new Set(permissions),
             createdAt: new Date().toISOString()
-        };
-        this.roles.set(name, role);
-        // حفظ في IndexedDB
-        if (window.AlaisaiDB) {
-            AlaisaiDB.put('roles', { name, permissions: Array.from(role.permissions), createdAt: role.createdAt });
-        }
+        });
         console.log(`👑 تم إنشاء دور: ${name}`);
         return this;
     },
     
     // إنشاء مستخدم
-    async createUser(username, password, role = 'user') {
+    createUser(username, password, role = 'user') {
         const userId = this.generateId();
-        const hashedPassword = await this.hashPassword(password);
         const user = {
             id: userId,
             username,
-            password: hashedPassword,
+            password: this.hashPassword(password),
             role,
             permissions: new Set(),
             createdAt: new Date().toISOString(),
@@ -69,14 +38,6 @@ const AlaisaiSecurity = {
         };
         
         this.permissions.set(userId, user);
-        
-        if (window.AlaisaiDB) {
-            await AlaisaiDB.put('users', {
-                ...user,
-                permissions: Array.from(user.permissions)
-            });
-        }
-        
         console.log(`👤 تم إنشاء مستخدم: ${username}`);
         return userId;
     },
@@ -112,7 +73,7 @@ const AlaisaiSecurity = {
         }
         
         // التحقق من كلمة المرور
-        if (await this.verifyPassword(password, user.password)) {
+        if (this.verifyPassword(password, user.password)) {
             // إنشاء جلسة
             const token = this.generateToken();
             const session = {
@@ -125,18 +86,11 @@ const AlaisaiSecurity = {
             };
             
             this.sessions.set(token, session);
+            this.tokens.set(token, { userId, expires: session.expiresAt });
             
             // تحديث معلومات المستخدم
             user.lastLogin = new Date().toISOString();
             user.failedAttempts = 0;
-            
-            if (window.AlaisaiDB) {
-                await AlaisaiDB.put('users', {
-                    ...user,
-                    permissions: Array.from(user.permissions)
-                });
-                await AlaisaiDB.put('sessions', { token, ...session });
-            }
             
             return {
                 success: true,
@@ -145,20 +99,14 @@ const AlaisaiSecurity = {
                     id: userId,
                     username: user.username,
                     role: user.role
-                }
+                },
+                session
             };
         } else {
             // زيادة محاولات الفاشلة
             user.failedAttempts++;
             if (user.failedAttempts >= 5) {
                 user.locked = true;
-            }
-            
-            if (window.AlaisaiDB) {
-                await AlaisaiDB.put('users', {
-                    ...user,
-                    permissions: Array.from(user.permissions)
-                });
             }
             
             return {
@@ -175,25 +123,22 @@ const AlaisaiSecurity = {
         const user = this.permissions.get(userId);
         if (!user) return false;
         
+        // صلاحيات الأدمن المطلق
         if (user.role === 'admin') return true;
         
+        // التحقق من صلاحيات الدور
         const role = this.roles.get(user.role);
         if (role && role.permissions.has(permission)) {
             return true;
         }
         
+        // التحقق من الصلاحيات المباشرة
         return user.permissions.has(permission);
     },
     
     // التحقق من التوكن
-    async verifyToken(token) {
-        // ابحث في الذاكرة أولاً
-        let session = this.sessions.get(token);
-        if (!session && window.AlaisaiDB) {
-            // حاول من IndexedDB
-            session = await AlaisaiDB.get('sessions', token);
-            if (session) this.sessions.set(token, session);
-        }
+    verifyToken(token) {
+        const session = this.sessions.get(token);
         if (!session) return null;
         
         const now = new Date();
@@ -201,9 +146,7 @@ const AlaisaiSecurity = {
         
         if (now > expires) {
             this.sessions.delete(token);
-            if (window.AlaisaiDB) {
-                await AlaisaiDB.delete('sessions', token);
-            }
+            this.tokens.delete(token);
             return null;
         }
         
@@ -212,102 +155,73 @@ const AlaisaiSecurity = {
     },
     
     // تسجيل الخروج
-    async logout(token) {
+    logout(token) {
         this.sessions.delete(token);
-        if (window.AlaisaiDB) {
-            await AlaisaiDB.delete('sessions', token);
-        }
+        this.tokens.delete(token);
         return true;
     },
     
-    // تشفير كلمة المرور باستخدام Web Crypto API
-    async hashPassword(password) {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(password + '_alaisai_salt_2026');
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        return Array.from(new Uint8Array(hashBuffer))
-            .map(b => b.toString(16).padStart(2, '0'))
-            .join('');
+    // تنقية المدخلات
+    sanitizeInput(input, type = 'string') {
+        if (!input) return input;
+        
+        let sanitized = String(input);
+        
+        // إزالة أكواد HTML الضارة
+        sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+        sanitized = sanitized.replace(/<[^>]*>?/gm, '');
+        
+        // منع حقن SQL
+        sanitized = sanitized.replace(/'/g, "''");
+        sanitized = sanitized.replace(/--/g, '');
+        sanitized = sanitized.replace(/;.*$/gm, '');
+        
+        // حسب النوع
+        switch (type) {
+            case 'email':
+                sanitized = sanitized.replace(/[^a-zA-Z0-9@._-]/g, '');
+                break;
+            case 'filename':
+                sanitized = sanitized.replace(/[^a-zA-Z0-9._-]/g, '');
+                break;
+            case 'number':
+                sanitized = sanitized.replace(/[^0-9.-]/g, '');
+                break;
+        }
+        
+        return sanitized;
     },
     
-    async verifyPassword(password, hash) {
-        const hashedInput = await this.hashPassword(password);
-        return hashedInput === hash;
+    // تشفير كلمة المرور
+    hashPassword(password) {
+        // في الإنتاج استخدم bcrypt أو Argon2
+        return btoa(password + '_alaisai_salt_2026');
     },
     
-    // تشفير وفك تشفير باستخدام AES-GCM (تشفير حقيقي)
-    async encrypt(data, password) {
-        const encoder = new TextEncoder();
-        const keyMaterial = await crypto.subtle.importKey(
-            'raw',
-            encoder.encode(password.padEnd(32, '0').slice(0, 32)),
-            { name: 'PBKDF2' },
-            false,
-            ['deriveKey']
-        );
-        const key = await crypto.subtle.deriveKey(
-            {
-                name: 'PBKDF2',
-                salt: encoder.encode('salt_alaisai'),
-                iterations: 100000,
-                hash: 'SHA-256'
-            },
-            keyMaterial,
-            { name: 'AES-GCM', length: 256 },
-            false,
-            ['encrypt']
-        );
-        const iv = crypto.getRandomValues(new Uint8Array(12));
-        const encrypted = await crypto.subtle.encrypt(
-            { name: 'AES-GCM', iv },
-            key,
-            encoder.encode(JSON.stringify(data))
-        );
-        return {
-            iv: Array.from(iv),
-            data: Array.from(new Uint8Array(encrypted))
-        };
+    // التحقق من كلمة المرور
+    verifyPassword(password, hash) {
+        return this.hashPassword(password) === hash;
     },
     
-    async decrypt(encryptedObj, password) {
-        const encoder = new TextEncoder();
-        const keyMaterial = await crypto.subtle.importKey(
-            'raw',
-            encoder.encode(password.padEnd(32, '0').slice(0, 32)),
-            { name: 'PBKDF2' },
-            false,
-            ['deriveKey']
-        );
-        const key = await crypto.subtle.deriveKey(
-            {
-                name: 'PBKDF2',
-                salt: encoder.encode('salt_alaisai'),
-                iterations: 100000,
-                hash: 'SHA-256'
-            },
-            keyMaterial,
-            { name: 'AES-GCM', length: 256 },
-            false,
-            ['decrypt']
-        );
-        const iv = new Uint8Array(encryptedObj.iv);
-        const data = new Uint8Array(encryptedObj.data);
-        const decrypted = await crypto.subtle.decrypt(
-            { name: 'AES-GCM', iv },
-            key,
-            data
-        );
-        return JSON.parse(new TextDecoder().decode(decrypted));
+    // إنشاء توكن
+    generateToken() {
+        return 'token_' + Date.now() + '_' + 
+               Math.random().toString(36).substr(2, 16) + 
+               '_' + Math.random().toString(36).substr(2, 16);
+    },
+    
+    generateId() {
+        return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     },
     
     // تحديد معدل الطلبات
-    checkRateLimit(key, limit = 100, windowMs = 60000) {
+    checkRateLimit(key, limit = 100, window = 60000) {
         const now = Date.now();
-        const record = this.rateLimits.get(key) || { count: 0, resetAt: now + windowMs };
+        const record = this.rateLimits.get(key) || { count: 0, resetAt: now + window };
         
         if (now > record.resetAt) {
             record.count = 1;
-            record.resetAt = now + windowMs;
+            record.resetAt = now + window;
         } else {
             record.count++;
         }
@@ -321,50 +235,29 @@ const AlaisaiSecurity = {
         };
     },
     
-    // تنقية المدخلات
-    sanitizeInput(input, type = 'string') {
-        if (!input) return input;
-        let sanitized = String(input);
-        
-        // إزالة أكواد HTML الضارة
-        sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-        sanitized = sanitized.replace(/<[^>]*>?/gm, '');
-        
-        // منع حقن SQL (بسيط)
-        sanitized = sanitized.replace(/'/g, "''");
-        sanitized = sanitized.replace(/--/g, '');
-        
-        switch (type) {
-            case 'email':
-                sanitized = sanitized.replace(/[^a-zA-Z0-9@._-]/g, '');
-                break;
-            case 'filename':
-                sanitized = sanitized.replace(/[^a-zA-Z0-9._-]/g, '');
-                break;
-            case 'number':
-                sanitized = sanitized.replace(/[^0-9.-]/g, '');
-                break;
+    // تشفير بيانات حساسة
+    encrypt(data, key = 'default') {
+        // تشفير بسيط - في الإنتاج استخدم AES
+        const encoded = btoa(JSON.stringify(data));
+        return `enc_${key}_${encoded}`;
+    },
+    
+    // فك تشفير
+    decrypt(encrypted) {
+        try {
+            const parts = encrypted.split('_');
+            const encoded = parts.slice(2).join('_');
+            return JSON.parse(atob(encoded));
+        } catch {
+            return null;
         }
-        return sanitized;
-    },
-    
-    generateToken() {
-        return 'token_' + Date.now() + '_' + 
-               Math.random().toString(36).substr(2, 16) + 
-               '_' + Math.random().toString(36).substr(2, 16);
-    },
-    
-    generateId() {
-        return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 };
 
-// تسجيل في النواة
-if (window.AlaisaiCore) {
-    AlaisaiCore.registerModule('AlaisaiSecurity', AlaisaiSecurity);
-    AlaisaiSecurity.init().catch(console.error);
-} else {
-    window.AlaisaiSecurity = AlaisaiSecurity;
-}
+// إنشاء أدوار افتراضية
+AlaisaiSecurity.createRole('admin', ['*']);
+AlaisaiSecurity.createRole('user', ['read', 'write:own']);
+AlaisaiSecurity.createRole('guest', ['read']);
 
-console.log('🛡️ Alaisai Security جاهز للعمل (نسخة آمنة)');
+window.AlaisaiSecurity = AlaisaiSecurity;
+console.log('🛡️ Alaisai Security جاهز للعمل');// Alaisai Security v1.4.0
