@@ -1,0 +1,31 @@
+{
+  "format": "alaisai-addon",
+  "version": 1,
+  "id": "todo",
+  "manifest": {
+    "id": "todo",
+    "name": "المهام",
+    "icon": "✅",
+    "version": "1.0.0",
+    "description": "قائمة مهام بسيطة تُحفظ تلقائياً وتدخل في النسخ الاحتياطي والمزامنة",
+    "author": "Alaisai"
+  },
+  "files": [
+    {
+      "name": "manifest.json",
+      "content": "{\n  \"id\": \"todo\",\n  \"name\": \"المهام\",\n  \"icon\": \"✅\",\n  \"version\": \"1.0.0\",\n  \"description\": \"قائمة مهام بسيطة تُحفظ تلقائياً وتدخل في النسخ الاحتياطي والمزامنة\",\n  \"author\": \"Alaisai\"\n}\n"
+    },
+    {
+      "name": "index.html",
+      "content": "<main class=\"todo\" aria-label=\"قائمة المهام\">\n  <form id=\"f\" class=\"add\"><label class=\"sr\" for=\"in\">مهمة جديدة</label><input id=\"in\" maxlength=\"200\" placeholder=\"أضف مهمة…\" autocomplete=\"off\" required><button class=\"primary\">إضافة</button></form>\n  <div class=\"filters\" role=\"group\" aria-label=\"تصفية\">\n    <button data-f=\"all\" aria-pressed=\"true\">الكل</button><button data-f=\"open\" aria-pressed=\"false\">المتبقية</button><button data-f=\"done\" aria-pressed=\"false\">المنجزة</button>\n  </div>\n  <ul id=\"list\" class=\"list\"></ul>\n  <p id=\"count\" class=\"muted\" role=\"status\"></p>\n  <button id=\"clear\" class=\"link\">مسح المنجزة</button>\n</main>\n"
+    },
+    {
+      "name": "main.js",
+      "content": "const $ = (id) => document.getElementById(id);\nlet tasks = [], filter = 'all';\nconst save = () => Alaisai.set('tasks', tasks);\nfunction render() {\n  const list = $('list'); list.textContent = '';\n  const shown = tasks.filter((t) => filter === 'all' || (filter === 'done') === t.done);\n  shown.forEach((t) => {\n    const li = document.createElement('li'); if (t.done) li.className = 'done';\n    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = t.done; cb.setAttribute('aria-label', 'إنجاز: ' + t.text);\n    cb.onchange = () => { t.done = cb.checked; save(); render(); };\n    const sp = document.createElement('span'); sp.textContent = t.text;\n    const del = document.createElement('button'); del.className = 'del'; del.textContent = '🗑'; del.setAttribute('aria-label', 'حذف: ' + t.text);\n    del.onclick = () => { tasks = tasks.filter((x) => x !== t); save(); render(); };\n    li.append(cb, sp, del); list.appendChild(li);\n  });\n  const left = tasks.filter((t) => !t.done).length;\n  $('count').textContent = tasks.length ? `${left} متبقية من ${tasks.length}` : 'لا توجد مهام. أضف أول مهمة 👆';\n  $('clear').hidden = !tasks.some((t) => t.done);\n  document.querySelectorAll('[data-f]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.f === filter));\n}\n$('f').onsubmit = (e) => {\n  e.preventDefault(); const v = $('in').value.trim(); if (!v) return;\n  if (tasks.length >= 500) return Alaisai.toast('بلغت الحد الأقصى للمهام');\n  tasks.unshift({ id: Date.now() + Math.random(), text: v, done: false }); $('in').value = ''; save(); render();\n};\ndocument.querySelectorAll('[data-f]').forEach((b) => (b.onclick = () => { filter = b.dataset.f; render(); }));\n$('clear').onclick = () => { tasks = tasks.filter((t) => !t.done); save(); render(); };\nAlaisai.get('tasks').then((v) => { tasks = Array.isArray(v) ? v.filter((t) => t && typeof t.text === 'string').slice(0, 500) : []; render(); }).catch(render);\n"
+    },
+    {
+      "name": "style.css",
+      "content": ".todo{max-width:520px;margin:0 auto;padding:16px}\n.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}\n.add{display:flex;gap:8px;margin-bottom:12px}\ninput[type=text],#in{flex:1;min-height:46px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit}\nbutton{font:inherit;min-height:44px;padding:6px 16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}\nbutton.primary,.filters [aria-pressed=true]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:700}\n.filters{display:flex;gap:8px;margin-bottom:8px}\n.list{list-style:none;padding:0;margin:0}\n.list li{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);background:var(--card);border-radius:12px;margin-bottom:8px}\n.list li.done span{text-decoration:line-through;color:var(--muted)}\n.list input{width:22px;height:22px;accent-color:var(--accent)}\n.list span{flex:1;word-break:break-word}\n.list .del{min-height:36px;padding:2px 10px;color:var(--danger)}\n.muted{color:var(--muted);margin:10px 0}\n.link{background:none;border:0;color:var(--accent);text-decoration:underline;min-height:44px}\n:focus-visible{outline:3px solid var(--accent);outline-offset:2px}\n"
+    }
+  ]
+}

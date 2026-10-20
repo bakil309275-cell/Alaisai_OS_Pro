@@ -1,0 +1,31 @@
+{
+  "format": "alaisai-addon",
+  "version": 1,
+  "id": "timer",
+  "manifest": {
+    "id": "timer",
+    "name": "المؤقّت",
+    "icon": "⏱️",
+    "version": "1.0.0",
+    "description": "ساعة إيقاف مع اللفّات، ومؤقّت تنازلي",
+    "author": "Alaisai"
+  },
+  "files": [
+    {
+      "name": "manifest.json",
+      "content": "{\n  \"id\": \"timer\",\n  \"name\": \"المؤقّت\",\n  \"icon\": \"⏱️\",\n  \"version\": \"1.0.0\",\n  \"description\": \"ساعة إيقاف مع اللفّات، ومؤقّت تنازلي\",\n  \"author\": \"Alaisai\"\n}\n"
+    },
+    {
+      "name": "index.html",
+      "content": "<main class=\"t\" aria-label=\"المؤقّت\">\n  <div class=\"tabs\" role=\"tablist\">\n    <button role=\"tab\" id=\"tab-sw\" aria-selected=\"true\" aria-controls=\"p-sw\">ساعة الإيقاف</button>\n    <button role=\"tab\" id=\"tab-cd\" aria-selected=\"false\" aria-controls=\"p-cd\">مؤقّت تنازلي</button>\n  </div>\n  <section id=\"p-sw\" role=\"tabpanel\" aria-labelledby=\"tab-sw\">\n    <output id=\"sw\" class=\"big\" dir=\"ltr\">00:00.00</output>\n    <div class=\"row\"><button id=\"sw-go\" class=\"primary\">ابدأ</button><button id=\"sw-lap\" disabled>لفّة</button><button id=\"sw-reset\">تصفير</button></div>\n    <ol id=\"laps\" class=\"laps\" dir=\"ltr\"></ol>\n  </section>\n  <section id=\"p-cd\" role=\"tabpanel\" aria-labelledby=\"tab-cd\" hidden>\n    <output id=\"cd\" class=\"big\" dir=\"ltr\" role=\"timer\">05:00</output>\n    <div class=\"row\"><label>دقائق <input id=\"min\" type=\"number\" min=\"0\" max=\"999\" value=\"5\"></label><label>ثوانٍ <input id=\"sec\" type=\"number\" min=\"0\" max=\"59\" value=\"0\"></label></div>\n    <div class=\"row\"><button id=\"cd-go\" class=\"primary\">ابدأ</button><button id=\"cd-reset\">إعادة</button></div>\n  </section>\n</main>\n"
+    },
+    {
+      "name": "main.js",
+      "content": "const $ = (id) => document.getElementById(id);\nconst pad = (n, l = 2) => String(Math.floor(n)).padStart(l, '0');\n// ---- التبويبات ----\nconst tabs = [['tab-sw', 'p-sw'], ['tab-cd', 'p-cd']];\ntabs.forEach(([t, p]) => $(t).addEventListener('click', () => tabs.forEach(([t2, p2]) => {\n  $(t2).setAttribute('aria-selected', t2 === t); $(p2).hidden = p2 !== p;\n})));\n// ---- ساعة الإيقاف ----\nlet swRun = false, swStart = 0, swAcc = 0, swRaf = 0, lastLap = 0;\nconst swNow = () => swAcc + (swRun ? performance.now() - swStart : 0);\nconst fmt = (ms) => `${pad(ms / 60000)}:${pad((ms / 1000) % 60)}.${pad((ms % 1000) / 10)}`;\nfunction swTick() { $('sw').textContent = fmt(swNow()); if (swRun) swRaf = requestAnimationFrame(swTick); }\n$('sw-go').onclick = () => {\n  if (swRun) { swAcc = swNow(); swRun = false; cancelAnimationFrame(swRaf); $('sw-go').textContent = 'متابعة'; $('sw-lap').disabled = true; }\n  else { swStart = performance.now(); swRun = true; $('sw-go').textContent = 'إيقاف'; $('sw-lap').disabled = false; swTick(); }\n  swTick();\n};\n$('sw-lap').onclick = () => {\n  const t = swNow(), li = document.createElement('li');\n  li.innerHTML = '<span></span><span></span>'; li.children[0].textContent = 'لفّة ' + ($('laps').children.length + 1);\n  li.children[1].textContent = fmt(t - lastLap) + '  |  ' + fmt(t); lastLap = t; $('laps').prepend(li);\n};\n$('sw-reset').onclick = () => { swRun = false; cancelAnimationFrame(swRaf); swAcc = 0; lastLap = 0; $('laps').textContent = ''; $('sw-go').textContent = 'ابدأ'; $('sw-lap').disabled = true; swTick(); };\n// ---- المؤقّت التنازلي ----\nlet cdRun = false, cdEnd = 0, cdLeft = 0, cdTimer = 0;\nconst total = () => Math.max(0, Math.min(999, +$('min').value || 0)) * 60 + Math.max(0, Math.min(59, +$('sec').value || 0));\nconst showCd = (s) => { $('cd').textContent = `${pad(s / 60)}:${pad(s % 60)}`; $('cd').classList.toggle('done', s === 0 && !cdRun && cdLeft === 0 && finished); };\nlet finished = false;\nfunction cdTick() {\n  const left = Math.max(0, Math.ceil((cdEnd - Date.now()) / 1000));\n  showCd(left);\n  if (left <= 0) { clearInterval(cdTimer); cdRun = false; cdLeft = 0; finished = true; $('cd').classList.add('done'); $('cd-go').textContent = 'ابدأ'; Alaisai.toast('⏰ انتهى الوقت!'); try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (_) {} }\n}\n$('cd-go').onclick = () => {\n  if (cdRun) { cdLeft = Math.max(0, Math.ceil((cdEnd - Date.now()) / 1000)); clearInterval(cdTimer); cdRun = false; $('cd-go').textContent = 'متابعة'; return; }\n  const s = cdLeft || total(); if (!s) return;\n  finished = false; $('cd').classList.remove('done'); cdEnd = Date.now() + s * 1000; cdRun = true; $('cd-go').textContent = 'إيقاف مؤقت';\n  clearInterval(cdTimer); cdTimer = setInterval(cdTick, 250); cdTick();\n};\n$('cd-reset').onclick = () => { clearInterval(cdTimer); cdRun = false; cdLeft = 0; finished = false; $('cd-go').textContent = 'ابدأ'; $('cd').classList.remove('done'); showCd(total()); };\n['min', 'sec'].forEach((id) => $(id).addEventListener('input', () => { if (!cdRun) { cdLeft = 0; showCd(total()); } }));\nswTick(); showCd(total());\n"
+    },
+    {
+      "name": "style.css",
+      "content": ".t{max-width:420px;margin:0 auto;padding:16px;text-align:center}\n.tabs{display:flex;gap:8px;margin-bottom:16px}\n.tabs button{flex:1}\nbutton,input{font:inherit}\nbutton{min-height:44px;padding:8px 16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}\nbutton.primary,.tabs [aria-selected=true]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:700}\nbutton:disabled{opacity:.5;cursor:not-allowed}\nbutton:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}\n.big{display:block;font-size:3rem;font-weight:700;margin:18px 0;font-variant-numeric:tabular-nums}\n.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:10px 0}\ninput{width:84px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:0 10px;text-align:center}\n.laps{list-style:none;padding:0;margin:14px 0 0;max-height:240px;overflow:auto;text-align:left}\n.laps li{display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}\n.done{color:var(--danger)}\n"
+    }
+  ]
+}
