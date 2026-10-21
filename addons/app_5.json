@@ -37,8 +37,21 @@
     display: flex; align-items: center; justify-content: center;
   }
   .header-icon svg { width: 26px; height: 26px; fill: white; }
-  .header-text h1 { font-size: 1.3rem; margin: 0; color: white; }
-  .header-text p { margin: 2px 0 0; color: var(--text-muted); font-size: 0.8rem; }
+  .header-text h1 { font-size: 1.2rem; margin: 0; color: white; }
+  .header-text p { margin: 2px 0 0; color: var(--text-muted); font-size: 0.75rem; }
+  
+  /* زر إعدادات الأقسام */
+  .btn-settings {
+    margin-right: auto;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 1.2rem; transition: 0.2s;
+  }
+  .btn-settings:hover { background: var(--gold); color: #000; transform: rotate(45deg); }
 
   /* === شريط البحث === */
   .search-box {
@@ -84,7 +97,7 @@
   }
   .site-btn:hover { transform: translateY(-2px); filter: brightness(1.15); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
   
-  .site-btn svg, .site-btn img { width: 22px; height: 22px; object-fit: contain; fill: currentColor; flex-shrink: 0; }
+  .site-btn svg, .site-btn img { width: 24px; height: 24px; object-fit: contain; fill: currentColor; flex-shrink: 0; border-radius: 4px; }
   
   .site-names { display: flex; flex-direction: column; line-height: 1.2; width: 100%; }
   .site-name-en { font-size: 0.8rem; font-weight: 700; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -122,7 +135,7 @@
   .modal-title { font-size: 1.1rem; color: var(--gold); font-weight: bold; }
   .modal-close { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
   
-  /* إدارة القسم داخل النافذة */
+  /* إدارة القوائم */
   .manage-list { overflow-y: auto; margin-bottom: 15px; padding-left: 5px; flex: 1; }
   .manage-item {
     display: flex; align-items: center; justify-content: space-between;
@@ -151,6 +164,14 @@
     background: rgba(255,255,255,0.1); color: white; border: none; padding: 10px;
     border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center;
   }
+  .btn-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white; border: none; padding: 10px;
+    border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 5px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+  }
+  .btn-success:hover { filter: brightness(1.1); }
 
   /* حقول الإدخال */
   .input-group { margin-bottom: 10px; }
@@ -158,11 +179,12 @@
   .input-group input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; outline: none; }
   .input-group input:focus { border-color: var(--gold); }
   .input-group input[type="file"] { font-size: 0.8rem; padding: 5px; }
+  .opt-text { font-size: 0.7rem; color: #64748b; margin-right: 5px; }
 
   @media (max-width: 400px) {
     .site-name-en { font-size: 0.7rem; }
     .site-name-ar { font-size: 0.6rem; }
-    .site-btn svg, .site-btn img { width: 18px; height: 18px; }
+    .site-btn svg, .site-btn img { width: 20px; height: 20px; }
   }
 </style>
 </head>
@@ -178,6 +200,9 @@
       <h1>المتصفح السريع</h1>
       <p>بوابة أدوات المطورين والمصممين</p>
     </div>
+    <button class="btn-settings" onclick="openCategoryManageModal()" title="إدارة الأقسام">
+      ⚙️
+    </button>
   </div>
 
   <input type="text" id="searchInput" class="search-box" placeholder="🔍 ابحث عن أداة أو موقع...">
@@ -192,7 +217,25 @@
 
 </div>
 
-<!-- نافذة إدارة القسم -->
+<!-- ========================================== -->
+<!-- نافذة إدارة الأقسام (جديدة) -->
+<!-- ========================================== -->
+<div class="modal-overlay" id="categoryManageModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">إدارة الأقسام</div>
+      <button class="modal-close" onclick="closeModal('categoryManageModal')">✖</button>
+    </div>
+    
+    <div class="manage-list" id="categoryManageList"></div>
+    
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="addNewCategory()">➕ إضافة قسم جديد</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة إدارة الاختصارات داخل القسم -->
 <div class="modal-overlay" id="manageModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -203,8 +246,11 @@
     <div class="manage-list" id="manageList"></div>
     
     <div class="modal-actions">
-      <button class="btn-secondary" id="btnRenameCat">✏️ تعديل اسم القسم</button>
       <button class="btn-primary" onclick="openAddModal()">➕ إضافة اختصار جديد</button>
+      <button class="btn-success" onclick="exportCode()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        حفظ / مشاركة الكود
+      </button>
     </div>
   </div>
 </div>
@@ -217,23 +263,23 @@
       <button class="modal-close" onclick="closeModal('addModal')">✖</button>
     </div>
     <div class="input-group">
-      <label>الرابط (URL)</label>
+      <label>الرابط (إجباري)</label>
       <input type="url" id="newUrl" placeholder="https://example.com" dir="ltr">
     </div>
     <div class="input-group">
-      <label>الاسم بالإنجليزية</label>
-      <input type="text" id="newNameEn" placeholder="Example" dir="ltr">
+      <label>الاسم بالإنجليزية <span class="opt-text">(اختياري)</span></label>
+      <input type="text" id="newNameEn" placeholder="مثال: YouTube" dir="ltr">
     </div>
     <div class="input-group">
-      <label>الاسم بالعربية</label>
-      <input type="text" id="newNameAr" placeholder="تطبيق تجريبي">
+      <label>الاسم بالعربية <span class="opt-text">(اختياري)</span></label>
+      <input type="text" id="newNameAr" placeholder="مثال: يوتيوب">
     </div>
     <div class="input-group">
-      <label>لون الخلفية (اختياري)</label>
+      <label>لون الخلفية <span class="opt-text">(اختياري)</span></label>
       <input type="color" id="newColor" value="#4cc9f0" style="height: 40px; padding: 2px;">
     </div>
     <div class="input-group">
-      <label>تغيير الأيقونة (اختياري - صورة من الهاتف)</label>
+      <label>رفع أيقونة مخصصة <span class="opt-text">(اختياري - يجلب الشعار تلقائياً إذا تُرك فارغاً)</span></label>
       <input type="file" id="newIconFile" accept="image/*">
     </div>
     <button class="btn-primary" id="btnSaveShortcut" style="margin-top: 10px;">حفظ الاختصار</button>
@@ -334,7 +380,7 @@ const defaultData = [
 // ==========================================
 // 2. إدارة البيانات
 // ==========================================
-const STORAGE_KEY = 'quickBrowserData_v3';
+const STORAGE_KEY = 'quickBrowserData_v7';
 let appData = [];
 
 try {
@@ -386,6 +432,7 @@ function renderApp() {
              cat.category.includes(searchTerm);
     });
 
+    // إخفاء القسم إذا كان البحث لا يطابق أي شيء (إلا إذا كان البحث فارغاً)
     if (filteredSites.length === 0 && searchTerm !== '') return;
 
     // رأس القسم
@@ -414,10 +461,13 @@ function renderApp() {
       a.style.backgroundColor = site.color || '#333';
       a.style.color = textColor;
       
-      // دعم الصور المرفوعة والأيقونات النصية
-      let iconHtml = site.icon || '';
+      let iconHtml = '';
       if (site.icon && site.icon.startsWith('data:image')) {
-        iconHtml = `<img src="${site.icon}" alt="${site.nameEn}">`;
+        iconHtml = `<img src="${site.icon}" alt="icon">`;
+      } else if (site.icon && site.icon.startsWith('<svg')) {
+        iconHtml = site.icon;
+      } else if (site.url) {
+        iconHtml = `<img src="https://www.google.com/s2/favicons?domain=${site.url}&sz=64" alt="icon" onerror="this.style.display='none'">`;
       }
       
       a.innerHTML = `
@@ -444,13 +494,89 @@ function renderApp() {
   if (siteCountEl) siteCountEl.textContent = visibleSites;
   if (catCountEl) catCountEl.textContent = appData.length;
 
-  if (visibleSites === 0) {
+  if (visibleSites === 0 && searchTerm !== '') {
     container.innerHTML = '<div style="text-align:center; color:#aaa; padding:20px;">لا توجد نتائج مطابقة</div>';
   }
 }
 
 // ==========================================
-// 5. إدارة الأقسام والاختصارات
+// 5. إدارة الأقسام (إضافة، ترتيب، حذف)
+// ==========================================
+function openCategoryManageModal() {
+  renderCategoryManageList();
+  document.getElementById('categoryManageModal').classList.add('active');
+}
+
+function renderCategoryManageList() {
+  const list = document.getElementById('categoryManageList');
+  list.innerHTML = '';
+
+  appData.forEach((cat, index) => {
+    const item = document.createElement('div');
+    item.className = 'manage-item';
+    item.innerHTML = `
+      <div class="manage-item-info">
+        <div class="manage-item-name">${cat.category}</div>
+      </div>
+      <div class="manage-actions">
+        <button class="btn-icon" onclick="moveCategory(${index}, -1)" ${index === 0 ? 'disabled' : ''}>⬆️</button>
+        <button class="btn-icon" onclick="moveCategory(${index}, 1)" ${index === appData.length - 1 ? 'disabled' : ''}>⬇️</button>
+        <button class="btn-icon edit" onclick="editCategoryName(${index})">✏️</button>
+        <button class="btn-icon danger" onclick="deleteCategory(${index})">🗑️</button>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function addNewCategory() {
+  const name = prompt('أدخل اسم القسم الجديد (مثال: ألعابي المفضلة):');
+  if (name && name.trim() !== '') {
+    const newCat = {
+      id: 'cat_' + Date.now(),
+      category: name.trim(),
+      sites: []
+    };
+    appData.push(newCat);
+    saveData();
+    renderCategoryManageList();
+    renderApp();
+  }
+}
+
+function moveCategory(index, direction) {
+  const newIndex = index + direction;
+  if (newIndex >= 0 && newIndex < appData.length) {
+    const temp = appData[index];
+    appData[index] = appData[newIndex];
+    appData[newIndex] = temp;
+    saveData();
+    renderCategoryManageList();
+    renderApp();
+  }
+}
+
+function editCategoryName(index) {
+  const newName = prompt('أدخل الاسم الجديد للقسم:', appData[index].category);
+  if (newName && newName.trim() !== '') {
+    appData[index].category = newName.trim();
+    saveData();
+    renderCategoryManageList();
+    renderApp();
+  }
+}
+
+function deleteCategory(index) {
+  if (confirm(`هل أنت متأكد من حذف قسم "${appData[index].category}" بالكامل مع كل اختصاراته؟`)) {
+    appData.splice(index, 1);
+    saveData();
+    renderCategoryManageList();
+    renderApp();
+  }
+}
+
+// ==========================================
+// 6. إدارة الاختصارات داخل الأقسام
 // ==========================================
 function openManageModal(catId) {
   currentCategoryId = catId;
@@ -509,20 +635,6 @@ function deleteSite(index) {
   }
 }
 
-document.getElementById('btnRenameCat').addEventListener('click', () => {
-  const cat = appData.find(c => c.id === currentCategoryId);
-  const newName = prompt('أدخل الاسم الجديد للقسم:', cat.category);
-  if (newName && newName.trim() !== '') {
-    cat.category = newName.trim();
-    saveData();
-    document.getElementById('manageModalTitle').textContent = `إدارة: ${cat.category}`;
-    renderApp();
-  }
-});
-
-// ==========================================
-// 6. إضافة وتعديل الاختصارات
-// ==========================================
 function openAddModal() {
   editingIndex = null;
   uploadedIconBase64 = null;
@@ -547,12 +659,11 @@ function editSite(index) {
   document.getElementById('newNameEn').value = site.nameEn;
   document.getElementById('newNameAr').value = site.nameAr;
   document.getElementById('newColor').value = site.color;
-  document.getElementById('newIconFile').value = ''; // تصفير حقل الصورة
+  document.getElementById('newIconFile').value = '';
   
   document.getElementById('addModal').classList.add('active');
 }
 
-// تحويل الصورة المرفوعة إلى Base64
 document.getElementById('newIconFile').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (file) {
@@ -565,37 +676,46 @@ document.getElementById('newIconFile').addEventListener('change', function(e) {
 });
 
 document.getElementById('btnSaveShortcut').addEventListener('click', () => {
-  const url = document.getElementById('newUrl').value.trim();
-  const nameEn = document.getElementById('newNameEn').value.trim();
-  const nameAr = document.getElementById('newNameAr').value.trim();
+  const urlInput = document.getElementById('newUrl').value.trim();
+  let nameEnInput = document.getElementById('newNameEn').value.trim();
+  let nameArInput = document.getElementById('newNameAr').value.trim();
   const color = document.getElementById('newColor').value;
 
-  if (!url || !nameEn || !nameAr) {
-    alert('الرجاء تعبئة جميع الحقول المطلوبة');
+  if (!urlInput) {
+    alert('الرجاء إدخال الرابط (URL) على الأقل.');
     return;
   }
 
-  const defaultIcon = `<svg viewBox="0 0 24 24"><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="14" font-weight="bold" fill="currentColor">${nameEn.charAt(0).toUpperCase()}</text></svg>`;
+  if (!nameEnInput) {
+    try {
+      const urlObj = new URL(urlInput);
+      nameEnInput = urlObj.hostname.replace('www.', '').split('.')[0];
+      nameEnInput = nameEnInput.charAt(0).toUpperCase() + nameEnInput.slice(1);
+    } catch (e) {
+      nameEnInput = 'موقع جديد';
+    }
+  }
+  if (!nameArInput) {
+    nameArInput = nameEnInput;
+  }
+
   const cat = appData.find(c => c.id === currentCategoryId);
 
   if (editingIndex !== null) {
-    // حفظ التعديلات
     const oldSite = cat.sites[editingIndex];
-    oldSite.nameEn = nameEn;
-    oldSite.nameAr = nameAr;
-    oldSite.url = url;
+    oldSite.nameEn = nameEnInput;
+    oldSite.nameAr = nameArInput;
+    oldSite.url = urlInput;
     oldSite.color = color;
     
-    // إذا رفع صورة جديدة نستخدمها، وإلا نبقي القديمة
     if (uploadedIconBase64) {
       oldSite.icon = uploadedIconBase64;
-    } else if (!oldSite.icon) {
-      oldSite.icon = defaultIcon;
+    } else {
+      oldSite.icon = '';
     }
   } else {
-    // إضافة جديد
-    const finalIcon = uploadedIconBase64 || defaultIcon;
-    cat.sites.push({ nameEn, nameAr, url, color, icon: finalIcon });
+    const finalIcon = uploadedIconBase64 || '';
+    cat.sites.push({ nameEn: nameEnInput, nameAr: nameArInput, url: urlInput, color: color, icon: finalIcon });
   }
   
   saveData();
@@ -605,13 +725,64 @@ document.getElementById('btnSaveShortcut').addEventListener('click', () => {
 });
 
 // ==========================================
-// 7. أدوات
+// 7. أدوات مساعدة وتصدير الكود
 // ==========================================
 function closeModal(modalId) {
   document.getElementById(modalId).classList.remove('active');
 }
 
 searchInput.addEventListener('input', renderApp);
+
+async function exportCode() {
+  let htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  htmlContent = htmlContent.replace(/class="modal-overlay active"/g, 'class="modal-overlay"');
+  htmlContent = htmlContent.replace(/value="[^"]*"/g, 'value=""'); 
+  
+  const newDataString = JSON.stringify(appData, null, 2);
+  const regex = /const defaultData = \[[\s\S]*?\];\s*\/\/ ==========================================\s*\/\/ 2\. إدارة البيانات/;
+  
+  if (regex.test(htmlContent)) {
+    htmlContent = htmlContent.replace(regex, `const defaultData = ${newDataString};\n\n// ==========================================\n// 2. إدارة البيانات`);
+  } else {
+    htmlContent = htmlContent.replace(/const defaultData = \[[\s\S]*?\];/, `const defaultData = ${newDataString};`);
+  }
+  
+  const oldKeyRegex = /const STORAGE_KEY = '[^']*';/;
+  const newKey = 'quickBrowserData_' + Date.now();
+  if (oldKeyRegex.test(htmlContent)) {
+    htmlContent = htmlContent.replace(oldKeyRegex, `const STORAGE_KEY = '${newKey}';`);
+  }
+
+  const blob = new Blob([htmlContent], {type: 'text/html;charset=utf-8'});
+  const fileName = 'index.html';
+  const file = new File([blob], fileName, { type: 'text/html' });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: 'المتصفح السريع - النسخة المحدثة',
+        text: 'إليك ملف التطبيق مع كافة التعديلات المدمجة.'
+      });
+      closeModal('manageModal');
+      return;
+    } catch (error) {
+      console.log('Share failed or cancelled', error);
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  closeModal('manageModal');
+  alert('✅ تم تحميل الملف المحدث بنجاح!\nيمكنك الآن فتحه، أو رفعه إلى GitHub، أو إرساله عبر البلوتوث.');
+}
 
 // التشغيل
 renderApp();
