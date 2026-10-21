@@ -1,1 +1,246 @@
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>سر الغرفة الغامضة</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #111827;
+  color: white;
+  text-align: center;
+}
+header { padding: 18px 10px; background: #202c42; }
+h1 { margin: 0 0 8px; font-size: 25px; }
+.stats {
+  display: flex; justify-content: center;
+  gap: 20px; flex-wrap: wrap; margin-top: 12px;
+}
+.panel { padding: 14px; }
+#targets {
+  display: flex; justify-content: center;
+  flex-wrap: wrap; gap: 9px; margin: 12px auto;
+}
+.target {
+  background: #34435b; border-radius: 10px;
+  padding: 9px 12px; font-size: 15px;
+}
+.target.found { opacity: .45; text-decoration: line-through; }
+#room {
+  max-width: 650px; min-height: 320px;
+  margin: 12px auto; padding: 15px;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 9px; background: linear-gradient(#675343, #352a28);
+  border: 5px solid #927452; border-radius: 15px;
+}
+.item {
+  min-height: 65px; border: 1px solid #ffffff24;
+  border-radius: 10px; background: #ffffff12;
+  font-size: 31px; cursor: pointer;
+  transition: .2s;
+}
+.item:hover { background: #ffffff30; transform: scale(1.05); }
+.item.found { background: #1e9b6655; opacity: .5; }
+.item.hint { outline: 3px solid #ffd166; }
+button.action {
+  padding: 11px 18px; margin: 5px;
+  border: 0; border-radius: 9px;
+  background: #f5bd4f; color: #242424;
+  font-weight: bold; font-size: 15px; cursor: pointer;
+}
+#message { min-height: 25px; color: #ffdb85; }
+footer { padding: 12px; color: #bac6d8; font-size: 12px; }
+@media(max-width: 420px) {
+  #room { gap: 5px; padding: 8px; }
+  .item { min-height: 57px; font-size: 26px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔎 سر الغرفة الغامضة</h1>
+  <div>اعثر على الأشياء المخفية قبل انتهاء الوقت!</div>
+  <div class="stats">
+    <span>⭐ النقاط: <b id="score">0</b></span>
+    <span>⏱️ الوقت: <b id="time">90</b></span>
+    <span>🗝️ المرحلة: <b id="level">1</b></span>
+  </div>
+</header>
+
+<div class="panel">
+  <h3>ابحث عن هذه الأشياء:</h3>
+  <div id="targets"></div>
+  <div id="message">انقر على الأشياء الصحيحة للفوز!</div>
+  <div id="room"></div>
+  <button class="action" onclick="hint()">💡 تلميح</button>
+  <button class="action" onclick="restart()">🔄 لعبة جديدة</button>
+</div>
+
+<footer>لعبة ألغاز مستقلة • إصدار تجريبي</footer>
+
+<script>
+const objects = [
+  {name:"المفتاح", icon:"🗝️"},
+  {name:"الكتاب", icon:"📕"},
+  {name:"الساعة", icon:"⏰"},
+  {name:"الشمعة", icon:"🕯️"},
+  {name:"التاج", icon:"👑"},
+  {name:"الماس", icon:"💎"},
+  {name:"الجرس", icon:"🔔"},
+  {name:"الكأس", icon:"🏆"},
+  {name:"التفاحة", icon:"🍎"},
+  {name:"القمر", icon:"🌙"},
+  {name:"الصندوق", icon:"📦"},
+  {name:"العدسة", icon:"🔍"},
+  {name:"القلب", icon:"❤️"},
+  {name:"النجمة", icon:"⭐"},
+  {name:"الوردة", icon:"🌹"},
+  {name:"الجرعة", icon:"🧪"},
+  {name:"الريشة", icon:"🪶"},
+  {name:"الفطر", icon:"🍄"},
+  {name:"العملة", icon:"🪙"},
+  {name:"الكتاب السحري", icon:"📜"}
+];
+
+let level = 1;
+let score = 0;
+let time = 90;
+let targets = [];
+let found = [];
+let scene = [];
+let ended = false;
+let timer;
+
+const $ = id => document.getElementById(id);
+
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function startLevel() {
+  ended = false;
+  clearInterval(timer);
+  time = Math.max(35, 90 - (level - 1) * 7);
+  found = [];
+
+  const count = Math.min(5 + level, 12);
+  targets = shuffle(objects).slice(0, count);
+
+  // إضافة أشياء مشتتة إلى الغرفة
+  scene = shuffle([
+    ...targets,
+    ...shuffle(objects.filter(
+      o => !targets.some(t => t.name === o.name)
+    )).slice(0, 16 - count)
+  ]);
+
+  render();
+  updateStats();
+  $("message").textContent = "ركز جيداً، بعض الأشياء صغيرة أو متشابهة!";
+
+  timer = setInterval(() => {
+    if (ended) return;
+    time--;
+    updateStats();
+    if (time <= 0) {
+      ended = true;
+      clearInterval(timer);
+      $("message").textContent =
+        "انتهى الوقت! اضغط لعبة جديدة للمحاولة مرة أخرى.";
+    }
+  }, 1000);
+}
+
+function render() {
+  $("targets").innerHTML = targets.map(o => `
+    <span class="target ${found.includes(o.name) ? "found" : ""}">
+      ${o.icon} ${o.name}
+    </span>
+  `).join("");
+
+  $("room").innerHTML = scene.map((o, i) => `
+    <button class="item ${found.includes(o.name) ? "found" : ""}"
+      data-index="${i}" aria-label="شيء في الغرفة"
+      ${ended || found.includes(o.name) ? "disabled" : ""}>
+      ${found.includes(o.name) ? "✓" : o.icon}
+    </button>
+  `).join("");
+
+  $("room").querySelectorAll(".item").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const o = scene[Number(btn.dataset.index)];
+      if (ended || found.includes(o.name)) return;
+
+      if (targets.some(t => t.name === o.name)) {
+        found.push(o.name);
+        score += 10;
+        $("message").textContent = "أحسنت! لقد وجدت " + o.name;
+        render();
+        updateStats();
+
+        if (found.length === targets.length) {
+          ended = true;
+          clearInterval(timer);
+          score += time * 2;
+          updateStats();
+          $("message").textContent =
+            "🎉 رائع! أكملت المرحلة " + level;
+          $("message").textContent += " — استعد للمرحلة التالية!";
+          const next = document.createElement("button");
+          next.className = "action";
+          next.textContent = "المرحلة التالية ➜";
+          next.onclick = () => {
+            level++;
+            startLevel();
+          };
+          $("room").after(next);
+          next.scrollIntoView({behavior:"smooth", block:"nearest"});
+        }
+      } else {
+        score = Math.max(0, score - 2);
+        $("message").textContent =
+          "ليس هذا ما نبحث عنه! حاول مرة أخرى.";
+        updateStats();
+      }
+    });
+  });
+}
+
+function hint() {
+  if (ended) return;
+  const remaining = targets.filter(t => !found.includes(t.name));
+  if (!remaining.length) return;
+
+  const target = remaining[Math.floor(Math.random() * remaining.length)];
+  const index = scene.findIndex(o => o.name === target.name);
+  const btn = $("room").querySelector(`[data-index="${index}"]`);
+  if (btn) {
+    btn.classList.add("hint");
+    $("message").textContent = "💡 تلميح: ابحث عن " + target.name;
+    setTimeout(() => btn.classList.remove("hint"), 1800);
+  }
+}
+
+function updateStats() {
+  $("score").textContent = score;
+  $("time").textContent = time;
+  $("level").textContent = level;
+}
+
+function restart() {
+  clearInterval(timer);
+  level = 1;
+  score = 0;
+  document.querySelectorAll("#room + .action").forEach(b => b.remove());
+  startLevel();
+}
+
+startLevel();
+</script>
+</body>
+</html>
