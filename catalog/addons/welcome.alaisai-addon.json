@@ -1,0 +1,23 @@
+{
+  "format": "alaisai-addon",
+  "version": 1,
+  "id": "welcome",
+  "manifest": {
+    "id": "welcome",
+    "name": "الترحيب",
+    "icon": "✨",
+    "version": "1.0.0",
+    "description": "شاشة ترحيب بسيطة",
+    "author": "المالك"
+  },
+  "files": [
+    {
+      "name": "manifest.json",
+      "content": "{\n  \"id\": \"welcome\",\n  \"name\": \"الترحيب\",\n  \"icon\": \"✨\",\n  \"version\": \"1.0.0\",\n  \"description\": \"شاشة ترحيب بسيطة\",\n  \"author\": \"المالك\"\n}\n"
+    },
+    {
+      "name": "index.html",
+      "content": "<div style=\"padding:20px;text-align:center;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:15px;color:white;\"><h1>أهلاً بك</h1><p>نظام العيسائي الاحترافي جاهز للعمل.</p><button onclick=\"alert('مرحباً!')\" style=\"padding:10px 20px;border:none;border-radius:8px;background:#4ade80;color:white;cursor:pointer;\">انقر هنا</button></div>\n"
+    }
+  ]
+}

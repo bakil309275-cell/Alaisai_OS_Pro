@@ -1,0 +1,27 @@
+{
+  "format": "alaisai-addon",
+  "version": 1,
+  "id": "simple-notes",
+  "manifest": {
+    "id": "simple-notes",
+    "name": "الملاحظات",
+    "icon": "📝",
+    "version": "1.0.0",
+    "description": "دفتر ملاحظات بسيط يحفظ نصك داخل التطبيق",
+    "author": "المالك"
+  },
+  "files": [
+    {
+      "name": "manifest.json",
+      "content": "{\n  \"id\": \"simple-notes\",\n  \"name\": \"الملاحظات\",\n  \"icon\": \"📝\",\n  \"version\": \"1.0.0\",\n  \"description\": \"دفتر ملاحظات بسيط يحفظ نصك داخل التطبيق\",\n  \"author\": \"المالك\"\n}\n"
+    },
+    {
+      "name": "index.html",
+      "content": "<div style=\"padding:20px;\"><h2>📋 دفتر الملاحظات</h2><textarea id=\"note-area\" style=\"width:100%;height:300px;padding:15px;border-radius:10px;border:1px solid #ccc;font-size:16px;\" placeholder=\"اكتب ملاحظاتك هنا...\"></textarea><button id=\"save-btn\" style=\"margin-top:10px;padding:10px 20px;background:#4cc9f0;border:none;border-radius:8px;color:white;\">💾 حفظ</button></div>\n"
+    },
+    {
+      "name": "main.js",
+      "content": "const area = document.getElementById('note-area');\nAlaisai.get('saved_note').then((v) => { if (typeof v === 'string') area.value = v; });\ndocument.getElementById('save-btn').addEventListener('click', async () => {\n  await Alaisai.set('saved_note', area.value);\n  Alaisai.toast('تم الحفظ!');\n});\n"
+    }
+  ]
+}
