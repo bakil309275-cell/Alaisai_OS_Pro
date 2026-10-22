@@ -5,7 +5,7 @@
 ## 1) النشر على الويب (الخطوة الأولى لكل شيء)
 1. ارفع هذا المجلد إلى مستودعك على GitHub (فرع `main`).
 2. من **Settings ← Pages ← Source** اختر **GitHub Actions**. سير العمل `.github/workflows/pages.yml` ينشر الموقع تلقائياً مع كل push، ويختم رقم البناء في `sw.js` فيصل التحديث لكل من يستخدم التطبيق.
-3. عنوانك الافتراضي: `https://alsamayoanwww-cyber.github.io/Alaisai_OS_Pro/`. إن استخدمت نطاقاً خاصاً: `node tools/set-site-url.mjs https://نطاقك/` ثم ارفع.
+3. عنوانك الافتراضي: `https://bakil309275-cell.github.io/Alaisai_OS_Pro/`. إن استخدمت نطاقاً خاصاً: `node tools/set-site-url.mjs https://نطاقك/` ثم ارفع.
 4. **كيف تصل التحديثات للجميع؟** كل push إلى `main` ← نشر ← يكتشف Service Worker الإصدار الجديد ← يظهر لمستخدميه إشعار «يتوفر إصدار جديد». والإضافات الجديدة: أضف مجلداً في `catalog/src/<id>/` ثم `node tools/build-catalog.mjs` وارفع، فتظهر في المتجر لكل المستخدمين وتُحدَّث الإضافات المثبّتة تلقائياً.
 
 ## 2) التثبيت المباشر (بلا متجر)
@@ -13,7 +13,7 @@
 - **iPhone/iPad:** Safari ← مشاركة ← «إضافة إلى الشاشة الرئيسية» (يعرض التطبيق الشرح بنفسه).
 
 ## 3) Google Play (عبر TWA)
-**شرط أساسي:** يجب أن يعمل الموقع على جذر نطاق (`https://نطاقك/`) ليُرفق `/.well-known/assetlinks.json`. مستودع GitHub Pages من نوع «project site» لا يصلح لذلك؛ استخدم نطاقاً خاصاً أو مستودعاً باسم `alsamayoanwww-cyber.github.io`.
+**شرط أساسي:** يجب أن يعمل الموقع على جذر نطاق (`https://نطاقك/`) ليُرفق `/.well-known/assetlinks.json`. مستودع GitHub Pages من نوع «project site» لا يصلح لذلك؛ استخدم نطاقاً خاصاً أو مستودعاً باسم `bakil309275-cell.github.io`.
 1. حساب Google Play Console (رسم تسجيل لمرة واحدة، وقد تُطلب خطوات تحقق للحسابات الجديدة).
 2. أسهل طريق: <https://www.pwabuilder.com> ← أدخل رابط موقعك ← Package for Stores ← Android. أو Bubblewrap: انسخ `store/twa-manifest.template.json` إلى `twa-manifest.json` وعدّل النطاق، ثم `npx @bubblewrap/cli build`.
 3. ارفع ملف `.aab`، وفعّل **Play App Signing**، ثم انسخ بصمة SHA-256 إلى `store/assetlinks.template.json` وانشره باسم `.well-known/assetlinks.json` على نطاقك (يجب أن يردّ بـ 200 دون إعادة توجيه).
