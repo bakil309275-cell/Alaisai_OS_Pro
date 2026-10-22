@@ -170,6 +170,17 @@ with sync_playwright() as p:
         page.wait_for_selector('.dialog button[type=submit]'); page.click('.dialog button[type=submit]'); page.wait_for_timeout(500)
         if page.locator('.dialog input[type=password]').count(): dialog_pw(page); page.wait_for_timeout(1500)
         page.wait_for_timeout(1500)
+    # «حذف» = إزالة من سطح المكتب فقط، وتبقى قابلة للتثبيت
+    page.click('#store-btn'); page.wait_for_selector('[data-uninst=fromrepo]'); page.click('[data-uninst=fromrepo]'); page.wait_for_timeout(500)
+    check('«حذف» أزال الأيقونة وأبقى الإضافة وملفاتها', page.evaluate("!Addons.isInstalled('fromrepo') && !!Addons.get('fromrepo')") and page.locator('.app-card:has-text("من المستودع")').count()==0)
+    check('بعد «حذف» تبقى قابلة للتثبيت في المتجر', page.locator('[data-repo=fromrepo]').count()==1 and page.locator('[data-uninst=fromrepo]').count()==0)
+    page.click('[data-repo=fromrepo]'); page.wait_for_timeout(1200)
+    check('إعادة التثبيت تعمل', page.evaluate("Addons.isInstalled('fromrepo')"))
+    # «تراجع» في الحذف النهائي لا يحذف شيئاً
+    page.click('[data-del=fromrepo]'); page.wait_for_selector('.dialog [data-cancel]'); check('نص التحذير يذكر عدم القابلية للتثبيت', 'لن تعود قابلة للتثبيت' in page.inner_text('.dialog'))
+    page.click('.dialog [data-cancel]'); page.wait_for_timeout(400)
+    check('التراجع أبقى الإضافة وملفاتها في المستودع', page.evaluate("!!Addons.get('fromrepo')") and any(k.startswith('addons/fromrepo/') for k in gh.files))
+    page.keyboard.press('Escape')
     store_delete('fromrepo')
     check('الحذف النهائي أزال الإضافة وأيقونتها محلياً', page.evaluate("!Addons.get('fromrepo')") and page.locator('.app-card:has-text("من المستودع")').count()==0)
     check('الحذف النهائي حذف ملفاتها من المستودع فوراً', not any(k.startswith('addons/fromrepo/') for k in gh.files), str([k for k in gh.files if k.startswith('addons')]))
