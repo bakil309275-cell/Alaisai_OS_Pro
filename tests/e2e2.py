@@ -89,7 +89,7 @@ with sync_playwright() as p:
 
     # ===== المتجر =====
     page.click('#store-btn'); page.wait_for_selector('[data-cat=calculator]')
-    check('الكتالوج يعرض 4 إضافات', page.locator('[data-cat]').count()==4)
+    N=len(json.load(open('catalog/index.json'))['addons']); check('الكتالوج يعرض كل الإضافات المبنية (%d)'%N, page.locator('[data-cat]').count()==N, str(page.locator('[data-cat]').count()))
     page.click('[data-cat=calculator]'); page.wait_for_timeout(1200)
     check('تثبيت الحاسبة من المتجر', 'مثبّتة' in page.inner_text('#cat-list'))
     page.keyboard.press('Escape'); page.locator('.app-card:has-text("الحاسبة")').click(); page.wait_for_timeout(800)

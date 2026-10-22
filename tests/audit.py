@@ -84,7 +84,7 @@ with sync_playwright() as p:
     ok('ملفات SEO موجودة', all(os.path.exists(f) for f in ('robots.txt','sitemap.xml','404.html','privacy.html','terms.html','.well-known/security.txt')))
     ids=page.evaluate("[...document.querySelectorAll('[id]')].map(e=>e.id)"); ok('لا معرّفات مكررة', len(ids)==len(set(ids)))
     errs=[l for l in logs if l[0]=='error']; ok('لا أخطاء في console', not errs, str(errs[:3]))
-    ok('لا موارد خارجية', not re.search(r'(src|href)="https?://(?!alsamayoanwww-cyber)', html.replace('https://github.com','')) )
+    ok('لا موارد خارجية', not re.search(r'(src|href)="https?://(?!bakil309275-cell)', html.replace('https://github.com','')) )
     ok('صور بنص بديل', page.evaluate("[...document.images].every(i=>i.alt!==null && i.hasAttribute('alt'))"))
 
     # ----- إمكانية الوصول -----
