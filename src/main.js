@@ -157,7 +157,7 @@
         el.innerHTML = `<div class="sys-pad"><div class="panel"><h3>العيسائي برو <span class="badge">v${UI.esc(APP_VERSION)}</span></h3>
           <p style="margin:8px 0">سطح مكتب تطبيقات يعمل في المتصفح ودون اتصال، بياناتك عندك وحدك.</p>
           <a class="btn" href="privacy.html" target="_blank" rel="noopener">سياسة الخصوصية</a><a class="btn" href="terms.html" target="_blank" rel="noopener">الشروط والأحكام</a>
-          <a class="btn" href="https://github.com/alsamayoanwww-cyber/Alaisai_OS_Pro" target="_blank" rel="noopener noreferrer">المستودع على GitHub</a></div>
+          <a class="btn" href="https://github.com/Bakil309275-cell/Alaisai_OS_Pro" target="_blank" rel="noopener noreferrer">المستودع على GitHub</a></div>
           <div class="panel"><h3>ما الجديد</h3>${log}</div></div>`;
       });
     },
