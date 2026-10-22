@@ -25,17 +25,6 @@
       "sha256": "e80a9df040023bdffdf4f8b5a03ed66214f332b29734779787fdff03ce300591"
     },
     {
-      "id": "timer",
-      "name": "المؤقّت",
-      "icon": "⏱️",
-      "version": "1.0.0",
-      "description": "ساعة إيقاف مع اللفّات، ومؤقّت تنازلي",
-      "author": "Alaisai",
-      "file": "addons/timer.alaisai-addon.json",
-      "size": 6462,
-      "sha256": "42f94d05bb7891747e6758ac9d9e5d1fe09ee5d620deea61cd7ec9f1d4a8445b"
-    },
-    {
       "id": "todo",
       "name": "المهام",
       "icon": "✅",
