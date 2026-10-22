@@ -14,17 +14,6 @@
       "sha256": "e80a9df040023bdffdf4f8b5a03ed66214f332b29734779787fdff03ce300591"
     },
     {
-      "id": "alhamdulillah",
-      "name": "الحمدلله",
-      "icon": "📦",
-      "version": "1.0.0",
-      "description": "صفحة نصية بسيطة",
-      "author": "المالك",
-      "file": "addons/alhamdulillah.alaisai-addon.json",
-      "size": 713,
-      "sha256": "f29d27ae7605de04d6fbe4c1c36f3742c38e7c9686829d942663b50e66645fe1"
-    },
-    {
       "id": "quick-browser",
       "name": "المتصفح السريع",
       "icon": "🌐",
