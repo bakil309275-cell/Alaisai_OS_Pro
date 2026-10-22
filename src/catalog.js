@@ -72,7 +72,7 @@
           const a = Addons.get(it.name), m = a && Addons.manifest(a).manifest;
           const meta = m || it.meta || {};
           out.push({ kind: 'repo', id: it.name, name: (meta && meta.name) || it.name, icon: (meta && meta.icon) || '🧩', version: (meta && meta.version) || '', description: (meta && meta.description) || 'من مستودعك: addons/' + it.name,
-            state: it.state === 'new' ? 'new' : it.state === 'current' || it.state === 'localnewer' ? 'current' : 'update' });
+            state: it.state === 'new' ? 'new' : it.state === 'gone' ? 'gone' : it.state === 'current' || it.state === 'localnewer' ? 'current' : 'update' });
         });
         return out;
       };
@@ -81,20 +81,25 @@
         const items = rows().filter((e) => !s || (e.name + ' ' + e.description).toLowerCase().includes(s));
         list.innerHTML = items.length ? items.map((e) => {
           const inst = Addons.isInstalled(e.id);
-          const act = e.state === 'current' ? '' : `<button class="btn btn-sm ${e.state === 'update' ? 'btn-primary' : 'btn-success'}" data-${e.kind}="${E(e.id)}">${e.state === 'update' ? '⬆ تحديث' : '⬇ تثبيت'}</button>`;
-          const tail = e.state === 'current' ? (inst ? '<span class="badge">✔ مثبّتة</span> ' : `<button class="btn btn-sm btn-success" data-${e.kind}="${E(e.id)}">⬇ تثبيت</button> `) : '';
-          const del = Addons.get(e.id) ? `<button class="btn btn-sm btn-danger" data-del="${E(e.id)}" aria-label="حذف ${E(e.name)}">🗑 حذف</button>` : '';
-          return `<div class="admin-row"><span class="ico" aria-hidden="true">${E(e.icon)}</span><span class="grow" style="white-space:normal"><b>${E(e.name)}</b> ${e.version ? `<span class="badge">v${E(e.version)}</span>` : ''}${e.kind === 'repo' ? ' <span class="badge">مستودعك</span>' : ''}${e.state === 'new' ? ' <span class="badge">جديد</span>' : ''}<br><small style="color:var(--muted)">${E(e.description)}</small></span>${tail}${act}${del}</div>`;
+          const act = e.state === 'gone' ? `<button class="btn btn-sm" data-republish="${E(e.id)}">↻ إعادة نشر</button>` : e.state === 'current' ? '' : `<button class="btn btn-sm ${e.state === 'update' ? 'btn-primary' : 'btn-success'}" data-${e.kind}="${E(e.id)}">${e.state === 'update' ? '⬆ تحديث' : '⬇ تثبيت'}</button>`;
+          const tail = e.state === 'gone' ? '' : e.state === 'current' ? (inst ? '<span class="badge">✔ مثبّتة</span> ' : `<button class="btn btn-sm btn-success" data-${e.kind}="${E(e.id)}">⬇ تثبيت</button> `) : '';
+          const inRepo = window.RepoAddons && RepoAddons.items.some((x) => x.name === e.id && x.state !== 'gone');
+          const del = Addons.get(e.id) || inRepo ? `<button class="btn btn-sm btn-danger" data-del="${E(e.id)}" aria-label="حذف ${E(e.name)} نهائياً">🗑 حذف نهائي</button>` : '';
+          return `<div class="admin-row"><span class="ico" aria-hidden="true">${E(e.icon)}</span><span class="grow" style="white-space:normal"><b>${E(e.name)}</b> ${e.version ? `<span class="badge">v${E(e.version)}</span>` : ''}${e.kind === 'repo' ? ' <span class="badge">مستودعك</span>' : ''}${e.state === 'new' ? ' <span class="badge">جديد</span>' : ''}${e.state === 'gone' ? ' <span class="badge">محذوفة من المستودع</span>' : ''}<br><small style="color:var(--muted)">${E(e.description)}</small></span>${tail}${act}${del}</div>`;
         }).join('') : '<p style="color:var(--muted)">لا نتائج</p>';
       };
       q.addEventListener('input', draw);
       list.addEventListener('click', async (ev) => {
-        const b = ev.target.closest('[data-cat],[data-repo],[data-del]'); if (!b) return;
+        const b = ev.target.closest('[data-cat],[data-repo],[data-del],[data-republish]'); if (!b) return;
         try {
-          if (b.dataset.del) {
-            const name = b.dataset.del, mirrored = window.RepoAddons && Sync.cfg && Sync.cfg.addonShas && Sync.cfg.addonShas[name];
-            if (!(await UI.confirm(`حذف الإضافة «${name}» نهائياً من هذا الجهاز مع بياناتها؟` + (mirrored ? ' وستُحذف ملفاتها من مجلد addons/ في المستودع عند المزامنة القادمة.' : ''), { title: 'حذف إضافة', okText: 'حذف' }))) return;
-            Addons.remove(name); OS.renderDesktop(); UI.toast('🗑 حُذفت الإضافة', 'success');
+          if (b.dataset.republish) {
+            b.disabled = true; await RepoAddons.republish(b.dataset.republish); UI.toast('↻ أُعيد نشر الإضافة في المستودع', 'success');
+          } else if (b.dataset.del) {
+            const name = b.dataset.del, remote = window.RepoAddons && RepoAddons.enabled();
+            if (!(await UI.confirm(`حذف الإضافة «${name}» نهائياً؟\nيُحذف من هذا الجهاز مع بياناتها` + (remote ? '، ومن مجلد addons/' + name + '/ في مستودعك أيضاً' : '') + '.\nلا يمكن التراجع.', { title: 'حذف نهائي', okText: 'حذف نهائياً' }))) return;
+            if (remote && !(await Admin.authenticate())) return;
+            const r = await RepoAddons.purge(name);
+            UI.toast(r.remoteError ? '🗑 حُذفت من هذا الجهاز. ' + r.remoteError : '🗑 حُذفت نهائياً' + (r.remote ? ' من الجهاز والمستودع' : ''), r.remoteError ? 'warn' : 'success', r.remoteError ? 7000 : 3500);
           } else if (b.dataset.cat) {
             const entry = this.index.find((x) => x.id === b.dataset.cat); if (!entry) return;
             b.disabled = true; b.textContent = '⏳';

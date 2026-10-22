@@ -64,6 +64,7 @@
             if (state === 'new' || state === 'update') { try { it.meta = JSON.parse(await this.fetchFile(files['manifest.json'].path)); } catch (_) { it.meta = {}; } }
             items.push(it);
           }
+          for (const a of Addons.list()) if (a.source !== 'catalog' && t[a.name] && !tree[a.name]) items.push({ name: a.name, files: {}, remoteMap: {}, state: 'gone' });
           this.items = items; this.scanned = Date.now();
           if (changed) await Sync.saveCfg();
           // تحديث صامت لما لم يُعدَّل محلياً
@@ -104,26 +105,49 @@
       return n;
     },
 
+    async putFile(path, text, sha) {
+      const r = await Sync.gh(`${Sync.base()}/contents/${encPath(path)}`, { method: 'PUT',
+        body: { message: 'Alaisai: ' + path, content: Sec.textToB64(text), branch: Sync.cfg.branch, ...(sha ? { sha } : {}) } });
+      if (!r.ok) throw new Sync.SyncError('http', 'تعذّر نشر ' + path + ' (' + r.status + ')');
+    },
+    async delFile(path, sha) {
+      if (!/^addons\/[\w-]{1,40}\/[\w.\- ]{1,80}$/.test(path)) throw new Error('مسار غير مسموح بحذفه'); // لا يُحذف أي شيء خارج addons/<اسم>/<ملف>
+      const r = await Sync.gh(`${Sync.base()}/contents/${encPath(path)}`, { method: 'DELETE', body: { message: 'Alaisai: حذف ' + path, sha, branch: Sync.cfg.branch } });
+      if (!r.ok && r.status !== 404) throw new Sync.SyncError('http', 'تعذّر حذف ' + path + ' (' + r.status + ')');
+    },
+
+    // حذف نهائي: يزيل الإضافة من هذا الجهاز (أيقونة وملفات وبيانات) ومن مجلد addons/<الاسم>/ في المستودع.
+    // يعيد {local, remote}. فشل الحذف البعيد لا يُعيد الإضافة محلياً.
+    async purge(name) {
+      if (!Addons.NAME_RE.test(name)) throw new Error('اسم غير صالح');
+      const res = { local: false, remote: 0, remoteError: '' };
+      if (Addons.get(name)) { Addons.remove(name); OS.renderDesktop(); res.local = true; }
+      if (this.enabled() && navigator.onLine) {
+        try {
+          const rf = (await this.remoteTree())[name] || {};
+          for (const n of Object.keys(rf)) { await this.delFile(rf[n].path, rf[n].sha); res.remote++; }
+          delete this.tracked()[name]; await Sync.saveCfg();
+        } catch (e) { res.remoteError = e.message; }
+      } else if (this.enabled()) res.remoteError = 'لا يوجد اتصال؛ ستُحذف ملفاتها من المستودع في المزامنة القادمة';
+      this.items = this.items.filter((x) => x.name !== name);
+      return res;
+    },
+    // إعادة نشر إضافة حُذفت من المستودع وما زالت عندك
+    async republish(name) { delete this.tracked()[name]; await Sync.saveCfg(); this.items = this.items.filter((x) => x.name !== name); await this.mirror(); await this.scan(); },
+
     // ينشر ملفات الإضافات المحلية في addons/<الاسم>/ ويحذف ما حُذف محلياً. لا يمس ما تغيّر في المستودع.
     async mirror() {
       if (!this.enabled()) return { skipped: true };
       const tree = await this.remoteTree(), t = this.tracked();
       let wrote = 0, removed = 0;
-      const put = async (path, text, sha) => {
-        const r = await Sync.gh(`${Sync.base()}/contents/${encPath(path)}`, { method: 'PUT',
-          body: { message: 'Alaisai: ' + path, content: Sec.textToB64(text), branch: Sync.cfg.branch, ...(sha ? { sha } : {}) } });
-        if (!r.ok) throw new Sync.SyncError('http', 'تعذّر نشر ' + path + ' (' + r.status + ')');
-        wrote++;
-      };
-      const del = async (path, sha) => {
-        const r = await Sync.gh(`${Sync.base()}/contents/${encPath(path)}`, { method: 'DELETE', body: { message: 'Alaisai: حذف ' + path, sha, branch: Sync.cfg.branch } });
-        if (r.ok || r.status === 404) removed++;
-      };
+      const put = async (path, text, sha) => { await this.putFile(path, text, sha); wrote++; };
+      const del = async (path, sha) => { await this.delFile(path, sha); removed++; };
       for (const addon of Addons.list()) {
         if (addon.source === 'catalog') continue; // الكتالوج العام مصدره المستودع أصلاً
         const rf = tree[addon.name] || {}, rm = this.shaMap(rf), lm = await this.localShas(addon);
         if (this.same(lm, rm)) { t[addon.name] = rm; continue; }
-        if (t[addon.name] && !this.same(t[addon.name], rm) && Object.keys(rm).length) continue; // تغيّر في المستودع: لا نكتب فوقه
+        if (t[addon.name] && !Object.keys(rm).length) continue; // حُذفت من المستودع بعد نشرها: لا نعيد رفعها (تظهر في المتجر «محذوفة من المستودع»)
+        if (t[addon.name] && !this.same(t[addon.name], rm)) continue; // تغيّر في المستودع: لا نكتب فوقه
         for (const f of addon.files) if (lm[f.name] !== (rf[f.name] || {}).sha) await put(`${DIR}/${addon.name}/${f.name}`, f.content, (rf[f.name] || {}).sha);
         for (const n of Object.keys(rf)) if (!(n in lm)) await del(rf[n].path, rf[n].sha);
         t[addon.name] = lm;
