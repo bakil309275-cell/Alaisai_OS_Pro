@@ -161,3 +161,8 @@ label.lbl{display:block;font-size:.9rem;color:var(--muted);margin:10px 0 4px}
 #sync-badge[data-state=behind] [data-glyph],#sync-badge[data-state=dirty] [data-glyph]{color:var(--warn)}
 .badge[data-state=idle]{color:var(--success)}.badge[data-state=error],.badge[data-state=conflict]{color:var(--danger)}
 @media(max-width:520px){.brand-text{display:none}.bar-actions{gap:0}}
+
+/* صفوف المتجر: النص أولاً والأزرار في سطر خاص كي لا تضغط النص على الشاشات الضيقة */
+.cat-row{flex-wrap:wrap}
+.cat-row .grow{flex:1 1 55%;min-width:150px;white-space:normal;overflow:visible}
+.cat-row .actions{display:flex;flex-wrap:wrap;gap:6px;flex:0 0 100%;justify-content:flex-end;align-items:center}
