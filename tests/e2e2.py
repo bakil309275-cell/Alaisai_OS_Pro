@@ -181,7 +181,19 @@ with sync_playwright() as p:
     page.click('.dialog [data-cancel]'); page.wait_for_timeout(400)
     check('التراجع أبقى الإضافة وملفاتها في المستودع', page.evaluate("!!Addons.get('fromrepo')") and any(k.startswith('addons/fromrepo/') for k in gh.files))
     page.keyboard.press('Escape')
+    # ملفات في الكتالوج المبني تخص الإضافة وأخرى لا تخصها: الأولى تُحذف والثانية تبقى
+    gh.files['catalog/addons/fromrepo.alaisai-addon.json']=b'{"id":"fromrepo"}'; gh.files['catalog/addons/other.alaisai-addon.json']=b'{"id":"other"}'
+    gh.files['catalog/src/fromrepo/manifest.json']=b'{"id":"fromrepo"}'; gh.files['README.md']=b'keep'
+    gh.files['catalog/index.json']=json.dumps({'format':'alaisai-catalog','version':1,'addons':[{'id':'fromrepo'},{'id':'other'}]}).encode()
     store_delete('fromrepo')
+    check('حُذفت حزمة الإضافة المبنية ومصدرها من الكتالوج', 'catalog/addons/fromrepo.alaisai-addon.json' not in gh.files and 'catalog/src/fromrepo/manifest.json' not in gh.files)
+    check('أُزيلت من فهرس المتجر العام وبقي غيرها', [a['id'] for a in json.loads(gh.files['catalog/index.json'])['addons']]==['other'])
+    check('لم يُمس ما لا يخص الإضافة', 'catalog/addons/other.alaisai-addon.json' in gh.files and gh.files.get('README.md')==b'keep')
+    page.wait_for_selector('#cat-list [data-unhide]')
+    check('أُخفيت من المتجر فلا تعود قابلة للتثبيت', page.locator('[data-repo=fromrepo],[data-cat=fromrepo],[data-local=fromrepo]').count()==0)
+    page.keyboard.press('Escape'); page.reload(); page.wait_for_selector('.app-card'); page.click('#store-btn'); page.wait_for_selector('#cat-list [data-unhide]')
+    check('الإخفاء يبقى بعد إعادة التحميل', page.locator('[data-repo=fromrepo],[data-cat=fromrepo]').count()==0 and page.evaluate("Catalog.isHidden('fromrepo')"))
+    page.keyboard.press('Escape')
     check('الحذف النهائي أزال الإضافة وأيقونتها محلياً', page.evaluate("!Addons.get('fromrepo')") and page.locator('.app-card:has-text("من المستودع")').count()==0)
     check('الحذف النهائي حذف ملفاتها من المستودع فوراً', not any(k.startswith('addons/fromrepo/') for k in gh.files), str([k for k in gh.files if k.startswith('addons')]))
     check('لم يُحذف شيء آخر من المستودع', all(('addons/demo/'+n) in gh.files for n in ['manifest.json','index.html','main.js','style.css']) and 'alaisai-backup.json' in gh.files)
