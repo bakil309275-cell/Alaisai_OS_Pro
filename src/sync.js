@@ -154,6 +154,7 @@
         else if (rem.sha === this.cfg.lastSha) this.setState(local ? 'dirty' : 'idle');
         else this.setState(local ? 'conflict' : 'behind');
         if (this.state === 'dirty' && this.cfg.auto) this.scheduleAuto(15000);
+        this.syncAddons();
       } catch (e) { this.fail(e, true); }
     },
     fail(e, quiet) {
@@ -163,6 +164,15 @@
       this.setState('error', e.message || 'خطأ غير متوقع');
       if (!quiet) UI.toast('❌ ' + (e.message || 'فشلت المزامنة'), 'error', 6000);
       if (['http', 'rate'].includes(e.code) && this.cfg && this.cfg.auto) { clearTimeout(this._tRetry); this._tRetry = setTimeout(() => this.scheduleAuto(1000), 300000); }
+    },
+
+    // ملفات الإضافات: نشر ما عندك في addons/ ثم قراءة ما جاء من المستودع (لا يُفشل المزامنة إن تعثّر)
+    async syncAddons() {
+      if (!window.RepoAddons || this._addonBusy) return;
+      this._addonBusy = true;
+      try { await RepoAddons.mirror(); await RepoAddons.scan({ quiet: false }); }
+      catch (e) { console.warn('syncAddons', e); }
+      finally { this._addonBusy = false; }
     },
 
     // يعيد {ok:true} أو {conflict:true, remote}
@@ -188,6 +198,7 @@
         await this.saveCfg(); this._fp = fp;
         this.setState('idle');
         if (!auto) UI.toast('✅ رُفعت نسخة مشفّرة إلى GitHub', 'success');
+        this.syncAddons();
         return { ok: true };
       } catch (e) { this.fail(e, auto); throw e; }
       finally { this._busy = false; }
@@ -243,7 +254,8 @@
       if (!v) return false;
       const keepLast = this.cfg && this.cfg.owner === v.owner && this.cfg.repo === v.repo && this.cfg.branch === v.branch && this.cfg.path === v.path;
       this.cfg = { owner: v.owner, repo: v.repo, branch: v.branch, path: v.path, auto: !!c.auto,
-        lastSha: keepLast ? c.lastSha || '' : '', lastSync: keepLast ? c.lastSync || 0 : 0, lastFp: keepLast ? c.lastFp || '' : '' };
+        lastSha: keepLast ? c.lastSha || '' : '', lastSync: keepLast ? c.lastSync || 0 : 0, lastFp: keepLast ? c.lastFp || '' : '',
+        mirror: c.mirror !== false, addonShas: keepLast ? c.addonShas || {} : {} };
       try { await this.saveSecrets(v.token ? v.token.trim() : this.token, v.pass || this.pass); }
       catch (e) { UI.toast('❌ ' + e.message, 'error'); return false; }
       await this.saveCfg();
@@ -298,13 +310,14 @@
           '<p>لم تُعدّ المزامنة بعد. يحفظ التطبيق نسخة <b>مشفّرة</b> من بياناتك في مستودع GitHub خاص بك، فتستعيدها على أي جهاز.</p>'}
           <div style="margin-top:10px">
             ${c ? `<button class="btn btn-primary" data-sy="push">⬆ رفع الآن</button><button class="btn" data-sy="pull">⬇ سحب من السحابة</button><button class="btn" data-sy="test">🔌 اختبار الاتصال</button>
-            <button class="btn" data-sy="auto">${c.auto ? '⏸ إيقاف التلقائية' : '🔁 تفعيل التلقائية'}</button><button class="btn" data-sy="setup">⚙️ تعديل الإعداد</button><button class="btn btn-danger" data-sy="off">❌ فصل</button>`
+            <button class="btn" data-sy="auto">${c.auto ? '⏸ إيقاف التلقائية' : '🔁 تفعيل التلقائية'}</button><button class="btn" data-sy="mirror">${c.mirror !== false ? '📂 نشر الإضافات في addons/: مفعّل' : '📂 نشر الإضافات في addons/: متوقف'}</button><button class="btn" data-sy="setup">⚙️ تعديل الإعداد</button><button class="btn btn-danger" data-sy="off">❌ فصل</button>`
             : '<button class="btn btn-primary" data-sy="setup">⚙️ إعداد المزامنة</button>'}</div></div>
           <details class="panel"><summary><b>كيف أُعدّها؟ (دقيقتان)</b></summary><ol style="margin:10px 22px;line-height:2">
             <li>أنشئ مستودعاً جديداً على GitHub واجعله <b>Private</b> مع ملف README (ليوجد فرع main).</li>
             <li>من <b>Settings ← Developer settings ← Personal access tokens ← Fine-grained tokens</b> أنشئ رمزاً: <i>Repository access: Only select repositories</i> واختر ذلك المستودع، و<i>Permissions ← Contents: Read and write</i>.</li>
             <li>اضغط «إعداد المزامنة»، الصق الرمز، واختر <b>عبارة تشفير</b> لا تفقدها (لا يمكن استعادة النسخة بدونها).</li>
             <li>على جهاز جديد: أعدّ المزامنة بنفس البيانات ثم «سحب من السحابة».</li></ol></details>
+          <div class="notice">📂 ملفات الإضافات تُنشر في المستودع <b>كنص عادي غير مشفّر</b> داخل <code>addons/اسم-الإضافة/</code> لتقرأها وتعدّلها، وما تضيفه أنت هناك يصل إلى «متجر الإضافات» في التطبيق. بقية بياناتك (ملاحظات، بيانات التطبيقات) تبقى مشفّرة. أوقف هذا الخيار إن لم ترد نشر كود إضافاتك.</div>
           <div class="notice">🔐 الرمز يُحفظ مشفّراً بمفتاح غير قابل للاستخراج داخل هذا المتصفح، والنسخة المرفوعة مشفّرة بعبارتك فلا يقرؤها أحد حتى لو كان المستودع عاماً. مع ذلك: أي شيفرة تعمل داخل هذا الموقع يمكنها استخدام الرمز، فاجعل صلاحياته لهذا المستودع وحده، وألغِه من GitHub عند الشك.</div>`;
       };
       const sub = () => { if (el.isConnected) draw(); else sub.dead = true; };
@@ -318,6 +331,7 @@
           else if (act === 'pull') await this.pullFlow();
           else if (act === 'setup') { if (await Admin.authenticate()) await this.setup(); }
           else if (act === 'auto') { if (!(await Admin.authenticate())) return; this.cfg.auto = !this.cfg.auto; await this.saveCfg(); if (this.cfg.auto && this.state === 'dirty') this.scheduleAuto(3000); UI.toast(this.cfg.auto ? '🔁 فُعّلت المزامنة التلقائية' : '⏸ أُوقفت المزامنة التلقائية'); }
+          else if (act === 'mirror') { if (!(await Admin.authenticate())) return; this.cfg.mirror = this.cfg.mirror === false; await this.saveCfg(); UI.toast(this.cfg.mirror ? '📂 ستُنشر ملفات الإضافات في مجلد addons/ بالمستودع' : '📂 أُوقف نشر الإضافات'); if (this.cfg.mirror) this.syncAddons(); }
           else if (act === 'off') { if (await Admin.authenticate() && await UI.confirm('فصل المزامنة وحذف الرمز والعبارة من هذا الجهاز؟ لا تُحذف نسخة السحابة.', { okText: 'فصل' })) await this.disconnect(); }
         } catch (err) { if (!(err instanceof SyncError)) UI.toast('❌ ' + err.message, 'error'); else UI.toast('❌ ' + err.message, 'error', 6000); }
         draw();

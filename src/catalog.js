@@ -64,24 +64,49 @@
     async mount(el) {
       el.innerHTML = '<div class="sys-pad"><div class="panel"><input class="field" type="search" id="cat-q" placeholder="🔍 ابحث في الإضافات" aria-label="بحث في الإضافات"></div><div id="cat-list" aria-live="polite"><p style="color:var(--muted)">⏳ جارٍ تحميل الكتالوج…</p></div></div>';
       const list = el.querySelector('#cat-list'), q = el.querySelector('#cat-q');
+      const rows = () => {
+        const cat = this.index || [], ids = new Set(cat.map((e) => e.id));
+        const repo = (window.RepoAddons ? RepoAddons.items : []).filter((it) => !ids.has(it.name));
+        const out = cat.map((e) => ({ kind: 'cat', id: e.id, name: e.name, icon: e.icon, version: e.version, description: e.description, state: this.state(e) }));
+        repo.forEach((it) => {
+          const a = Addons.get(it.name), m = a && Addons.manifest(a).manifest;
+          const meta = m || it.meta || {};
+          out.push({ kind: 'repo', id: it.name, name: (meta && meta.name) || it.name, icon: (meta && meta.icon) || '🧩', version: (meta && meta.version) || '', description: (meta && meta.description) || 'من مستودعك: addons/' + it.name,
+            state: it.state === 'new' ? 'new' : it.state === 'current' || it.state === 'localnewer' ? 'current' : 'update' });
+        });
+        return out;
+      };
       const draw = () => {
         const s = q.value.trim().toLowerCase();
-        const items = (this.index || []).filter((e) => !s || (e.name + ' ' + e.description).toLowerCase().includes(s));
+        const items = rows().filter((e) => !s || (e.name + ' ' + e.description).toLowerCase().includes(s));
         list.innerHTML = items.length ? items.map((e) => {
-          const st = this.state(e);
-          return `<div class="admin-row"><span class="ico" aria-hidden="true">${E(e.icon)}</span><span class="grow" style="white-space:normal"><b>${E(e.name)}</b> <span class="badge">v${E(e.version)}</span><br><small style="color:var(--muted)">${E(e.description)}</small></span>
-            ${st === 'current' ? '<span class="badge">✔ مثبّتة</span>' : `<button class="btn btn-sm ${st === 'update' ? 'btn-primary' : 'btn-success'}" data-cat="${E(e.id)}">${st === 'update' ? '⬆ تحديث' : '⬇ تثبيت'}</button>`}</div>`; }).join('')
-          : '<p style="color:var(--muted)">لا نتائج</p>';
+          const inst = Addons.isInstalled(e.id);
+          const act = e.state === 'current' ? '' : `<button class="btn btn-sm ${e.state === 'update' ? 'btn-primary' : 'btn-success'}" data-${e.kind}="${E(e.id)}">${e.state === 'update' ? '⬆ تحديث' : '⬇ تثبيت'}</button>`;
+          const tail = e.state === 'current' ? (inst ? '<span class="badge">✔ مثبّتة</span> ' : `<button class="btn btn-sm btn-success" data-${e.kind}="${E(e.id)}">⬇ تثبيت</button> `) : '';
+          const del = Addons.get(e.id) ? `<button class="btn btn-sm btn-danger" data-del="${E(e.id)}" aria-label="حذف ${E(e.name)}">🗑 حذف</button>` : '';
+          return `<div class="admin-row"><span class="ico" aria-hidden="true">${E(e.icon)}</span><span class="grow" style="white-space:normal"><b>${E(e.name)}</b> ${e.version ? `<span class="badge">v${E(e.version)}</span>` : ''}${e.kind === 'repo' ? ' <span class="badge">مستودعك</span>' : ''}${e.state === 'new' ? ' <span class="badge">جديد</span>' : ''}<br><small style="color:var(--muted)">${E(e.description)}</small></span>${tail}${act}${del}</div>`;
+        }).join('') : '<p style="color:var(--muted)">لا نتائج</p>';
       };
       q.addEventListener('input', draw);
       list.addEventListener('click', async (ev) => {
-        const b = ev.target.closest('[data-cat]'); if (!b) return;
-        const entry = this.index.find((x) => x.id === b.dataset.cat); if (!entry) return;
-        b.disabled = true; b.textContent = '⏳';
-        try { const name = await this.install(entry); if (name) UI.toast('✅ تم التثبيت وظهرت الإضافة على سطح المكتب', 'success'); }
-        catch (e) { UI.toast('❌ ' + e.message, 'error', 5000); }
+        const b = ev.target.closest('[data-cat],[data-repo],[data-del]'); if (!b) return;
+        try {
+          if (b.dataset.del) {
+            const name = b.dataset.del, mirrored = window.RepoAddons && Sync.cfg && Sync.cfg.addonShas && Sync.cfg.addonShas[name];
+            if (!(await UI.confirm(`حذف الإضافة «${name}» نهائياً من هذا الجهاز مع بياناتها؟` + (mirrored ? ' وستُحذف ملفاتها من مجلد addons/ في المستودع عند المزامنة القادمة.' : ''), { title: 'حذف إضافة', okText: 'حذف' }))) return;
+            Addons.remove(name); OS.renderDesktop(); UI.toast('🗑 حُذفت الإضافة', 'success');
+          } else if (b.dataset.cat) {
+            const entry = this.index.find((x) => x.id === b.dataset.cat); if (!entry) return;
+            b.disabled = true; b.textContent = '⏳';
+            if (await this.install(entry)) UI.toast('✅ تم التثبيت وظهرت الإضافة على سطح المكتب', 'success');
+          } else {
+            b.disabled = true; b.textContent = '⏳';
+            if (await RepoAddons.install(b.dataset.repo)) UI.toast('✅ تم التثبيت من مستودعك', 'success');
+          }
+        } catch (e) { UI.toast('❌ ' + e.message, 'error', 5000); }
         draw();
       });
+      if (window.RepoAddons && RepoAddons.enabled()) RepoAddons.scan().then(draw);
       try { await this.fetchIndex(); draw(); }
       catch (e) { list.innerHTML = `<div class="notice danger">⚠️ ${E(navigator.onLine ? e.message : 'لا يوجد اتصال بالإنترنت. يعمل المتجر عند توفر الاتصال أو بعد فتحه مرة سابقاً.')}</div>`; }
     },
