@@ -165,11 +165,29 @@ with sync_playwright() as p:
     gh.files['addons/fromrepo/index.html']='<main><h1 id="t">نسخة 2</h1></main>'.encode()
     page.evaluate("Sync.check()"); page.wait_for_timeout(3000)
     check('تحديث المستودع يصل تلقائياً للإضافة المثبّتة', 'نسخة 2' in page.evaluate("Addons.get('fromrepo').files.find(f=>f.name==='index.html').content"))
-    page.click('#store-btn'); page.wait_for_selector('[data-del=fromrepo]'); page.click('[data-del=fromrepo]'); page.wait_for_selector('.dialog button[type=submit]'); page.click('.dialog button[type=submit]'); page.wait_for_timeout(500)
-    check('حذف الإضافة من المتجر يزيلها ويزيل أيقونتها', page.evaluate("!Addons.get('fromrepo')") and page.locator('.app-card:has-text("من المستودع")').count()==0)
+    def store_delete(name):
+        page.click('#store-btn'); page.wait_for_selector('[data-del=%s]'%name); page.click('[data-del=%s]'%name)
+        page.wait_for_selector('.dialog button[type=submit]'); page.click('.dialog button[type=submit]'); page.wait_for_timeout(500)
+        if page.locator('.dialog input[type=password]').count(): dialog_pw(page); page.wait_for_timeout(1500)
+        page.wait_for_timeout(1500)
+    store_delete('fromrepo')
+    check('الحذف النهائي أزال الإضافة وأيقونتها محلياً', page.evaluate("!Addons.get('fromrepo')") and page.locator('.app-card:has-text("من المستودع")').count()==0)
+    check('الحذف النهائي حذف ملفاتها من المستودع فوراً', not any(k.startswith('addons/fromrepo/') for k in gh.files), str([k for k in gh.files if k.startswith('addons')]))
+    check('لم يُحذف شيء آخر من المستودع', all(('addons/demo/'+n) in gh.files for n in ['manifest.json','index.html','main.js','style.css']) and 'alaisai-backup.json' in gh.files)
+    page.keyboard.press('Escape')
+    # حذفها من المستودع يدوياً (من GitHub) لا يُعيد رفعها: تظهر «محذوفة من المستودع»
+    for k in [k for k in gh.files if k.startswith('addons/demo/')]: del gh.files[k]
+    page.evaluate("Sync.syncAddons()"); page.wait_for_timeout(2500)
+    check('لا إعادة رفع لما حُذف من المستودع عمداً', not any(k.startswith('addons/demo/') for k in gh.files), str([k for k in gh.files if k.startswith('addons')]))
+    check('الإضافة تظهر بحالة «gone» وتبقى محلياً', page.evaluate("RepoAddons.items.some(i=>i.name==='demo'&&i.state==='gone')") and page.evaluate("!!Addons.get('demo')"))
+    page.click('#store-btn'); page.wait_for_selector('[data-republish=demo]'); check('المتجر يعرض شارة المحذوفة وزر إعادة النشر', 'محذوفة من المستودع' in page.inner_text('#cat-list'))
+    page.click('[data-republish=demo]'); page.wait_for_timeout(2500)
+    check('إعادة النشر أعادت الملفات', all(('addons/demo/'+n) in gh.files for n in ['manifest.json','index.html','main.js','style.css']))
     page.keyboard.press('Escape')
     page.evaluate("Sync.push({auto:true})"); page.wait_for_timeout(3000)
-    check('الحذف المحلي حذف الملفات من addons/ في المستودع', not any(k.startswith('addons/fromrepo/') for k in gh.files), str([k for k in gh.files if k.startswith('addons')]))
+    # حذف محلي من المستكشف (المسار القديم) تحذف مزامنته ملفات addons/ أيضاً
+    page.evaluate("Addons.remove('demo')"); page.evaluate("Sync.push({auto:true})"); page.wait_for_timeout(3000)
+    check('الحذف المحلي حذف الملفات من addons/ في المستودع بعد المزامنة', not any(k.startswith('addons/demo/') for k in gh.files), str([k for k in gh.files if k.startswith('addons')]))
     # عبارة خاطئة
     page.evaluate("Sync.pass='خطأ-خطأ-خطأ'")
     try: page.evaluate("Sync.fetchRemote()"); ok=False
