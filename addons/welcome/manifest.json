@@ -1,0 +1,8 @@
+{
+  "id": "welcome",
+  "name": "الترحيب",
+  "icon": "✨",
+  "version": "1.0.0",
+  "description": "شاشة ترحيب بسيطة",
+  "author": "المالك"
+}
