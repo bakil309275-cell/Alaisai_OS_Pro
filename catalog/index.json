@@ -14,17 +14,6 @@
       "sha256": "e80a9df040023bdffdf4f8b5a03ed66214f332b29734779787fdff03ce300591"
     },
     {
-      "id": "todo",
-      "name": "المهام",
-      "icon": "✅",
-      "version": "1.0.0",
-      "description": "قائمة مهام بسيطة تُحفظ تلقائياً وتدخل في النسخ الاحتياطي والمزامنة",
-      "author": "Alaisai",
-      "file": "addons/todo.alaisai-addon.json",
-      "size": 5010,
-      "sha256": "327309e49f02f9a95acf83c39b1087c7626fdefeeea542480e846dcf19566347"
-    },
-    {
       "id": "alhamdulillah",
       "name": "الحمدلله",
       "icon": "📦",
