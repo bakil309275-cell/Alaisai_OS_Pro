@@ -100,17 +100,6 @@
       "file": "addons/simple-notes.alaisai-addon.json",
       "size": 1503,
       "sha256": "7dbacdbe6cf4861f528182af3a22fe299847035b00424ecf7563a3c0a3774d56"
-    },
-    {
-      "id": "welcome",
-      "name": "الترحيب",
-      "icon": "✨",
-      "version": "1.0.0",
-      "description": "شاشة ترحيب بسيطة",
-      "author": "المالك",
-      "file": "addons/welcome.alaisai-addon.json",
-      "size": 1011,
-      "sha256": "4c889590d2a155fe74d6d35bb651e83048c5de77b93207cdf0df73e80cc70116"
     }
   ]
 }
