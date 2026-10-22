@@ -25,17 +25,6 @@
       "sha256": "f29d27ae7605de04d6fbe4c1c36f3742c38e7c9686829d942663b50e66645fe1"
     },
     {
-      "id": "island-puzzle",
-      "name": "لغز الجزيرة",
-      "icon": "🏝️",
-      "version": "1.0.0",
-      "description": "لعبة ألغاز: ناجٍ على جزيرة غامضة، حلّ 6 ألغاز ثم افتح الفتحة قبل أن ينتهي العدّ التنازلي",
-      "author": "العيسائي برو",
-      "file": "addons/island-puzzle.alaisai-addon.json",
-      "size": 19767,
-      "sha256": "6452323bd6f68e6485eb38d7954ae7e595cb3c3ca63f2df3ab810b2d5d6997cc"
-    },
-    {
       "id": "quick-browser",
       "name": "المتصفح السريع",
       "icon": "🌐",
