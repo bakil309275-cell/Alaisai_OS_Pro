@@ -1,4 +1,4 @@
-# هيكل المشروع (الإصدار 2.2)
+# هيكل المشروع (الإصدار 2.3)
 
 ```
 index.html              الهيكل (سطح المكتب)
@@ -21,6 +21,7 @@ addons/<الاسم>/         إضافات المستودع: manifest.json + inde
 catalog/                الكتالوج العام (يُبنى بـ node tools/build-catalog.mjs من catalog/src ومن addons/)
 tools/                  أدوات البناء
 tests/                  الاختبارات
+docs/                   دليل المالك (لا يقرؤه التطبيق)
 store/                  ملفات النشر في المتاجر
 .github/workflows/      الاختبارات والنشر على GitHub Pages
 ```
