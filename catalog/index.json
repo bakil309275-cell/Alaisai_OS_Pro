@@ -89,17 +89,6 @@
       "file": "addons/quick-browser-dev.alaisai-addon.json",
       "size": 45200,
       "sha256": "a911ae452eee9e460f1c5147adfe5ca7d8e7c32f370bcd20ca170c734153eb29"
-    },
-    {
-      "id": "simple-notes",
-      "name": "الملاحظات",
-      "icon": "📝",
-      "version": "1.0.0",
-      "description": "دفتر ملاحظات بسيط يحفظ نصك داخل التطبيق",
-      "author": "المالك",
-      "file": "addons/simple-notes.alaisai-addon.json",
-      "size": 1503,
-      "sha256": "7dbacdbe6cf4861f528182af3a22fe299847035b00424ecf7563a3c0a3774d56"
     }
   ]
 }
