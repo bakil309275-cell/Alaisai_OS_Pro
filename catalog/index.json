@@ -3,17 +3,6 @@
   "version": 1,
   "addons": [
     {
-      "id": "calculator",
-      "name": "الحاسبة",
-      "icon": "🧮",
-      "version": "1.0.0",
-      "description": "حاسبة بسيطة تدعم لوحة المفاتيح والنسبة المئوية",
-      "author": "Alaisai",
-      "file": "addons/calculator.alaisai-addon.json",
-      "size": 5755,
-      "sha256": "209e34515a8613b64c915d8a7d1dbbe2391ff204b28cf4601f73ffc16a9df5ad"
-    },
-    {
       "id": "tasbih",
       "name": "المسبحة",
       "icon": "📿",
