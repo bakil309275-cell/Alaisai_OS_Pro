@@ -14,17 +14,6 @@
       "sha256": "e80a9df040023bdffdf4f8b5a03ed66214f332b29734779787fdff03ce300591"
     },
     {
-      "id": "quick-browser",
-      "name": "المتصفح السريع",
-      "icon": "🌐",
-      "version": "1.0.0",
-      "description": "المتصفح السريع: روابط مواقعك المفضلة",
-      "author": "المالك",
-      "file": "addons/quick-browser.alaisai-addon.json",
-      "size": 12168,
-      "sha256": "ea29697b433ef372126014e62d16270d5c9f85faf09eeb62df443576603492d1"
-    },
-    {
       "id": "quick-browser-dev",
       "name": "المتصفح السريع - بوابة المطورين",
       "icon": "🌐",
