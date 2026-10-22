@@ -6,6 +6,12 @@
 
   const Catalog = {
     index: null,
+    // إضافات حُذفت نهائياً: تُخفى من متجر هذا الجهاز كي لا تعود قابلة للتثبيت (محلي، غير مُزامَن)
+    hidden: new Set(),
+    async loadHidden() { try { const v = await Store.get('hidden_addons'); this.hidden = new Set(Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []); } catch (_) {} },
+    isHidden(n) { return this.hidden.has(n); },
+    async hide(n) { this.hidden.add(n); try { await Store.set('hidden_addons', [...this.hidden]); } catch (_) {} },
+    async unhideAll() { this.hidden.clear(); try { await Store.set('hidden_addons', []); } catch (_) {} },
 
     async fetchIndex() {
       const r = await fetch('catalog/index.json', { cache: 'no-cache' });
@@ -62,11 +68,12 @@
     // ---------- الواجهة ----------
     open() { OS.openSystem('🛍️ متجر الإضافات', (el) => this.mount(el)); },
     async mount(el) {
+      await this.loadHidden();
       el.innerHTML = '<div class="sys-pad"><div class="panel"><input class="field" type="search" id="cat-q" placeholder="🔍 ابحث في الإضافات" aria-label="بحث في الإضافات"></div><div id="cat-list" aria-live="polite"><p style="color:var(--muted)">⏳ جارٍ تحميل الكتالوج…</p></div></div>';
       const list = el.querySelector('#cat-list'), q = el.querySelector('#cat-q');
       const rows = () => {
-        const cat = this.index || [], ids = new Set(cat.map((e) => e.id));
-        const repo = (window.RepoAddons ? RepoAddons.items : []).filter((it) => !ids.has(it.name));
+        const cat = (this.index || []).filter((e) => !this.isHidden(e.id)), ids = new Set(cat.map((e) => e.id));
+        const repo = (window.RepoAddons ? RepoAddons.items : []).filter((it) => !ids.has(it.name) && !this.isHidden(it.name));
         const out = cat.map((e) => ({ kind: 'cat', id: e.id, name: e.name, icon: e.icon, version: e.version, description: e.description, state: this.state(e) }));
         repo.forEach((it) => {
           const a = Addons.get(it.name), m = a && Addons.manifest(a).manifest;
@@ -75,7 +82,7 @@
             state: it.state === 'new' ? 'new' : it.state === 'gone' ? 'gone' : it.state === 'current' || it.state === 'localnewer' ? 'current' : 'update' });
         });
         const known = new Set(out.map((x) => x.id));
-        Addons.list().filter((a) => !known.has(a.name)).forEach((a) => {
+        Addons.list().filter((a) => !known.has(a.name) && !this.isHidden(a.name)).forEach((a) => {
           const m = Addons.manifest(a).manifest || { name: a.name, icon: '🧩', version: '', description: '' };
           out.push({ kind: 'local', id: a.name, name: m.name, icon: m.icon, version: m.version, description: m.description || 'إضافة على هذا الجهاز', state: 'current' });
         });
@@ -88,17 +95,19 @@
           const inst = Addons.isInstalled(e.id);
           const act = e.state === 'gone' ? `<button class="btn btn-sm" data-republish="${E(e.id)}">↻ إعادة نشر</button>` : e.state === 'current' ? '' : `<button class="btn btn-sm ${e.state === 'update' ? 'btn-primary' : 'btn-success'}" data-${e.kind}="${E(e.id)}">${e.state === 'update' ? '⬆ تحديث' : '⬇ تثبيت'}</button>`;
           const tail = e.state === 'gone' ? '' : e.state === 'current' ? (inst ? '<span class="badge">✔ مثبّتة</span> ' : `<button class="btn btn-sm btn-success" data-${e.kind === 'local' ? 'local' : e.kind}="${E(e.id)}">⬇ تثبيت</button> `) : '';
-          const inRepo = window.RepoAddons && RepoAddons.items.some((x) => x.name === e.id && x.state !== 'gone');
           const un = inst ? `<button class="btn btn-sm" data-uninst="${E(e.id)}" aria-label="حذف ${E(e.name)} من سطح المكتب">🗑 حذف</button>` : '';
-          const del = Addons.get(e.id) || inRepo ? `<button class="btn btn-sm btn-danger" data-del="${E(e.id)}" aria-label="حذف ${E(e.name)} نهائياً">⛔ حذف نهائي</button>` : '';
-          return `<div class="admin-row"><span class="ico" aria-hidden="true">${E(e.icon)}</span><span class="grow" style="white-space:normal"><b>${E(e.name)}</b> ${e.version ? `<span class="badge">v${E(e.version)}</span>` : ''}${e.kind === 'repo' ? ' <span class="badge">مستودعك</span>' : ''}${e.state === 'new' ? ' <span class="badge">جديد</span>' : ''}${e.state === 'gone' ? ' <span class="badge">محذوفة من المستودع</span>' : ''}<br><small style="color:var(--muted)">${E(e.description)}</small></span>${tail}${act}${un}${del}</div>`;
+          const del = `<button class="btn btn-sm btn-danger" data-del="${E(e.id)}" aria-label="حذف ${E(e.name)} نهائياً">⛔ حذف نهائي</button>`;
+          return `<div class="admin-row cat-row"><span class="ico" aria-hidden="true">${E(e.icon)}</span><span class="grow"><b>${E(e.name)}</b> ${e.version ? `<span class="badge">v${E(e.version)}</span>` : ''}${e.kind === 'repo' ? ' <span class="badge">مستودعك</span>' : ''}${e.state === 'new' ? ' <span class="badge">جديد</span>' : ''}${e.state === 'gone' ? ' <span class="badge">محذوفة من المستودع</span>' : ''}<br><small style="color:var(--muted)">${E(e.description)}</small></span><span class="actions">${tail}${act}${un}${del}</span></div>`;
         }).join('') : '<p style="color:var(--muted)">لا نتائج</p>';
+        if (this.hidden.size) list.insertAdjacentHTML('beforeend', `<p style="margin-top:12px"><button class="btn btn-sm" data-unhide="1">♻️ إظهار الإضافات المحذوفة نهائياً (${this.hidden.size})</button></p>`);
       };
       q.addEventListener('input', draw);
       list.addEventListener('click', async (ev) => {
-        const b = ev.target.closest('[data-cat],[data-repo],[data-local],[data-del],[data-uninst],[data-republish]'); if (!b) return;
+        const b = ev.target.closest('[data-cat],[data-repo],[data-local],[data-del],[data-uninst],[data-republish],[data-unhide]'); if (!b) return;
         try {
-          if (b.dataset.republish) {
+          if (b.dataset.unhide) {
+            await this.unhideAll(); UI.toast('♻️ أُعيد إظهار الإضافات المحذوفة في المتجر', 'success');
+          } else if (b.dataset.republish) {
             b.disabled = true; await RepoAddons.republish(b.dataset.republish); UI.toast('↻ أُعيد نشر الإضافة في المستودع', 'success');
           } else if (b.dataset.uninst) {
             Addons.uninstall(b.dataset.uninst); // إزالة الأيقونة فقط: الإضافة وملفاتها وبياناتها تبقى وتُثبَّت متى شئت
@@ -107,12 +116,13 @@
             Addons.install(b.dataset.local); UI.toast('✅ تم التثبيت وظهرت الإضافة على سطح المكتب', 'success');
           } else if (b.dataset.del) {
             const name = b.dataset.del, remote = window.RepoAddons && RepoAddons.enabled();
+            const scope = remote ? ' ومن مجلد addons/ ومن متجر الإضافات العام في مستودعك' : '';
             const sure = await UI.dialog({ title: '⛔ حذف نهائي', okText: 'نعم، احذف نهائياً', cancelText: 'تراجع', danger: true,
-              message: `هل أنت متأكد من حذف الإضافة «${name}» نهائياً؟\nستُحذف مع ملفاتها وبياناتها من هذا الجهاز` + (remote ? ' ومن مجلد addons/' + name + '/ في مستودعك' : '') + '، ولن تعود قابلة للتثبيت.\nلا يمكن التراجع عن هذا الإجراء.' });
+              message: `هل أنت متأكد من حذف الإضافة «${name}» نهائياً؟\nستُحذف مع ملفاتها وبياناتها من هذا الجهاز${scope}، ولن تعود قابلة للتثبيت.` + (remote ? '' : '\n(لحذفها من المستودع والمتجر لكل المستخدمين فعّل المزامنة بصلاحية المالك، أو احذف مجلدها من GitHub.)') + '\nلا يمكن التراجع عن هذا الإجراء.' });
             if (!sure) return;
             if (remote && !(await Admin.authenticate())) return;
             const r = await RepoAddons.purge(name);
-            UI.toast(r.remoteError ? '⛔ حُذفت من هذا الجهاز. ' + r.remoteError : '⛔ حُذفت نهائياً' + (r.remote ? ' من الجهاز والمستودع' : ''), r.remoteError ? 'warn' : 'success', r.remoteError ? 7000 : 3500);
+            UI.toast(r.remoteError ? '⛔ حُذفت من هذا الجهاز. تعذّر الحذف من المستودع: ' + r.remoteError : '⛔ حُذفت نهائياً' + (r.remote ? ' من الجهاز والمستودع والمتجر' : ' من هذا الجهاز'), r.remoteError ? 'warn' : 'success', r.remoteError ? 8000 : 4000);
           } else if (b.dataset.cat) {
             const entry = this.index.find((x) => x.id === b.dataset.cat); if (!entry) return;
             b.disabled = true; b.textContent = '⏳';

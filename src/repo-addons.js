@@ -44,6 +44,7 @@
     async scan({ quiet = true } = {}) {
       if (!this.enabled() || !navigator.onLine) return this.items;
       if (this._scanning) return this._scanning;
+      await Catalog.loadHidden();
       this._scanning = (async () => {
         try {
           const tree = await this.remoteTree(), t = this.tracked(), items = [];
@@ -71,7 +72,7 @@
           for (const it of items.filter((x) => x.state === 'update')) { try { await this.fetchInto(it, { keepDesktop: true }); auto++; } catch (_) {} }
           if (auto) { items.forEach((x) => { if (x.state === 'update') x.state = 'current'; }); if (!quiet) UI.toast(`⬇ وصلت تحديثات ${auto} إضافة من المستودع`, 'success'); }
           this.seen = this.seen || [];
-          const fresh = items.filter((x) => x.state === 'new' && !this.seen.includes(x.name));
+          const fresh = items.filter((x) => x.state === 'new' && !this.seen.includes(x.name) && !Catalog.isHidden(x.name));
           if (fresh.length) { this.seen.push(...fresh.map((x) => x.name)); UI.toast(`🧩 إضافات جديدة في مستودعك: ${fresh.map((x) => x.name).join('، ')} — افتح المتجر لتثبيتها`, 'info', 7000); }
           return this.items;
         } catch (e) { console.warn('RepoAddons.scan', e); return this.items; }
@@ -111,24 +112,53 @@
       if (!r.ok) throw new Sync.SyncError('http', 'تعذّر نشر ' + path + ' (' + r.status + ')');
     },
     async delFile(path, sha) {
-      if (!/^addons\/[\w-]{1,40}\/[\w.\- ]{1,80}$/.test(path)) throw new Error('مسار غير مسموح بحذفه'); // لا يُحذف أي شيء خارج addons/<اسم>/<ملف>
+      // قائمة بيضاء: لا يُحذف أي شيء إلا ملفات إضافة واحدة بعينها (مصدرها أو حزمتها المبنية)
+      if (!/^(addons\/[\w-]{1,40}\/[\w.\- ]{1,80}|catalog\/src\/[\w-]{1,40}\/[\w.\- ]{1,80}|catalog\/addons\/[\w-]{1,40}\.alaisai-addon\.json)$/.test(path)) throw new Error('مسار غير مسموح بحذفه');
       const r = await Sync.gh(`${Sync.base()}/contents/${encPath(path)}`, { method: 'DELETE', body: { message: 'Alaisai: حذف ' + path, sha, branch: Sync.cfg.branch } });
       if (!r.ok && r.status !== 404) throw new Sync.SyncError('http', 'تعذّر حذف ' + path + ' (' + r.status + ')');
     },
 
-    // حذف نهائي: يزيل الإضافة من هذا الجهاز (أيقونة وملفات وبيانات) ومن مجلد addons/<الاسم>/ في المستودع.
-    // يعيد {local, remote}. فشل الحذف البعيد لا يُعيد الإضافة محلياً.
+    async getFile(path) { // {sha, text} أو null
+      const r = await Sync.gh(`${Sync.base()}/contents/${encPath(path)}?ref=${enc(Sync.cfg.branch)}`);
+      if (r.status === 404) return null;
+      if (!r.ok) throw new Sync.SyncError('http', 'GitHub أعاد الخطأ ' + r.status);
+      const j = await r.json(); if (Array.isArray(j) || j.type !== 'file') return null;
+      return { sha: j.sha, text: Sec.b64ToText(j.content.replace(/\s/g, '')) };
+    },
+    // ملفات الإضافة كلها في المستودع: المصدر (addons/ وcatalog/src/) والحزمة المبنية، ثم إزالتها من فهرس المتجر العام
+    async purgeRemote(name) {
+      const r = await Sync.gh(`${Sync.base()}/git/trees/${enc(Sync.cfg.branch)}?recursive=1`);
+      if (!r.ok && r.status !== 404 && r.status !== 409) throw new Sync.SyncError('http', 'GitHub أعاد الخطأ ' + r.status);
+      const blobs = r.ok ? ((await r.json()).tree || []).filter((t) => t.type === 'blob') : [];
+      const mine = blobs.filter((t) => t.path.startsWith(`${DIR}/${name}/`) || t.path.startsWith(`catalog/src/${name}/`) || t.path === `catalog/addons/${name}.alaisai-addon.json`);
+      let n = 0;
+      for (const t of mine) { await this.delFile(t.path, t.sha); n++; }
+      let index = false;
+      if (blobs.some((t) => t.path === 'catalog/index.json')) {
+        const f = await this.getFile('catalog/index.json');
+        if (f) {
+          const j = JSON.parse(f.text);
+          if (j && Array.isArray(j.addons) && j.addons.some((a) => a && a.id === name)) {
+            j.addons = j.addons.filter((a) => !(a && a.id === name));
+            await this.putFile('catalog/index.json', JSON.stringify(j, null, 2) + '\n', f.sha); index = true;
+          }
+        }
+      }
+      delete this.tracked()[name]; await Sync.saveCfg();
+      return { files: n, index };
+    },
+
+    // حذف نهائي: من هذا الجهاز (أيقونة وملفات وبيانات)، ومن المستودع والمتجر العام إن كان لك صلاحية المزامنة،
+    // وتُخفى من متجر هذا الجهاز كي لا تعود قابلة للتثبيت. فشل الجزء البعيد لا يُعيد الإضافة محلياً.
     async purge(name) {
       if (!Addons.NAME_RE.test(name)) throw new Error('اسم غير صالح');
-      const res = { local: false, remote: 0, remoteError: '' };
+      const res = { local: false, remote: 0, index: false, remoteError: '', remoteTried: this.enabled() };
       if (Addons.get(name)) { Addons.remove(name); OS.renderDesktop(); res.local = true; }
+      await Catalog.hide(name);
       if (this.enabled() && navigator.onLine) {
-        try {
-          const rf = (await this.remoteTree())[name] || {};
-          for (const n of Object.keys(rf)) { await this.delFile(rf[n].path, rf[n].sha); res.remote++; }
-          delete this.tracked()[name]; await Sync.saveCfg();
-        } catch (e) { res.remoteError = e.message; }
-      } else if (this.enabled()) res.remoteError = 'لا يوجد اتصال؛ ستُحذف ملفاتها من المستودع في المزامنة القادمة';
+        try { const r = await this.purgeRemote(name); res.remote = r.files; res.index = r.index; }
+        catch (e) { res.remoteError = e.message; }
+      } else if (this.enabled()) res.remoteError = 'لا يوجد اتصال؛ لم تُحذف من المستودع بعد';
       this.items = this.items.filter((x) => x.name !== name);
       return res;
     },
