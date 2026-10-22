@@ -1,0 +1,11 @@
+{
+  "id": "app_3",
+  "name": "الملاحظات",
+  "icon": "📝",
+  "content": "<div style=\"padding:20px;\"><h2>📋 دفتر الملاحظات</h2><textarea id=\"note-area\" style=\"width:100%;height:300px;padding:15px;border-radius:10px;border:1px solid #ccc;font-size:16px;\" placeholder=\"اكتب ملاحظاتك هنا...\"></textarea><button onclick=\"localStorage.setItem('saved_note', document.getElementById('note-area').value);alert('تم الحفظ!')\" style=\"margin-top:10px;padding:10px 20px;background:#4cc9f0;border:none;border-radius:8px;color:white;\">💾 حفظ</button></div>",
+  "version": "1.0.0",
+  "author": "المالك",
+  "script": "",
+  "styles": "",
+  "source": "registry"
+}
