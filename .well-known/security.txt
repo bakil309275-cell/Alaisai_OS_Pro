@@ -1,1 +1,3 @@
-
+Contact: https://github.com/alsamayoanwww-cyber/Alaisai_OS_Pro/security/advisories/new
+Expires: 2027-10-12T00:00:00.000Z
+Preferred-Languages: ar, en
