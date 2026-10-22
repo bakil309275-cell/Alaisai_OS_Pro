@@ -1,1 +1,27 @@
-
+name: CI
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: بناء الكتالوج (يشمل مجلد addons/)
+        run: node tools/build-catalog.mjs
+      - name: اختبارات الوحدة
+        run: node tests/run.mjs
+      - name: متصفح (Playwright)
+        run: |
+          pip install playwright pillow
+          python -m playwright install --with-deps chromium
+          python -m http.server 8765 &
+          sleep 2
+          python tests/e2e.py
+          python tests/e2e2.py
+          python tests/audit.py
