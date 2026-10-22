@@ -1,6 +1,6 @@
 // يغيّر عنوان الموقع الافتراضي (GitHub Pages) إلى نطاقك: node tools/set-site-url.mjs https://example.com/
 import fs from 'node:fs';
-const OLD = 'https://alsamayoanwww-cyber.github.io/Alaisai_OS_Pro/';
+const OLD = 'https://bakil309275-cell.github.io/Alaisai_OS_Pro/';
 let next = process.argv[2];
 if (!next || !/^https:\/\/[^\s]+$/.test(next)) { console.error('Usage: node tools/set-site-url.mjs https://your-domain.com/'); process.exit(1); }
 if (!next.endsWith('/')) next += '/';
