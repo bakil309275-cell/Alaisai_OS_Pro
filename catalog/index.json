@@ -45,6 +45,72 @@
       "file": "addons/todo.alaisai-addon.json",
       "size": 5010,
       "sha256": "327309e49f02f9a95acf83c39b1087c7626fdefeeea542480e846dcf19566347"
+    },
+    {
+      "id": "alhamdulillah",
+      "name": "الحمدلله",
+      "icon": "📦",
+      "version": "1.0.0",
+      "description": "صفحة نصية بسيطة",
+      "author": "المالك",
+      "file": "addons/alhamdulillah.alaisai-addon.json",
+      "size": 713,
+      "sha256": "f29d27ae7605de04d6fbe4c1c36f3742c38e7c9686829d942663b50e66645fe1"
+    },
+    {
+      "id": "island-puzzle",
+      "name": "لغز الجزيرة",
+      "icon": "🏝️",
+      "version": "1.0.0",
+      "description": "لعبة ألغاز: ناجٍ على جزيرة غامضة، حلّ 6 ألغاز ثم افتح الفتحة قبل أن ينتهي العدّ التنازلي",
+      "author": "العيسائي برو",
+      "file": "addons/island-puzzle.alaisai-addon.json",
+      "size": 19767,
+      "sha256": "6452323bd6f68e6485eb38d7954ae7e595cb3c3ca63f2df3ab810b2d5d6997cc"
+    },
+    {
+      "id": "quick-browser",
+      "name": "المتصفح السريع",
+      "icon": "🌐",
+      "version": "1.0.0",
+      "description": "المتصفح السريع: روابط مواقعك المفضلة",
+      "author": "المالك",
+      "file": "addons/quick-browser.alaisai-addon.json",
+      "size": 12168,
+      "sha256": "ea29697b433ef372126014e62d16270d5c9f85faf09eeb62df443576603492d1"
+    },
+    {
+      "id": "quick-browser-dev",
+      "name": "المتصفح السريع - بوابة المطورين",
+      "icon": "🌐",
+      "version": "1.0.0",
+      "description": "متصفح سريع بأقسام مخصصة وبوابة للمطورين، يحفظ تعديلاتك",
+      "author": "المالك",
+      "file": "addons/quick-browser-dev.alaisai-addon.json",
+      "size": 45200,
+      "sha256": "a911ae452eee9e460f1c5147adfe5ca7d8e7c32f370bcd20ca170c734153eb29"
+    },
+    {
+      "id": "simple-notes",
+      "name": "الملاحظات",
+      "icon": "📝",
+      "version": "1.0.0",
+      "description": "دفتر ملاحظات بسيط يحفظ نصك داخل التطبيق",
+      "author": "المالك",
+      "file": "addons/simple-notes.alaisai-addon.json",
+      "size": 1503,
+      "sha256": "7dbacdbe6cf4861f528182af3a22fe299847035b00424ecf7563a3c0a3774d56"
+    },
+    {
+      "id": "welcome",
+      "name": "الترحيب",
+      "icon": "✨",
+      "version": "1.0.0",
+      "description": "شاشة ترحيب بسيطة",
+      "author": "المالك",
+      "file": "addons/welcome.alaisai-addon.json",
+      "size": 1011,
+      "sha256": "4c889590d2a155fe74d6d35bb651e83048c5de77b93207cdf0df73e80cc70116"
     }
   ]
 }
