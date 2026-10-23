@@ -3,17 +3,6 @@
   "version": 1,
   "addons": [
     {
-      "id": "tasbih",
-      "name": "المسبحة",
-      "icon": "📿",
-      "version": "1.0.0",
-      "description": "مسبحة إلكترونية بعدّاد وهدف قابل للتخصيص",
-      "author": "Alaisai",
-      "file": "addons/tasbih.alaisai-addon.json",
-      "size": 4659,
-      "sha256": "e80a9df040023bdffdf4f8b5a03ed66214f332b29734779787fdff03ce300591"
-    },
-    {
       "id": "quick-browser-dev",
       "name": "المتصفح السريع - بوابة المطورين",
       "icon": "🌐",
