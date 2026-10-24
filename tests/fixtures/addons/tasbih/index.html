@@ -1,1 +1,16 @@
-
+<main class="tz" aria-label="المسبحة">
+  <div class="presets" role="group" aria-label="الذكر">
+    <button data-z="سبحان الله" aria-pressed="true">سبحان الله</button>
+    <button data-z="الحمد لله" aria-pressed="false">الحمد لله</button>
+    <button data-z="الله أكبر" aria-pressed="false">الله أكبر</button>
+    <button data-z="لا إله إلا الله" aria-pressed="false">لا إله إلا الله</button>
+    <button data-z="أستغفر الله" aria-pressed="false">أستغفر الله</button>
+  </div>
+  <h1 id="zikr" class="zikr">سبحان الله</h1>
+  <button id="tap" class="tap" aria-label="عدّ"><span id="n">0</span><small id="of">من 33</small></button>
+  <div class="row">
+    <label>الهدف <select id="goal"><option>33</option><option>99</option><option>100</option><option value="0">بلا حدّ</option></select></label>
+    <button id="reset">تصفير</button>
+  </div>
+  <p id="total" class="muted" role="status"></p>
+</main>
