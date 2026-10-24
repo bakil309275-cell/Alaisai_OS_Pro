@@ -1,17 +1,5 @@
 {
   "format": "alaisai-catalog",
   "version": 1,
-  "addons": [
-    {
-      "id": "quick-browser-dev",
-      "name": "المتصفح السريع - بوابة المطورين",
-      "icon": "🌐",
-      "version": "1.0.0",
-      "description": "متصفح سريع بأقسام مخصصة وبوابة للمطورين، يحفظ تعديلاتك",
-      "author": "المالك",
-      "file": "addons/quick-browser-dev.alaisai-addon.json",
-      "size": 45200,
-      "sha256": "a911ae452eee9e460f1c5147adfe5ca7d8e7c32f370bcd20ca170c734153eb29"
-    }
-  ]
+  "addons": []
 }
