@@ -1,1 +1,9 @@
-
+<main class="todo" aria-label="قائمة المهام">
+  <form id="f" class="add"><label class="sr" for="in">مهمة جديدة</label><input id="in" maxlength="200" placeholder="أضف مهمة…" autocomplete="off" required><button class="primary">إضافة</button></form>
+  <div class="filters" role="group" aria-label="تصفية">
+    <button data-f="all" aria-pressed="true">الكل</button><button data-f="open" aria-pressed="false">المتبقية</button><button data-f="done" aria-pressed="false">المنجزة</button>
+  </div>
+  <ul id="list" class="list"></ul>
+  <p id="count" class="muted" role="status"></p>
+  <button id="clear" class="link">مسح المنجزة</button>
+</main>
