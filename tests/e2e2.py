@@ -1,6 +1,7 @@
 # اختبار الإضافات والمتجر والمزامنة (مع خادم GitHub وهمي): python3 tests/e2e2.py
-import json, hashlib, base64, sys, re
+import json, hashlib, base64, sys, re, urllib.parse
 from playwright.sync_api import sync_playwright
+import fixture_catalog
 BASE='http://localhost:8765/index.html'; PW='Alaisai#2026'; TOKEN='github_pat_testtoken1234567890abcdef'
 fails=[]
 def check(name, cond, extra=''):
@@ -24,7 +25,7 @@ class GH:
             return route.fulfill(status=200,headers=cors,body=json.dumps({'truncated':False,'tree':[{'path':k,'type':'blob','sha':s.sha(v)} for k,v in s.files.items()]}))
         m=re.match(r'/repos/me/vault/contents/(.+)$',path)
         if m:
-            f=m.group(1)
+            f=urllib.parse.unquote(m.group(1))
             if req.method=='DELETE':
                 b=json.loads(req.post_data)
                 if f not in s.files or b.get('sha')!=s.sha(s.files[f]): return route.fulfill(status=409,headers=cors,body='{}')
@@ -50,8 +51,8 @@ def open_admin(page):
     page.wait_for_selector('.tabs',timeout=8000)
 
 with sync_playwright() as p:
-    b=p.chromium.launch(args=['--no-sandbox']); ctx=b.new_context(viewport={'width':1100,'height':800},accept_downloads=True)
-    gh=GH(); ctx.route('https://api.github.com/**',gh.handle)
+    b=p.chromium.launch(args=['--no-sandbox']); ctx=b.new_context(viewport={'width':1100,'height':800},accept_downloads=True,service_workers='block')
+    gh=GH(); ctx.route('https://api.github.com/**',gh.handle); fixture_catalog.install(ctx)
     page=ctx.new_page(); errs=[]; page.on('pageerror',lambda e:errs.append(str(e)))
     page.goto(BASE); page.wait_for_selector('.app-card'); page.wait_for_timeout(600)
 
@@ -87,9 +88,31 @@ with sync_playwright() as p:
     check('حزمة خبيثة المعرّف تُرفض', 'معرّف' in page.inner_text('#toast-wrap'))
     page.keyboard.press('Escape')
 
+    # ===== أسماء بأي لغة ومجلدات متداخلة =====
+    open_admin(page); page.click('[data-act=tab][data-tab=storage]')
+    page.click('[data-ex=newaddon]'); page.fill('input[name=name]','a/b'); page.keyboard.press('Enter'); page.wait_for_timeout(200)
+    check('اسم إضافة فيه / يُرفض برسالة', page.locator('.dialog').count()==1 and 'غير صالح' in page.inner_text('.dialog'))
+    page.fill('input[name=name]','لعبتي الأولى'); page.keyboard.press('Enter'); page.wait_for_timeout(500)
+    check('إضافة باسم عربي مع مسافة تُنشأ', page.evaluate("!!Addons.get('لعبتي الأولى')") and page.locator('.file-item .name').count()==4)
+    page.click('[data-ex=newfile]'); page.fill('input[name=name]','../x.js'); page.keyboard.press('Enter'); page.wait_for_timeout(200)
+    check('مسار فيه .. يُرفض', page.locator('.dialog').count()==1); page.fill('input[name=name]','src/bridge/AisaiAdapter.js'); page.keyboard.press('Enter'); page.wait_for_timeout(300)
+    check('ملف بمسار src/bridge/AisaiAdapter.js ينشئ المجلدات', page.evaluate("Addons.get('لعبتي الأولى').files.some(f=>f.name==='src/bridge/AisaiAdapter.js')") and page.locator('.file-item .name:has-text("📁 src")').count()==1)
+    page.locator('[data-ex=opendir][data-dir=src]').first.click(); page.locator('[data-ex=opendir][data-dir="src/bridge"]').first.click(); page.wait_for_timeout(200)
+    check('التنقل داخل المجلدات المتداخلة', 'AisaiAdapter.js' in page.inner_text('.panel'))
+    page.click('[data-ex=newdir]'); page.fill('input[name=name]','assets/صور'); page.keyboard.press('Enter'); page.wait_for_timeout(300)
+    check('مجلد جديد بمسار متداخل يُنشأ (بملف حفظ مخفي)', page.evaluate("Addons.get('لعبتي الأولى').files.some(f=>f.name==='src/bridge/assets/صور/.gitkeep')") and '.gitkeep' not in page.inner_text('.panel'))
+    page.locator('[data-ex=deldir][data-dir="src/bridge/assets"]').first.click(); page.wait_for_selector('.dialog button[type=submit]'); page.click('.dialog button[type=submit]'); page.wait_for_timeout(300)
+    check('حذف مجلد يحذف ما بداخله فقط', page.evaluate("Addons.get('لعبتي الأولى').files.every(f=>!f.name.startsWith('src/bridge/assets'))") and page.evaluate("Addons.get('لعبتي الأولى').files.some(f=>f.name==='src/bridge/AisaiAdapter.js')"))
+    page.evaluate("""()=>{const a=Addons.get('لعبتي الأولى'); const set=(n,c)=>{const f=a.files.find(x=>x.name===n); f?f.content=c:a.files.push({name:n,content:c})};
+      set('src/bridge/AisaiAdapter.js','window.ADAPTER="جاهز";'); set('index.html','<main><b id="o">…</b></main><script src="src/bridge/AisaiAdapter.js"></script>');
+      set('main.js','document.getElementById("o").textContent=window.ADAPTER+"|"+Alaisai.file("data/cfg.json");'); set('data/cfg.json','{"x":1}'); Store.save()}""")
+    page.locator('[data-ex=opendir][data-dir=""]').first.click(); page.wait_for_timeout(200); page.click('[data-ex=preview]'); page.wait_for_timeout(900)
+    check('سكربت بمسار متداخل يعمل وAlaisai.file تقرأ ملفاً من مجلد', page.frame_locator('#addon-preview iframe').locator('#o').inner_text(timeout=4000)=='جاهز|{"x":1}')
+    page.keyboard.press('Escape')
+
     # ===== المتجر =====
     page.click('#store-btn'); page.wait_for_selector('[data-cat=calculator]')
-    N=len(json.load(open('catalog/index.json'))['addons']); check('الكتالوج يعرض كل الإضافات المبنية (%d)'%N, page.locator('[data-cat]').count()==N, str(page.locator('[data-cat]').count()))
+    N=fixture_catalog.count(); check('الكتالوج يعرض كل الإضافات المبنية (%d)'%N, page.locator('[data-cat]').count()==N, str(page.locator('[data-cat]').count()))
     page.click('[data-cat=calculator]'); page.wait_for_timeout(1200)
     check('تثبيت الحاسبة من المتجر', 'مثبّتة' in page.inner_text('#cat-list'))
     page.keyboard.press('Escape'); page.locator('.app-card:has-text("الحاسبة")').click(); page.wait_for_timeout(800)
@@ -151,6 +174,15 @@ with sync_playwright() as p:
     page.evaluate("Sync.syncAddons()"); page.wait_for_timeout(2500)
     check('نُشرت ملفات الإضافة المحلية في addons/ بالمستودع', all(('addons/demo/'+n) in gh.files for n in ['manifest.json','index.html','main.js','style.css']), str([k for k in gh.files if k.startswith('addons')]))
     check('ملفات الإضافة في المستودع نص عادي مطابق', b'Alaisai' in gh.files.get('addons/demo/main.js',b''))
+    check('نُشرت المجلدات المتداخلة بمساراتها لإضافة باسم عربي', all(('addons/لعبتي الأولى/'+n) in gh.files for n in ['manifest.json','src/bridge/AisaiAdapter.js','data/cfg.json','index.html']), str([k for k in gh.files if k.startswith('addons')]))
+    gh.files['addons/إضافة المستودع/manifest.json']=json.dumps({'name':'إضافة من المستودع','icon':'📦','version':'1.0.0'},ensure_ascii=False).encode()
+    gh.files['addons/إضافة المستودع/lib/util.js']=b'window.U=1'; gh.files['addons/إضافة المستودع/index.html']=b'<main id="m">x</main>'
+    page.evaluate("Sync.check()"); page.wait_for_timeout(2500)
+    check('اكتشاف إضافة باسم عربي ومجلد متداخل من المستودع', page.evaluate("RepoAddons.items.some(i=>i.name==='إضافة المستودع'&&i.state==='new')"))
+    page.evaluate("RepoAddons.install('إضافة المستودع')"); page.wait_for_timeout(1500)
+    check('نُزّلت بمجلداتها المتداخلة وثُبّتت', page.evaluate("Addons.get('إضافة المستودع').files.some(f=>f.name==='lib/util.js')") and page.evaluate("Addons.isInstalled('إضافة المستودع')"))
+    pr=page.evaluate("RepoAddons.purge('إضافة المستودع')"); page.wait_for_timeout(300)
+    check('الحذف النهائي لإضافة عربية متداخلة يحذف كل ملفاتها من المستودع', not any(k.startswith('addons/إضافة المستودع/') for k in gh.files) and pr['remote']==3, str(pr))
     gh.files['addons/fromrepo/manifest.json']=json.dumps({'id':'fromrepo','name':'من المستودع','icon':'📦','version':'1.0.0','description':'وُضعت في المستودع'},ensure_ascii=False).encode()
     gh.files['addons/fromrepo/index.html']='<main><h1 id="t">نسخة 1</h1></main>'.encode()
     page.evaluate("Sync.check()"); page.wait_for_timeout(2500)
@@ -166,7 +198,7 @@ with sync_playwright() as p:
     page.evaluate("Sync.check()"); page.wait_for_timeout(3000)
     check('تحديث المستودع يصل تلقائياً للإضافة المثبّتة', 'نسخة 2' in page.evaluate("Addons.get('fromrepo').files.find(f=>f.name==='index.html').content"))
     def store_delete(name):
-        page.click('#store-btn'); page.wait_for_selector('[data-del=%s]'%name); page.click('[data-del=%s]'%name)
+        page.click('#store-btn'); page.wait_for_selector('[data-del="%s"]'%name); page.click('[data-del="%s"]'%name)
         page.wait_for_selector('.dialog button[type=submit]'); page.click('.dialog button[type=submit]'); page.wait_for_timeout(500)
         if page.locator('.dialog input[type=password]').count(): dialog_pw(page); page.wait_for_timeout(1500)
         page.wait_for_timeout(1500)
@@ -216,6 +248,7 @@ with sync_playwright() as p:
     try: page.evaluate("Sync.fetchRemote()"); ok=False
     except Exception as e: ok='عبارة' in str(e)
     check('عبارة تشفير خاطئة تُرفض بوضوح', ok)
+    errs=[e for e in errs if 'serviceWorker' not in e]  # ضجيج من وضع حجب Service Worker في Playwright داخل الإطارات المعزولة
     check('لا أخطاء JavaScript غير ملتقطة', not errs, str(errs))
     b.close()
 print('\nFAILED:',fails) if fails else print('\nكل اختبارات الإضافات والمزامنة نجحت')

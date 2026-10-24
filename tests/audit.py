@@ -96,7 +96,7 @@ with sync_playwright() as p:
         page.evaluate(f"Store.db.settings.theme='{theme}';UI.applyTheme('{theme}')"); page.wait_for_timeout(900)
         v=page.evaluate(CONTRAST_JS); ok(f'تباين الألوان (رئيسية، {theme})', not v, json.dumps(v[:5],ensure_ascii=False))
         page.get_by_text('الملاحظات').first.click(); page.wait_for_selector('.notes'); v=page.evaluate(CONTRAST_JS); ok(f'تباين الألوان (ملاحظات، {theme})', not v, json.dumps(v[:5],ensure_ascii=False)); page.click('#close-stage')
-        page.click('#store-btn'); page.wait_for_selector('#cat-list .admin-row'); v=page.evaluate(CONTRAST_JS); ok(f'تباين الألوان (متجر، {theme})', not v, json.dumps(v[:5],ensure_ascii=False)); page.click('#close-stage')
+        page.click('#store-btn'); page.wait_for_selector('#cat-list .notice, #cat-list .admin-row'); v=page.evaluate(CONTRAST_JS); ok(f'تباين الألوان (متجر، {theme})', not v, json.dumps(v[:5],ensure_ascii=False)); page.click('#close-stage')
         page.evaluate("void UI.dialog({title:'عنوان',message:'رسالة توضيحية',fields:[{id:'a',label:'حقل',type:'text'},{id:'b',label:'قائمة',type:'select',options:[['1','أ']]}],danger:true})"); page.wait_for_selector('.dialog'); v=page.evaluate(CONTRAST_JS); ok(f'تباين الألوان (حوار، {theme})', not v, json.dumps(v[:5],ensure_ascii=False)); page.keyboard.press('Escape')
         page.click('#admin-gate'); page.wait_for_timeout(500)
         if page.locator('.dialog input[name=p1]').count(): page.fill('input[name=p1]','Alaisai#2026'); page.fill('input[name=p2]','Alaisai#2026'); page.keyboard.press('Enter')

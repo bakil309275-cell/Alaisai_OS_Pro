@@ -69,6 +69,30 @@ await t('حزمة إضافة صالحة وأخرى خبيثة', async () => {
     { ...good, files: [{ name: 'a.js', content: 'x' }] }, { ...good, files: [good.files[0], { name: 'big.js', content: 'x'.repeat(600000) }] }])
     assert.throws(() => Addons.validatePackage(bad));
 });
+await t('أسماء الإضافات بأي لغة ومسارات متداخلة', () => {
+  for (const ok of ['إضافتي', 'my addon', 'لعبة-الألغاز v2', 'a'.repeat(60), 'مرحبا_world']) assert.ok(Addons.NAME_RE.test(ok), ok);
+  for (const bad of ['', ' x', 'x ', '.hid', 'x.', 'a/b', 'a\\b', 'a:b', 'a?b', '..', '__proto__', 'a'.repeat(61), 'x\u0000y']) assert.ok(!Addons.NAME_RE.test(bad), JSON.stringify(bad));
+  for (const ok of ['main.js', 'src/bridge/AisaiAdapter.js', 'بيانات/إعدادات.json', 'a/b/c/d/e/f/g/h.txt', 'src/.gitkeep']) assert.ok(Addons.FILE_RE.test(ok), ok);
+  for (const bad of ['', '/x', 'x/', 'a//b', '../x', 'a/../b', 'a/./b', 'a/b/c/d/e/f/g/h/i.txt', 'a\\b', 'a/ b']) assert.ok(!Addons.FILE_RE.test(bad), bad);
+  const pkg = { format: 'alaisai-addon', version: 1, id: 'لعبتي', files: [{ name: 'manifest.json', content: '{"name":"لعبتي"}' }, { name: 'src/bridge/AisaiAdapter.js', content: 'x' }] };
+  const r = Addons.validatePackage(pkg); assert.equal(r.addon.name, 'لعبتي'); assert.equal(r.addon.files[1].name, 'src/bridge/AisaiAdapter.js');
+});
+await t('هيكل المجلدات وقائمة المجلد', () => {
+  const files = ['manifest.json', 'src/a.js', 'src/bridge/AisaiAdapter.js', 'src/bridge/.gitkeep', 'data/فارغ/.gitkeep'].map((name) => ({ name, content: '' }));
+  const root = Addons.listDir(files, ''); assert.deepEqual(JSON.parse(JSON.stringify(root.dirs)), ['data', 'src']); assert.equal(root.files.length, 1);
+  const src = Addons.listDir(files, 'src'); assert.deepEqual(JSON.parse(JSON.stringify(src.dirs)), ['bridge']); assert.equal(src.files[0].name, 'src/a.js');
+  const br = Addons.listDir(files, 'src/bridge'); assert.equal(br.files.length, 1, '.gitkeep مخفي');
+});
+await t('بناء مستند الإضافة: دمج script/link بالمسار وAlaisai.file', () => {
+  const addon = { name: 'ت', files: [{ name: 'manifest.json', content: '{"name":"ت"}' },
+    { name: 'index.html', content: '<link rel="stylesheet" href="css/app.css"><main id="a"></main><script src="./src/bridge/A.js"></script>' },
+    { name: 'css/app.css', content: 'body{color:red}' }, { name: 'src/bridge/A.js', content: 'window.__A=1' }, { name: 'main.js', content: 'window.__M=1' }, { name: 'data/x.json', content: '{"k":1}' }] };
+  const doc = Addons.buildDoc(addon);
+  assert.ok(doc.includes('window.__A=1') && doc.includes('body{color:red}') && doc.includes('window.__M=1'));
+  assert.ok(!doc.includes('src="./src/bridge/A.js"') && !doc.includes('href="css/app.css"'));
+  assert.equal(doc.split('window.__A=1').length, 2, 'يُدمج مرة واحدة');
+  assert.ok(doc.includes('Alaisai.file=') && doc.includes('data/x.json') && !doc.includes('"manifest.json"'));
+});
 await t('مقارنة الإصدارات', () => { assert.equal(Addons.cmpVer('1.10.0', '1.9.9'), 1); assert.equal(Addons.cmpVer('1.0.0', '1.0.0'), 0); assert.equal(Addons.cmpVer('0.9.0', '1.0.0'), -1); });
 await t('اتساق رقم الإصدار (version.js / sw.js / package.json)', () => {
   const sw = fs.readFileSync('sw.js', 'utf8').match(/const VERSION = '([\d.]+)'/)[1], pk = JSON.parse(fs.readFileSync('package.json', 'utf8')).version;
