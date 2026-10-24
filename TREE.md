@@ -1,4 +1,4 @@
-# هيكل المشروع (الإصدار 2.3)
+# هيكل المشروع (الإصدار 2.4)
 
 ```
 index.html              الهيكل (سطح المكتب)
@@ -18,7 +18,7 @@ src/                    كود التطبيق:
   admin.js              لوحة الإدارة
   main.js               النواة
 addons/<الاسم>/         إضافات المستودع: manifest.json + index.html (+ main.js, style.css)
-catalog/                الكتالوج العام (يُبنى بـ node tools/build-catalog.mjs من catalog/src ومن addons/)
+catalog/                الكتالوج العام (يُبنى بـ node tools/build-catalog.mjs من addons/ ومن catalog/src إن وُجد)
 tools/                  أدوات البناء
 tests/                  الاختبارات
 docs/                   دليل المالك (لا يقرؤه التطبيق)

@@ -136,18 +136,11 @@
       "label": "ملاحظات متعددة مع بحث وحفظ تلقائي"
     },
     {
-      "src": "assets/screenshots/wide-3-store.png",
+      "src": "assets/screenshots/wide-3-explorer.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "متجر الإضافات"
-    },
-    {
-      "src": "assets/screenshots/wide-4-calculator.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "إضافة الحاسبة"
+      "label": "إضافاتك بمجلداتها وملفاتها"
     },
     {
       "src": "assets/screenshots/narrow-1-home.png",
@@ -164,18 +157,11 @@
       "label": "ملاحظات متعددة مع بحث وحفظ تلقائي"
     },
     {
-      "src": "assets/screenshots/narrow-3-store.png",
+      "src": "assets/screenshots/narrow-3-explorer.png",
       "sizes": "720x1280",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "متجر الإضافات"
-    },
-    {
-      "src": "assets/screenshots/narrow-4-calculator.png",
-      "sizes": "720x1280",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "إضافة الحاسبة"
+      "label": "إضافاتك بمجلداتها وملفاتها"
     }
   ]
 }

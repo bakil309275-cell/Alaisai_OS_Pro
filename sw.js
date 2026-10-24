@@ -1,6 +1,6 @@
 /* Alaisai OS - Service Worker
  * غيّر VERSION عند كل إصدار ليصل التحديث للمستخدمين. */
-const VERSION = '2.3.2';
+const VERSION = '2.4.0';
 const BUILD = 'dev'; // يستبدله سير العمل برمز الإيداع عند النشر ليصل التحديث للجميع
 const CACHE = `alaisai-${VERSION}-${BUILD}`;
 const CORE = [
@@ -31,10 +31,6 @@ const CORE = [
   './privacy.html',
   './terms.html',
   './catalog/index.json',
-  './catalog/addons/calculator.alaisai-addon.json',
-  './catalog/addons/timer.alaisai-addon.json',
-  './catalog/addons/todo.alaisai-addon.json',
-  './catalog/addons/tasbih.alaisai-addon.json',
 ];
 
 self.addEventListener('install', (event) => {

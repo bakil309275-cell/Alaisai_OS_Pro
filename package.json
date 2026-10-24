@@ -1,6 +1,6 @@
 {
   "name": "alaisai-os-pro",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "private": true,
   "description": "العيسائي برو: سطح مكتب تطبيقات PWA يعمل دون اتصال",
   "type": "module",
