@@ -166,3 +166,13 @@ label.lbl{display:block;font-size:.9rem;color:var(--muted);margin:10px 0 4px}
 .cat-row{flex-wrap:wrap}
 .cat-row .grow{flex:1 1 55%;min-width:150px;white-space:normal;overflow:visible}
 .cat-row .actions{display:flex;flex-wrap:wrap;gap:6px;flex:0 0 100%;justify-content:flex-end;align-items:center}
+
+/* شاشة ترحيب قصيرة (شعار ثم تختفي) في التطبيق المثبّت فقط، فلا تؤثر على قياسات الصفحة في المتصفح */
+#splash{display:none}
+@media (display-mode: standalone){
+  #splash{display:flex;position:fixed;inset:0;z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0b1124;color:#fff;font-size:1.4rem;pointer-events:none;animation:splash-out .5s ease 1.2s forwards}
+  #splash img{border-radius:22px;animation:splash-pop .7s ease both}
+}
+@keyframes splash-out{to{opacity:0;visibility:hidden}}
+@keyframes splash-pop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion: reduce){#splash{animation-duration:.01s;animation-delay:.6s}#splash img{animation:none}}
