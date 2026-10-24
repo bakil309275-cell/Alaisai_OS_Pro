@@ -1,1 +1,8 @@
-
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.bakil309275.alaisai",
+        "sha256_cert_fingerprints": ["72:33:B1:B4:6A:6A:19:0C:AB:95:87:41:26:77:95:69:A9:3B:73:A8:1B:0A:D2:97:58:20:06:A7:E8:36:57:A6"]
+      }
+    }]
