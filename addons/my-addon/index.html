@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نواة المحترف - Pro Core</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- الشريط الجانبي -->
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="logo">🚀</span>
+                <h2>Pro Core</h2>
+            </div>
+            <nav class="menu">
+                <button class="nav-btn active" data-target="prompts">🤖 برومبتات AI</button>
+                <button class="nav-btn" data-target="income">💰 تتبع الأرباح</button>
+                <button class="nav-btn" data-target="focus">⏱️ مؤقت التركيز</button>
+            </nav>
+            
+            <div class="vip-buttons-container">
+                <button id="buyVipBtn" class="btn-buy-vip">💎 اشترك في VIP</button>
+                <button id="activateVipBtn" class="btn-activate-vip">🔑 لدي كود تفعيل</button>
+                <!-- عرض بصمة الجهاز للمستخدم -->
+                <div class="device-id-display">جهازك: <span id="deviceIdText">جاري التحميل...</span></div>
+            </div>
+
+            <div class="sidebar-footer">
+                <p>الإصدار 1.1.0</p>
+                <!-- زر سري للمالك (اضغط 5 مرات لفتح لوحة التوليد) -->
+                <p id="secretAdminTrigger" style="cursor: pointer; color: var(--border);">Alaisai OS</p>
+            </div>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <!-- قسم برومبتات AI -->
+            <section id="prompts" class="section active">
+                <header class="section-header">
+                    <h1>مكتبة الذكاء الاصطناعي</h1>
+                    <p>احفظ أوامرك الجاهزة، وانسخها بضغطة واحدة.</p>
+                </header>
+                <div class="add-form">
+                    <input type="text" id="promptTitle" placeholder="عنوان البرومبت (مثال: كتابة إعلان تسويقي)">
+                    <textarea id="promptText" placeholder="نص البرومبت هنا..." rows="4"></textarea>
+                    
+                    <label class="vip-checkbox-label">
+                        <input type="checkbox" id="isVipPrompt">
+                        <span>جعل هذا البرومبت مقفلاً (حصري لمشتركي VIP) 🔒</span>
+                    </label>
+
+                    <button id="savePrompt" class="btn-primary">حفظ البرومبت</button>
+                </div>
+                <div class="prompts-grid" id="promptsList"></div>
+            </section>
+
+            <!-- قسم تتبع الأرباح -->
+            <section id="income" class="section">
+                <header class="section-header">
+                    <h1>تتبع الأرباح</h1>
+                    <p>راقب دخلك اليومي من أعمالك الحرة أو مشاريعك.</p>
+                </header>
+                <div class="income-header">
+                    <div class="total-balance">
+                        <span>إجمالي الأرباح</span>
+                        <h2 id="totalIncome">$0.00</h2>
+                    </div>
+                    <div class="add-income">
+                        <input type="number" id="incomeAmount" placeholder="المبلغ ($)" min="0.1" step="0.1">
+                        <input type="text" id="incomeDesc" placeholder="الوصف (مثال: تصميم شعار)">
+                        <button id="addIncomeBtn" class="btn-primary">إضافة</button>
+                    </div>
+                </div>
+                <ul class="transaction-list" id="incomeList"></ul>
+            </section>
+
+            <!-- قسم التركيز -->
+            <section id="focus" class="section">
+                <header class="section-header">
+                    <h1>مؤقت التركيز (Pomodoro)</h1>
+                    <p>اعمل لمدة 25 دقيقة بتركيز كامل، ثم خذ استراحة 5 دقائق.</p>
+                </header>
+                <div class="timer-container">
+                    <div class="timer-circle">
+                        <h1 id="timeDisplay">25:00</h1>
+                    </div>
+                    <div class="timer-controls">
+                        <button id="startTimer" class="btn-primary">ابدأ</button>
+                        <button id="resetTimer" class="btn-secondary">إعادة ضبط</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>
