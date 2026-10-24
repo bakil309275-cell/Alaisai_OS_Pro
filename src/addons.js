@@ -1,20 +1,34 @@
 /* الإضافات: حزمة ملفات (manifest.json + index.html + main.js + style.css) تعمل كتطبيق معزول على سطح المكتب */
 (function () {
   const E = UI.esc;
-  const NAME_RE = /^[\w-]{1,40}$/, FILE_RE = /^[\w.\- ]{1,80}$/, VER_RE = /^\d{1,4}\.\d{1,4}\.\d{1,4}$/;
-  const MAX_FILES = 30, MAX_FILE = 500000, MAX_TOTAL = 2000000;
+  // أسماء الإضافات بأي لغة، ومسارات الملفات مجلدات متداخلة (src/bridge/File.js). التحقق في Store ليتطابق مع التخزين
+  const NAME_RE = { test: (n) => Store.validName(n) }, FILE_RE = { test: (p) => Store.validPath(p) }, VER_RE = /^\d{1,4}\.\d{1,4}\.\d{1,4}$/;
+  const MAX_FILES = 100, MAX_FILE = 500000, MAX_TOTAL = 2000000;
   // أساس مظهر الإضافات: متغيرات داكن/فاتح يمكن للإضافة استخدامها (var(--bg), var(--fg), var(--accent)...)
   const BASE_CSS = ':root{--bg:#fff;--fg:#1b1f2a;--muted:#555e70;--card:#f1f3f8;--line:#cfd5e0;--accent:#0b6e9c;--accent-fg:#fff;--danger:#b4174f}' +
     'html[data-theme=dark]{--bg:#16161d;--fg:#f1f2f6;--muted:#b4bacb;--card:#23232d;--line:#3d3d4d;--accent:#4cc9f0;--accent-fg:#04202a;--danger:#ff7aa8}' +
     'html,body{margin:0;background:var(--bg);color:var(--fg)}body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6}[hidden]{display:none!important}';
+  const KEEP = '.gitkeep'; // ملف يحفظ المجلد الفارغ (git لا يحتفظ بمجلد بلا ملفات)
+  const normPath = (p) => { const out = []; for (const seg of String(p).split(/[?#]/)[0].split('/')) { if (!seg || seg === '.') continue; if (seg === '..') out.pop(); else out.push(seg); } return out.join('/'); };
+  const isLocalRef = (u) => !/^[a-z][\w+.\-]*:|^\/\//i.test(u);
   const jsSafe = (s) => s.replace(/<\/(script)/gi, '<\\/$1');
   const cssSafe = (s) => s.replace(/<\/(style)/gi, '<\\/$1');
 
   const Addons = {
-    NAME_RE, FILE_RE,
+    NAME_RE, FILE_RE, KEEP, normPath,
     list() { return Store.db.explorer.addons; },
     get(name) { return Store.db.explorer.addons.find((a) => a.name === name); },
     file(addon, name) { return addon.files.find((f) => f.name === name); },
+    // هيكل المجلدات: يعيد {dirs:[أسماء المجلدات المباشرة], files:[ملفات هذا المستوى]} لمسار مجلد داخل الإضافة ('' = الجذر)
+    listDir(files, dir = '') {
+      const pre = dir ? dir + '/' : '', dirs = new Set(), here = [];
+      for (const f of files) {
+        if (!f.name.startsWith(pre)) continue;
+        const rest = f.name.slice(pre.length), i = rest.indexOf('/');
+        if (i < 0) { if (rest !== KEEP) here.push(f); } else dirs.add(rest.slice(0, i));
+      }
+      return { dirs: [...dirs].sort((a, b) => a.localeCompare(b, 'ar')), files: here.sort((a, b) => a.name.localeCompare(b.name, 'ar')) };
+    },
 
     cmpVer(a, b) {
       const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
@@ -48,7 +62,7 @@
       if (r.error) throw new Error(r.error);
       const m = r.manifest;
       const txt = (n) => { const f = this.file(addon, n); return f ? f.content : ''; };
-      const css = m.styles.map((n) => cssSafe(txt(n))).join('\n');
+      const used = new Set();
       let body = txt('index.html'), headExtra = '';
       if (/<!doctype|<html|<body/i.test(body)) { // مستند كامل: نأخذ body وأنماط head فقط (DOMParser لا ينفّذ شيئاً)
         const d = new DOMParser().parseFromString(body, 'text/html');
@@ -56,8 +70,22 @@
         body = d.body.innerHTML;
       }
       if (!body.trim()) body = '<main id="app"></main>';
-      const js = m.scripts.map((n) => `<script>\n${jsSafe(txt(n))}\n<\/script>`).join('\n');
-      return Viewer.head(`<title>${E(m.name)}</title><style>${BASE_CSS}</style>` + (css ? `<style>${css}</style>` : '') + headExtra) + '<body>' + body + js + '</body></html>';
+      // مراجع الملفات المحلية في index.html (script src / link href) تُدمج من ملفات الإضافة بمساراتها
+      body = body.replace(/<script\b[^>]*?\bsrc\s*=\s*(["'])([^"']+)\1[^>]*>\s*<\/script>/gi, (m, q, src) => {
+        if (!isLocalRef(src)) return m; const p = normPath(src), f = this.file(addon, p);
+        if (!f) return m; used.add(p); return `<script>\n${jsSafe(f.content)}\n<\/script>`; });
+      body = body.replace(/<link\b[^>]*>/gi, (m) => {
+        if (!/rel\s*=\s*["']?stylesheet/i.test(m)) return m; const h = m.match(/\bhref\s*=\s*(["'])([^"']+)\1/); if (!h || !isLocalRef(h[2])) return m;
+        const p = normPath(h[2]), f = this.file(addon, p); if (!f) return m; used.add(p); return `<style>${cssSafe(f.content)}</style>`; });
+      const css = m.styles.filter((n) => !used.has(normPath(n))).map((n) => cssSafe(txt(n))).join('\n');
+      const js = m.scripts.filter((n) => !used.has(normPath(n))).map((n) => `<script>\n${jsSafe(txt(n))}\n<\/script>`).join('\n');
+      // Alaisai.file(path) / Alaisai.files(): قراءة ملفات الإضافة النصية (بيانات، قوالب...) من أي مجلد فيها
+      const skip = new Set(['manifest.json', 'index.html', ...used, ...m.scripts.map(normPath), ...m.styles.map(normPath)]); // ما نُفّذ أصلاً لا يُكرَّر
+      const map = {}; addon.files.forEach((f) => { if (!skip.has(f.name) && f.name.split('/').pop() !== KEEP) map[f.name] = f.content; });
+      const fileApi = '<script>(function(){var F=' + JSON.stringify(map).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029') +
+        ';function n(p){var o=[];String(p).split(/[?#]/)[0].split("/").forEach(function(s){if(!s||s===".")return;if(s==="..")o.pop();else o.push(s)});return o.join("/")}' +
+        'Alaisai.file=function(p){p=n(p);return Object.prototype.hasOwnProperty.call(F,p)?F[p]:null};Alaisai.files=function(){return Object.keys(F)}})()<\/script>';
+      return Viewer.head(`<title>${E(m.name)}</title><style>${BASE_CSS}</style>` + (css ? `<style>${css}</style>` : '') + headExtra + fileApi) + '<body>' + body + js + '</body></html>';
     },
 
     // ---------- الحزم (تصدير/استيراد/متجر) ----------
@@ -71,11 +99,11 @@
       const bad = (m) => { throw new Error(m); };
       if (!pkg || typeof pkg !== 'object' || pkg.format !== 'alaisai-addon') bad('هذا ليس ملف إضافة صالحاً (alaisai-addon)');
       if (pkg.version !== 1) bad('إصدار حزمة الإضافة غير مدعوم');
-      if (typeof pkg.id !== 'string' || !NAME_RE.test(pkg.id)) bad('معرّف الإضافة غير صالح (أحرف إنجليزية وأرقام و - _ فقط)');
+      if (typeof pkg.id !== 'string' || !NAME_RE.test(pkg.id)) bad('معرّف الإضافة غير صالح (حتى 60 حرفاً بلا / \\ : * ? " < > | ولا نقطة في البداية أو النهاية)');
       if (!Array.isArray(pkg.files) || !pkg.files.length || pkg.files.length > MAX_FILES) bad(`عدد الملفات غير صالح (1–${MAX_FILES})`);
       let total = 0; const seen = new Set();
       const files = pkg.files.map((f) => {
-        if (!f || typeof f.name !== 'string' || !FILE_RE.test(f.name) || typeof f.content !== 'string') bad('ملف غير صالح داخل الحزمة');
+        if (!f || typeof f.name !== 'string' || !FILE_RE.test(f.name) || typeof f.content !== 'string') bad('مسار ملف غير صالح داخل الحزمة: ' + String(f && f.name).slice(0, 60));
         if (seen.has(f.name)) bad('أسماء ملفات مكررة'); seen.add(f.name);
         if (f.content.length > MAX_FILE) bad(`الملف ${f.name} كبير جداً`);
         total += f.content.length; return { name: f.name, content: f.content };

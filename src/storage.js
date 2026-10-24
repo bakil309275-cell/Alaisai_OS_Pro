@@ -6,6 +6,13 @@
   const MAX_APPDATA = 256 * 1024; // لكل تطبيق/إضافة
   const rid = () => 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const str = (v, max, d = '') => (typeof v === 'string' ? v.slice(0, max) : d);
+  // أسماء الإضافات: أي لغة (عربي/إنجليزي/مسافات...) عدا ما يكسر المسارات أو أنظمة الملفات
+  const BAD_CH = /[\u0000-\u001f\u007f\\/:*?"<>|]/;
+  const RESERVED = ['__proto__', 'constructor', 'prototype'];
+  const validName = (n) => typeof n === 'string' && n.length >= 1 && n.length <= 60 && n === n.trim() && !BAD_CH.test(n) && !/^\.|\.$/.test(n) && !RESERVED.includes(n);
+  // مسار ملف داخل إضافة: مجلدات متداخلة بـ «/» (حتى 8 مستويات، 200 حرفاً)
+  const validPath = (p) => typeof p === 'string' && p.length >= 1 && p.length <= 200 && p.split('/').length <= 8
+    && p.split('/').every((s) => s.length >= 1 && s.length <= 80 && s === s.trim() && !BAD_CH.test(s) && s !== '.' && s !== '..');
 
   const WELCOME = '<div style="padding:20px;text-align:center;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:15px;color:white;font-family:system-ui"><h1>أهلاً بك</h1><p>نظام العيسائي الاحترافي جاهز للعمل.</p><button onclick="alert(\'مرحباً!\')" style="padding:10px 20px;border:none;border-radius:8px;background:#4ade80;color:#04200f;cursor:pointer;margin-top:10px">انقر هنا</button></div>';
 
@@ -100,7 +107,7 @@
           else if (m) { type = 'url'; content = m[1]; }
           else type = 'html';
         }
-        if (type === 'addon' && !/^[\w-]{1,40}$/.test(content)) type = 'html';
+        if (type === 'addon' && !validName(content)) type = 'html';
         return { id, name: str(a.name, 60, 'بدون اسم') || 'بدون اسم', icon: str(a.icon, 8, '📦') || '📦',
           type, content, order: Number.isFinite(a.order) ? a.order : i };
       }).sort((x, y) => x.order - y.order).map((a, i) => ({ ...a, order: i }));
@@ -114,16 +121,17 @@
         .filter((r) => r && typeof r === 'object').slice(0, 500)
         .map((r) => ({ id: r.id || rid(), email: str(r.email, 200), text: str(r.text, 5000), ts: Number(r.ts) || Number(r.id) || Date.now() }));
 
-      const fileList = (arr) => (Array.isArray(arr) ? arr : []).filter((f) => f && typeof f.name === 'string' && f.name.length <= 80)
+      const fileList = (arr) => (Array.isArray(arr) ? arr : []).filter((f) => f && validPath(f.name))
         .slice(0, 200).map((f) => ({ name: f.name, content: str(f.content, 500000) }));
+      const dedupe = (arr) => { const u = new Set(); return arr.filter((f) => !u.has(f.name) && u.add(f.name)); };
       const ex = raw.explorer && typeof raw.explorer === 'object' ? raw.explorer : extras.explorer || {};
       const explorer = {
         system: Array.isArray(ex.system) ? fileList(ex.system) : d.explorer.system,
         addons: (() => {
           const names = new Set();
-          return (Array.isArray(ex.addons) ? ex.addons : []).filter((a) => a && /^[\w-]{1,40}$/.test(a.name || '') && !names.has(a.name) && names.add(a.name))
-            .slice(0, 100).map((a) => ({ name: a.name, source: ['catalog', 'import', 'local'].includes(a.source) ? a.source : 'local',
-              files: fileList(a.files).slice(0, 30) }));
+          return (Array.isArray(ex.addons) ? ex.addons : []).filter((a) => a && validName(a.name) && !names.has(a.name) && names.add(a.name))
+            .slice(0, 100).map((a) => ({ name: a.name, source: ['catalog', 'import', 'local', 'repo'].includes(a.source) ? a.source : 'local',
+              files: dedupe(fileList(a.files)).slice(0, 100) }));
         })(),
         labCode: str(ex.labCode, 500000),
       };
@@ -132,7 +140,7 @@
       const appData = {};
       if (raw.appData && typeof raw.appData === 'object' && !Array.isArray(raw.appData)) {
         Object.keys(raw.appData).slice(0, 400).forEach((ns) => {
-          if (!/^(addon:)?[\w-]{1,64}$/.test(ns) || ns === '__proto__') return;
+          if (!(ns.startsWith('addon:') ? validName(ns.slice(6)) : /^[\w-]{1,64}$/.test(ns)) || ns === '__proto__') return;
           const src = raw.appData[ns]; if (!src || typeof src !== 'object') return;
           const out = Object.create(null); let size = 0;
           Object.keys(src).slice(0, 200).forEach((k) => {
@@ -240,7 +248,7 @@
       for (const k of ['db', 'backups', 'errlog', 'sync', 'secrets', 'devkey', 'hidden_addons']) { try { await this.del(k); } catch (_) {} }
     },
 
-    MAX_APPDATA, TYPES,
+    MAX_APPDATA, TYPES, validName, validPath,
     rid,
   };
 

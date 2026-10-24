@@ -2,7 +2,7 @@
 (function () {
   const E = UI.esc;
   const hex = (u8) => [...u8].map((b) => b.toString(16).padStart(2, '0')).join('');
-  const PATH_RE = /^addons\/[\w-]{1,40}\.alaisai-addon\.json$/;
+  const PATH_RE = /^addons\/[\w.-]{1,90}\.alaisai-addon\.json$/;
 
   const Catalog = {
     index: null,
@@ -98,7 +98,7 @@
           const un = inst ? `<button class="btn btn-sm" data-uninst="${E(e.id)}" aria-label="حذف ${E(e.name)} من سطح المكتب">🗑 حذف</button>` : '';
           const del = `<button class="btn btn-sm btn-danger" data-del="${E(e.id)}" aria-label="حذف ${E(e.name)} نهائياً">⛔ حذف نهائي</button>`;
           return `<div class="admin-row cat-row"><span class="ico" aria-hidden="true">${E(e.icon)}</span><span class="grow"><b>${E(e.name)}</b> ${e.version ? `<span class="badge">v${E(e.version)}</span>` : ''}${e.kind === 'repo' ? ' <span class="badge">مستودعك</span>' : ''}${e.state === 'new' ? ' <span class="badge">جديد</span>' : ''}${e.state === 'gone' ? ' <span class="badge">محذوفة من المستودع</span>' : ''}<br><small style="color:var(--muted)">${E(e.description)}</small></span><span class="actions">${tail}${act}${un}${del}</span></div>`;
-        }).join('') : '<p style="color:var(--muted)">لا نتائج</p>';
+        }).join('') : `<div class="notice ok" role="status">${s ? 'لا نتائج' : '🧩 لا توجد إضافات في المتجر بعد. ستظهر هنا الإضافات التي تُنشر في مجلد <code>addons/</code> بالمستودع، أو تنشئها من «الملفات والإضافات» في لوحة الإدارة.'}</div>`;
         if (this.hidden.size) list.insertAdjacentHTML('beforeend', `<p style="margin-top:12px"><button class="btn btn-sm" data-unhide="1">♻️ إظهار الإضافات المحذوفة نهائياً (${this.hidden.size})</button></p>`);
       };
       q.addEventListener('input', draw);

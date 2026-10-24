@@ -32,7 +32,7 @@
       const j = await r.json(), out = {};
       for (const t of j.tree || []) {
         if (t.type !== 'blob') continue;
-        const m = /^addons\/([^/]+)\/([^/]+)$/.exec(t.path);
+        const m = /^addons\/([^/]+)\/(.+)$/.exec(t.path);
         if (!m || !Addons.NAME_RE.test(m[1]) || !Addons.FILE_RE.test(m[2])) continue;
         (out[m[1]] = out[m[1]] || {})[m[2]] = { sha: t.sha, path: t.path };
       }
@@ -113,7 +113,8 @@
     },
     async delFile(path, sha) {
       // قائمة بيضاء: لا يُحذف أي شيء إلا ملفات إضافة واحدة بعينها (مصدرها أو حزمتها المبنية)
-      if (!/^(addons\/[\w-]{1,40}\/[\w.\- ]{1,80}|catalog\/src\/[\w-]{1,40}\/[\w.\- ]{1,80}|catalog\/addons\/[\w-]{1,40}\.alaisai-addon\.json)$/.test(path)) throw new Error('مسار غير مسموح بحذفه');
+      const m = /^(addons|catalog\/src)\/([^/]+)\/(.+)$/.exec(path), pk = /^catalog\/addons\/[\w.-]{1,90}\.alaisai-addon\.json$/.test(path);
+      if (!pk && !(m && Addons.NAME_RE.test(m[2]) && Addons.FILE_RE.test(m[3]))) throw new Error('مسار غير مسموح بحذفه');
       const r = await Sync.gh(`${Sync.base()}/contents/${encPath(path)}`, { method: 'DELETE', body: { message: 'Alaisai: حذف ' + path, sha, branch: Sync.cfg.branch } });
       if (!r.ok && r.status !== 404) throw new Sync.SyncError('http', 'تعذّر حذف ' + path + ' (' + r.status + ')');
     },
@@ -130,13 +131,18 @@
       const r = await Sync.gh(`${Sync.base()}/git/trees/${enc(Sync.cfg.branch)}?recursive=1`);
       if (!r.ok && r.status !== 404 && r.status !== 409) throw new Sync.SyncError('http', 'GitHub أعاد الخطأ ' + r.status);
       const blobs = r.ok ? ((await r.json()).tree || []).filter((t) => t.type === 'blob') : [];
-      const mine = blobs.filter((t) => t.path.startsWith(`${DIR}/${name}/`) || t.path.startsWith(`catalog/src/${name}/`) || t.path === `catalog/addons/${name}.alaisai-addon.json`);
+      let pkgFile = `catalog/addons/${name}.alaisai-addon.json`, idx = null;
+      if (blobs.some((t) => t.path === 'catalog/index.json')) {
+        idx = await this.getFile('catalog/index.json');
+        try { const e = (JSON.parse(idx.text).addons || []).find((a) => a && a.id === name); if (e && typeof e.file === 'string') pkgFile = 'catalog/' + e.file; } catch (_) {}
+      }
+      const mine = blobs.filter((t) => t.path.startsWith(`${DIR}/${name}/`) || t.path.startsWith(`catalog/src/${name}/`) || t.path === pkgFile);
       let n = 0;
       for (const t of mine) { await this.delFile(t.path, t.sha); n++; }
       let index = false;
-      if (blobs.some((t) => t.path === 'catalog/index.json')) {
-        const f = await this.getFile('catalog/index.json');
-        if (f) {
+      if (idx) {
+        const f = idx;
+        {
           const j = JSON.parse(f.text);
           if (j && Array.isArray(j.addons) && j.addons.some((a) => a && a.id === name)) {
             j.addons = j.addons.filter((a) => !(a && a.id === name));
