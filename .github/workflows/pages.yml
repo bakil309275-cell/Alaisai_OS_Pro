@@ -2,6 +2,8 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+    # نسخة المزامنة المشفّرة تُرفع كثيراً ولا تغيّر الموقع: لا داعي لإعادة النشر في كل مرة
+    paths-ignore: ['alaisai-backup.json']
   workflow_dispatch:
 permissions:
   contents: read
