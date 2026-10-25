@@ -1,0 +1,10 @@
+{
+  "id": "pro-core",
+  "name": "نواة المحترف | Pro Core",
+  "version": "1.1.0",
+  "description": "مركز أعمالك الشخصي: إدارة برومبتات الذكاء الاصطناعي، تتبع الأرباح، ومؤقت التركيز.",
+  "author": "Alaisai VIP",
+  "icon": "icon.png",
+  "entry": "index.html",
+  "permissions": ["storage", "clipboard"]
+}
