@@ -2,7 +2,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "com.alaisai.os",
+    "package_name": "io.github.bakil309275.alaisai",
     "sha256_cert_fingerprints": ["ضع هنا بصمة SHA-256 لمفتاح التوقيع من Play Console"]
   }
 }]
