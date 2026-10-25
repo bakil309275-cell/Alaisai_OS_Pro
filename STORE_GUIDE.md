@@ -13,7 +13,8 @@
 - **iPhone/iPad:** Safari ← مشاركة ← «إضافة إلى الشاشة الرئيسية» (يعرض التطبيق الشرح بنفسه).
 
 ## 3) Google Play (عبر TWA)
-**شرط أساسي:** يجب أن يعمل الموقع على جذر نطاق (`https://نطاقك/`) ليُرفق `/.well-known/assetlinks.json`. مستودع GitHub Pages من نوع «project site» لا يصلح لذلك؛ استخدم نطاقاً خاصاً أو مستودعاً باسم `bakil309275-cell.github.io`.
+**شرط أساسي:** يتحقق أندرويد من الملف عند **جذر النطاق**: `https://bakil309275-cell.github.io/.well-known/assetlinks.json`. مستودع التطبيق (`Alaisai_OS_Pro`) منشور تحت مسار فرعي فلا يصلح لذلك، لذا أنشئ مستودعاً عاماً ثانياً باسمه بالضبط `bakil309275-cell.github.io` فيه ملف `.nojekyll` (فارغ) و`.well-known/assetlinks.json`، وفعّل Pages من الفرع `main` (الجذر). لا تضع الملف في مستودع التطبيق.
+معرّف الحزمة المعتمد: `io.github.bakil309275.alaisai` (لا يتغيّر بعد النشر). احفظ `signing.keystore` وكلمات السر خارج المستودع.
 1. حساب Google Play Console (رسم تسجيل لمرة واحدة، وقد تُطلب خطوات تحقق للحسابات الجديدة).
 2. أسهل طريق: <https://www.pwabuilder.com> ← أدخل رابط موقعك ← Package for Stores ← Android. أو Bubblewrap: انسخ `store/twa-manifest.template.json` إلى `twa-manifest.json` وعدّل النطاق، ثم `npx @bubblewrap/cli build`.
 3. ارفع ملف `.aab`، وفعّل **Play App Signing**، ثم انسخ بصمة SHA-256 إلى `store/assetlinks.template.json` وانشره باسم `.well-known/assetlinks.json` على نطاقك (يجب أن يردّ بـ 200 دون إعادة توجيه).
