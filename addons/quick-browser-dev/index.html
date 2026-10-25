@@ -1,10 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>المتصفح السريع - بوابة المطورين</title>
-<style>
+<html lang="ar" dir="rtl" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank"><script>(function(){var p={},n=0;addEventListener("message",function(e){var d=e.data;if(e.source!==parent||!d||!d.alaisai||!p[d.id])return;var x=p[d.id];delete p[d.id];d.ok?x[0](d.result):x[1](new Error(d.error))});function c(o,a){return new Promise(function(r,j){var i=++n;p[i]=[r,j];parent.postMessage({alaisai:1,id:i,op:o,args:a},"*")})}window.Alaisai={version:1,env:{"theme":"dark","lang":"ar","dir":"rtl"},toast:function(m){return c("toast",[String(m)])},get:function(k){return c("get",[k]).then(function(v){return v==null?null:JSON.parse(v)})},set:function(k,v){return c("set",[k,JSON.stringify(v)])},remove:function(k){return c("remove",[k])},keys:function(){return c("keys",[])}};addEventListener("keydown",function(e){if(e.key==="Escape")setTimeout(function(){if(!e.defaultPrevented)c("escape",[])},0)})})();</script><style>body{font-family:system-ui,sans-serif;color:#222}</style><title>المتصفح السريع - بوابة المطورين</title><style>:root{--bg:#fff;--fg:#1b1f2a;--muted:#555e70;--card:#f1f3f8;--line:#cfd5e0;--accent:#0b6e9c;--accent-fg:#fff;--danger:#b4174f}html[data-theme=dark]{--bg:#16161d;--fg:#f1f2f6;--muted:#b4bacb;--card:#23232d;--line:#3d3d4d;--accent:#4cc9f0;--accent-fg:#04202a;--danger:#ff7aa8}html,body{margin:0;background:var(--bg);color:var(--fg)}body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6}[hidden]{display:none!important}</style><style>
   :root {
     --bg-grad-start: #1a1a2e;
     --bg-grad-end: #16213e;
@@ -186,15 +181,13 @@
     .site-name-ar { font-size: 0.6rem; }
     .site-btn svg, .site-btn img { width: 20px; height: 20px; }
   }
-</style>
-</head>
-<body>
+</style><script>(function(){var F={"README.md":"# مجلد الإضافات\n\nكل مجلد هنا هو **إضافة**. اسم المجلد هو اسم الإضافة، ويمكن أن يكون بالعربية أو الإنجليزية أو بمسافات.\n\n```\naddons/\n  اسم الإضافة/\n    manifest.json      (إلزامي)  {\"name\":\"الاسم الظاهر\",\"icon\":\"🧩\",\"version\":\"1.0.0\",\"description\":\"...\"}\n    index.html         المحتوى\n    main.js\n    style.css\n    src/bridge/Adapter.js   ← مجلدات متداخلة مسموحة\n```\n\n- يمكن ربط الملفات بمساراتها داخل `index.html`: `\u003cscript src=\"src/bridge/Adapter.js\">\u003c/script>` و`\u003clink rel=\"stylesheet\" href=\"css/app.css\">`.\n- من الكود: `Alaisai.file(\"data/config.json\")` تقرأ أي ملف نصي من الإضافة، و`Alaisai.files()` تعدّدها.\n- الإضافات التي تنشئها داخل التطبيق تُنشر هنا تلقائياً مع المزامنة، وما تضعه هنا يظهر في «متجر الإضافات».\n- هذا الملف لا يُعدّ إضافة ولا يتأثر به شيء.\n"};function n(p){var o=[];String(p).split(/[?#]/)[0].split("/").forEach(function(s){if(!s||s===".")return;if(s==="..")o.pop();else o.push(s)});return o.join("/")}Alaisai.file=function(p){p=n(p);return Object.prototype.hasOwnProperty.call(F,p)?F[p]:null};Alaisai.files=function(){return Object.keys(F)}})()</script></head><body>
 
 <div id="app-container">
   
   <div class="app-header">
     <div class="header-icon">
-      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg>
     </div>
     <div class="header-text">
       <h1>المتصفح السريع</h1>
@@ -207,12 +200,225 @@
 
   <input type="text" id="searchInput" class="search-box" placeholder="🔍 ابحث عن أداة أو موقع...">
 
-  <div id="sitesContainer"></div>
+  <div id="sitesContainer"><div class="section-header">
+      <div class="section-title">الذكاء الاصطناعي</div>
+      <button class="menu-btn" onclick="openManageModal('ai')">⋮</button>
+    </div><div class="site-grid"><a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(16, 163, 127); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M22.281 11.51c0-1.108-.34-2.15-.92-3.01.23-1.02.06-2.12-.49-3.02-.95-1.56-2.62-2.48-4.42-2.48-.3 0-.59.03-.88.08C14.84 2.16 13.47 1.5 12 1.5c-2.17 0-4.08 1.32-4.9 3.18-.16-.02-.32-.03-.48-.03-2.32 0-4.28 1.65-4.76 3.86C1.15 9.61.5 11.24.5 12.94c0 2.17 1.32 4.08 3.18 4.9-.02.16-.03.32-.03.48 0 2.32 1.65 4.28 3.86 4.76 1.1 1.71 2.73 2.36 4.43 2.36 1.108 0 2.15-.34 3.01-.92 1.02.23 2.12.06 3.02-.49 1.56-.95 2.48-2.62 2.48-4.42 0-.3-.03-.59-.08-.88 1.61-1.15 2.61-2.97 2.61-4.92zm-10.17 7.08c-1.36 0-2.49-.63-3.25-1.62l.78-2.14c.18.02.35.03.53.03 1.96 0 3.55-1.59 3.55-3.55 0-1.05-.46-2.02-1.21-2.67l1.5-1.5c1.36 1.2 2.21 2.95 2.21 4.9 0 3.59-2.91 6.5-6.5 6.5-.53 0-1.05-.06-1.55-.18l.93-2.54c.51.17 1.05.26 1.61.26zm-2.3-9.77c0-1.36.63-2.49 1.62-3.25l2.14.78c-.02.18-.03.35-.03.53 0 1.96 1.59 3.55 3.55 3.55 1.05 0 2.02-.46 2.67-1.21l1.5 1.5c-1.2 1.36-2.95 2.21-4.9 2.21-3.59 0-6.5-2.91-6.5-6.5 0-.53.06-1.05.18-1.55l2.54.93c-.17.51-.26 1.05-.26 1.61z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">ChatGPT</span>
+          <span class="site-name-ar">شات جي بي تي</span>
+        </div>
+      </a><a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(26, 115, 232); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Gemini</span>
+          <span class="site-name-ar">جيميني</span>
+        </div>
+      </a><a href="https://www.deepseek.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(45, 91, 255); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20.7 6.7C18.9 4 15.8 2 12 2 6.5 2 2 6.5 2 12c0 5.5 4.5 10 10 10 5.5 0 10-4.5 10-10 0-2-0.6-3.9-1.6-5.5-0.3 0.6-0.9 1.2-1.5 1.6-2.2 1.5-4.7 2.4-7.4 2.4-0.5 0-0.9-0.1-1.4-0.2-0.5 1.3-1.2 2.4-2.2 3.2-0.1-0.6-0.2-1.3-0.2-2 0-1.1 0.3-2.2 0.7-3.2-0.3-0.3-0.5-0.7-0.7-1.1-0.3 1.6-1.4 3-2.9 3.5-0.1-1.5 0.3-3.1 1.3-4.3 0.5-0.6 1.1-1 1.8-1.3-1-1.2-2.2-2.1-3.5-2.6C6.1 6 5 8.8 5 12c0 3.9 3.1 7 7 7 3.9 0 7-3.1 7-7 0-2.2-1-4.1-2.6-5.4-0.2 0.6-0.5 1.2-0.9 1.7-1.1 1.4-2.7 2.3-4.5 2.3z" fill="#fff"></path><circle cx="8" cy="11" r="1.5" fill="#2D5BFF"></circle><path d="M13 13c1.5 1 3.5 1 5 0" stroke="#2D5BFF" stroke-width="1.5" stroke-linecap="round"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">DeepSeek</span>
+          <span class="site-name-ar">ديب سيك</span>
+        </div>
+      </a><a href="https://claude.ai/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(217, 119, 87); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Claude</span>
+          <span class="site-name-ar">كلود</span>
+        </div>
+      </a></div><div class="section-header">
+      <div class="section-title">البحث والتخزين</div>
+      <button class="menu-btn" onclick="openManageModal('search')">⋮</button>
+    </div><div class="site-grid"><a href="https://www.google.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(66, 133, 244); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"></path><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"></path><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"></path><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Google</span>
+          <span class="site-name-ar">جوجل</span>
+        </div>
+      </a><a href="https://drive.google.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(52, 168, 83); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M19.34 3H4.66L12 16.43 19.34 3zM4.32 4.46 11 16.43 4.32 19.54l.18-15.08zM12.68 16.43 19.68 4.46 19.5 19.54l-6.82-3.11z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Drive</span>
+          <span class="site-name-ar">درايف</span>
+        </div>
+      </a><a href="https://earth.google.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(66, 133, 244); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Earth</span>
+          <span class="site-name-ar">إيرث</span>
+        </div>
+      </a></div><div class="section-header">
+      <div class="section-title">تطوير الويب</div>
+      <button class="menu-btn" onclick="openManageModal('webdev')">⋮</button>
+    </div><div class="site-grid"><a href="https://code.visualstudio.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(0, 122, 204); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.46 1.06l-5.4 5.4L7.4 4.2 1.06 8.3l5.4 5.4-5.4 5.4 6.34 4.1 4.66-2.26 5.4 5.4 5.24-5.24V6.3l-5.24-5.24zm-1.06 16.6l-3.9-3.9 3.9-3.9v7.8zm-8.2-7.8l3.9 3.9-3.9 3.9V9.86z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">VS Code</span>
+          <span class="site-name-ar">في إس كود</span>
+        </div>
+      </a><a href="https://stackoverflow.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(245, 128, 37); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M18.986 21.865v-6.404h2.134V24H1.844v-8.539h2.13v6.404h15.012zM6.111 19.731H16.85v-2.137H6.111v2.137zm.259-4.852l10.48 2.189.451-2.07-10.478-2.187-.453 2.068zm1.359-5.056l9.705 4.53.903-1.95-9.706-4.53-.902 1.95zm2.715-4.785l8.217 6.855 1.359-1.62-8.216-6.853-1.36 1.618zM15.751 0l-1.746 1.294c2.653 3.585 4.943 8.563 4.943 8.563l1.746-1.294S18.404 3.585 15.751 0z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Stack</span>
+          <span class="site-name-ar">ستاك</span>
+        </div>
+      </a><a href="https://developer.mozilla.org/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">MDN</span>
+          <span class="site-name-ar">إم دي إن</span>
+        </div>
+      </a><a href="https://www.w3schools.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(4, 170, 109); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">W3S</span>
+          <span class="site-name-ar">دبليو 3</span>
+        </div>
+      </a><a href="https://github.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(24, 23, 23); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">GitHub</span>
+          <span class="site-name-ar">جيت هاب</span>
+        </div>
+      </a></div><div class="section-header">
+      <div class="section-title">التصميم</div>
+      <button class="menu-btn" onclick="openManageModal('design')">⋮</button>
+    </div><div class="site-grid"><a href="https://www.figma.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(242, 78, 30); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 24c2.208 0 4-1.792 4-4v-4H8c-2.208 0-4 1.792-4 4s1.792 4 4 4zm0-12h4V8H8c-2.208 0-4 1.792-4 4s1.792 4 4 4zm0-8h4V0H8C5.792 0 4 1.792 4 4s1.792 4 4 4zm8 4c2.208 0 4-1.792 4-4s-1.792-4-4-4-4 1.792-4 4 1.792 4 4 4zm0 2c-2.208 0-4 1.792-4 4s1.792 4 4 4 4-1.792 4-4-1.792-4-4-4z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Figma</span>
+          <span class="site-name-ar">فيجما</span>
+        </div>
+      </a></div><div class="section-header">
+      <div class="section-title">تطوير الألعاب</div>
+      <button class="menu-btn" onclick="openManageModal('gamedev')">⋮</button>
+    </div><div class="site-grid"><a href="https://unity.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Unity</span>
+          <span class="site-name-ar">يونيتي</span>
+        </div>
+      </a><a href="https://www.unrealengine.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Unreal</span>
+          <span class="site-name-ar">أنريل</span>
+        </div>
+      </a><a href="https://godotengine.org/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(71, 140, 191); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Godot</span>
+          <span class="site-name-ar">جودو</span>
+        </div>
+      </a><a href="https://www.blender.org/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(245, 121, 42); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Blender</span>
+          <span class="site-name-ar">بلندر</span>
+        </div>
+      </a></div><div class="section-header">
+      <div class="section-title">الاستضافة</div>
+      <button class="menu-btn" onclick="openManageModal('hosting')">⋮</button>
+    </div><div class="site-grid"><a href="https://www.netlify.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(0, 199, 183); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Netlify</span>
+          <span class="site-name-ar">نتليفاي</span>
+        </div>
+      </a><a href="https://vercel.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M24 22.525H0L12 1.475l12 21.05z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Vercel</span>
+          <span class="site-name-ar">فيرسل</span>
+        </div>
+      </a><a href="http://elessaiy.blogspot.com" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(76, 201, 240); color: rgb(0, 0, 0);">
+        <img src="https://www.google.com/s2/favicons?domain=http://elessaiy.blogspot.com&amp;sz=64" alt="icon" onerror="this.style.display='none'">
+        <div class="site-names">
+          <span class="site-name-en">Elessaiy</span>
+          <span class="site-name-ar">Elessaiy</span>
+        </div>
+      </a></div><div class="section-header">
+      <div class="section-title">التواصل</div>
+      <button class="menu-btn" onclick="openManageModal('social')">⋮</button>
+    </div><div class="site-grid"><a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(255, 0, 0); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">YouTube</span>
+          <span class="site-name-ar">يوتيوب</span>
+        </div>
+      </a><a href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(24, 119, 242); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Facebook</span>
+          <span class="site-name-ar">فيسبوك</span>
+        </div>
+      </a><a href="https://web.whatsapp.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(37, 211, 102); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">WhatsApp</span>
+          <span class="site-name-ar">واتساب</span>
+        </div>
+      </a><a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(228, 64, 95); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Instagram</span>
+          <span class="site-name-ar">إنستغرام</span>
+        </div>
+      </a><a href="https://www.tiktok.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">TikTok</span>
+          <span class="site-name-ar">تيك توك</span>
+        </div>
+      </a><a href="https://x.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(0, 0, 0); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">X (Twitter)</span>
+          <span class="site-name-ar">إكس</span>
+        </div>
+      </a></div><div class="section-header">
+      <div class="section-title">الأخبار</div>
+      <button class="menu-btn" onclick="openManageModal('news')">⋮</button>
+    </div><div class="site-grid"><a href="https://www.bbc.com/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(187, 25, 25); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">BBC</span>
+          <span class="site-name-ar">بي بي سي</span>
+        </div>
+      </a><a href="https://www.aljazeera.net/" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(250, 185, 21); color: rgb(0, 0, 0);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Al Jazeera</span>
+          <span class="site-name-ar">الجزيرة</span>
+        </div>
+      </a></div><div class="section-header">
+      <div class="section-title">مشاريعي المحلية</div>
+      <button class="menu-btn" onclick="openManageModal('local')">⋮</button>
+    </div><div class="site-grid"><a href="http://127.0.0.1:8080" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(76, 201, 240); color: rgb(0, 0, 0);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Dashboard</span>
+          <span class="site-name-ar">لوحة التحكم</span>
+        </div>
+      </a><a href="http://localhost:3000" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(247, 37, 133); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Server</span>
+          <span class="site-name-ar">الخادم</span>
+        </div>
+      </a><a href="http://localhost:5173" target="_blank" rel="noopener noreferrer" class="site-btn" style="background-color: rgb(114, 9, 183); color: rgb(255, 255, 255);">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"></path></svg>
+        <div class="site-names">
+          <span class="site-name-en">Vite</span>
+          <span class="site-name-ar">تطبيق Vite</span>
+        </div>
+      </a></div><div class="warning-box">⚠️ تعمل فقط إذا كان الخادم المحلي قيد التشغيل.</div></div>
 
   <div class="footer-bar">
     <span>⚡ سرعة فائقة</span>
-    <span>● <strong id="siteCount">0</strong> موقعاً</span>
-    <span>📁 <strong id="catCount">0</strong> أقسام</span>
+    <span>● <strong id="siteCount">31</strong> موقعاً</span>
+    <span>📁 <strong id="catCount">9</strong> أقسام</span>
   </div>
 
 </div>
@@ -239,16 +445,46 @@
 <div class="modal-overlay" id="manageModal">
   <div class="modal-content">
     <div class="modal-header">
-      <div class="modal-title" id="manageModalTitle">إدارة القسم</div>
+      <div class="modal-title" id="manageModalTitle">إدارة: الاستضافة</div>
       <button class="modal-close" onclick="closeModal('manageModal')">✖</button>
     </div>
     
-    <div class="manage-list" id="manageList"></div>
+    <div class="manage-list" id="manageList"><div class="manage-item">
+      <div class="manage-item-info">
+        <div class="manage-item-name">Netlify <span>(نتليفاي)</span></div>
+      </div>
+      <div class="manage-actions">
+        <button class="btn-icon" onclick="moveSite(0, -1)" disabled="">⬆️</button>
+        <button class="btn-icon" onclick="moveSite(0, 1)">⬇️</button>
+        <button class="btn-icon edit" onclick="editSite(0)">✏️</button>
+        <button class="btn-icon danger" onclick="deleteSite(0)">🗑️</button>
+      </div>
+    </div><div class="manage-item">
+      <div class="manage-item-info">
+        <div class="manage-item-name">Vercel <span>(فيرسل)</span></div>
+      </div>
+      <div class="manage-actions">
+        <button class="btn-icon" onclick="moveSite(1, -1)">⬆️</button>
+        <button class="btn-icon" onclick="moveSite(1, 1)">⬇️</button>
+        <button class="btn-icon edit" onclick="editSite(1)">✏️</button>
+        <button class="btn-icon danger" onclick="deleteSite(1)">🗑️</button>
+      </div>
+    </div><div class="manage-item">
+      <div class="manage-item-info">
+        <div class="manage-item-name">Elessaiy <span>(Elessaiy)</span></div>
+      </div>
+      <div class="manage-actions">
+        <button class="btn-icon" onclick="moveSite(2, -1)">⬆️</button>
+        <button class="btn-icon" onclick="moveSite(2, 1)" disabled="">⬇️</button>
+        <button class="btn-icon edit" onclick="editSite(2)">✏️</button>
+        <button class="btn-icon danger" onclick="deleteSite(2)">🗑️</button>
+      </div>
+    </div></div>
     
     <div class="modal-actions">
       <button class="btn-primary" onclick="openAddModal()">➕ إضافة اختصار جديد</button>
       <button class="btn-success" onclick="exportCode()">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"></path></svg>
         حفظ / مشاركة الكود
       </button>
     </div>
@@ -276,7 +512,7 @@
     </div>
     <div class="input-group">
       <label>لون الخلفية <span class="opt-text">(اختياري)</span></label>
-      <input type="color" id="newColor" value="#4cc9f0" style="height: 40px; padding: 2px;">
+      <input type="color" id="newColor" value="" style="height: 40px; padding: 2px;">
     </div>
     <div class="input-group">
       <label>رفع أيقونة مخصصة <span class="opt-text">(اختياري - يجلب الشعار تلقائياً إذا تُرك فارغاً)</span></label>
@@ -287,5 +523,155 @@
 </div>
 
 
-</body>
-</html>
+
+
+<script>
+// ==========================================
+// 1. البيانات الافتراضية
+// ==========================================
+const defaultData = [
+  {
+    "id": "ai",
+    "category": "الذكاء الاصطناعي",
+    "sites": [
+      {
+        "nameEn": "ChatGPT",
+        "nameAr": "شات جي بي تي",
+        "url": "https://chatgpt.com/",
+        "color": "#10a37f",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M22.281 11.51c0-1.108-.34-2.15-.92-3.01.23-1.02.06-2.12-.49-3.02-.95-1.56-2.62-2.48-4.42-2.48-.3 0-.59.03-.88.08C14.84 2.16 13.47 1.5 12 1.5c-2.17 0-4.08 1.32-4.9 3.18-.16-.02-.32-.03-.48-.03-2.32 0-4.28 1.65-4.76 3.86C1.15 9.61.5 11.24.5 12.94c0 2.17 1.32 4.08 3.18 4.9-.02.16-.03.32-.03.48 0 2.32 1.65 4.28 3.86 4.76 1.1 1.71 2.73 2.36 4.43 2.36 1.108 0 2.15-.34 3.01-.92 1.02.23 2.12.06 3.02-.49 1.56-.95 2.48-2.62 2.48-4.42 0-.3-.03-.59-.08-.88 1.61-1.15 2.61-2.97 2.61-4.92zm-10.17 7.08c-1.36 0-2.49-.63-3.25-1.62l.78-2.14c.18.02.35.03.53.03 1.96 0 3.55-1.59 3.55-3.55 0-1.05-.46-2.02-1.21-2.67l1.5-1.5c1.36 1.2 2.21 2.95 2.21 4.9 0 3.59-2.91 6.5-6.5 6.5-.53 0-1.05-.06-1.55-.18l.93-2.54c.51.17 1.05.26 1.61.26zm-2.3-9.77c0-1.36.63-2.49 1.62-3.25l2.14.78c-.02.18-.03.35-.03.53 0 1.96 1.59 3.55 3.55 3.55 1.05 0 2.02-.46 2.67-1.21l1.5 1.5c-1.2 1.36-2.95 2.21-4.9 2.21-3.59 0-6.5-2.91-6.5-6.5 0-.53.06-1.05.18-1.55l2.54.93c-.17.51-.26 1.05-.26 1.61z\"/></svg>"
+      },
+      {
+        "nameEn": "Gemini",
+        "nameAr": "جيميني",
+        "url": "https://gemini.google.com/",
+        "color": "#1a73e8",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z\"/></svg>"
+      },
+      {
+        "nameEn": "DeepSeek",
+        "nameAr": "ديب سيك",
+        "url": "https://www.deepseek.com/",
+        "color": "#2D5BFF",
+        "icon": "<svg viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M20.7 6.7C18.9 4 15.8 2 12 2 6.5 2 2 6.5 2 12c0 5.5 4.5 10 10 10 5.5 0 10-4.5 10-10 0-2-0.6-3.9-1.6-5.5-0.3 0.6-0.9 1.2-1.5 1.6-2.2 1.5-4.7 2.4-7.4 2.4-0.5 0-0.9-0.1-1.4-0.2-0.5 1.3-1.2 2.4-2.2 3.2-0.1-0.6-0.2-1.3-0.2-2 0-1.1 0.3-2.2 0.7-3.2-0.3-0.3-0.5-0.7-0.7-1.1-0.3 1.6-1.4 3-2.9 3.5-0.1-1.5 0.3-3.1 1.3-4.3 0.5-0.6 1.1-1 1.8-1.3-1-1.2-2.2-2.1-3.5-2.6C6.1 6 5 8.8 5 12c0 3.9 3.1 7 7 7 3.9 0 7-3.1 7-7 0-2.2-1-4.1-2.6-5.4-0.2 0.6-0.5 1.2-0.9 1.7-1.1 1.4-2.7 2.3-4.5 2.3z\" fill=\"#fff\"/><circle cx=\"8\" cy=\"11\" r=\"1.5\" fill=\"#2D5BFF\"/><path d=\"M13 13c1.5 1 3.5 1 5 0\" stroke=\"#2D5BFF\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg>"
+      },
+      {
+        "nameEn": "Claude",
+        "nameAr": "كلود",
+        "url": "https://claude.ai/",
+        "color": "#d97757",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z\"/></svg>"
+      }
+    ]
+  },
+  {
+    "id": "search",
+    "category": "البحث والتخزين",
+    "sites": [
+      {
+        "nameEn": "Google",
+        "nameAr": "جوجل",
+        "url": "https://www.google.com/",
+        "color": "#4285F4",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z\"/><path fill=\"currentColor\" d=\"M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z\"/><path fill=\"currentColor\" d=\"M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z\"/><path fill=\"currentColor\" d=\"M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z\"/></svg>"
+      },
+      {
+        "nameEn": "Drive",
+        "nameAr": "درايف",
+        "url": "https://drive.google.com/",
+        "color": "#34A853",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M19.34 3H4.66L12 16.43 19.34 3zM4.32 4.46 11 16.43 4.32 19.54l.18-15.08zM12.68 16.43 19.68 4.46 19.5 19.54l-6.82-3.11z\"/></svg>"
+      },
+      {
+        "nameEn": "Earth",
+        "nameAr": "إيرث",
+        "url": "https://earth.google.com/",
+        "color": "#4285F4",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z\"/></svg>"
+      }
+    ]
+  },
+  {
+    "id": "webdev",
+    "category": "تطوير الويب",
+    "sites": [
+      {
+        "nameEn": "VS Code",
+        "nameAr": "في إس كود",
+        "url": "https://code.visualstudio.com/",
+        "color": "#007ACC",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M17.46 1.06l-5.4 5.4L7.4 4.2 1.06 8.3l5.4 5.4-5.4 5.4 6.34 4.1 4.66-2.26 5.4 5.4 5.24-5.24V6.3l-5.24-5.24zm-1.06 16.6l-3.9-3.9 3.9-3.9v7.8zm-8.2-7.8l3.9 3.9-3.9 3.9V9.86z\"/></svg>"
+      },
+      {
+        "nameEn": "Stack",
+        "nameAr": "ستاك",
+        "url": "https://stackoverflow.com/",
+        "color": "#F58025",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M18.986 21.865v-6.404h2.134V24H1.844v-8.539h2.13v6.404h15.012zM6.111 19.731H16.85v-2.137H6.111v2.137zm.259-4.852l10.48 2.189.451-2.07-10.478-2.187-.453 2.068zm1.359-5.056l9.705 4.53.903-1.95-9.706-4.53-.902 1.95zm2.715-4.785l8.217 6.855 1.359-1.62-8.216-6.853-1.36 1.618zM15.751 0l-1.746 1.294c2.653 3.585 4.943 8.563 4.943 8.563l1.746-1.294S18.404 3.585 15.751 0z\"/></svg>"
+      },
+      {
+        "nameEn": "MDN",
+        "nameAr": "إم دي إن",
+        "url": "https://developer.mozilla.org/",
+        "color": "#ffffff",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z\"/></svg>"
+      },
+      {
+        "nameEn": "W3S",
+        "nameAr": "دبليو 3",
+        "url": "https://www.w3schools.com/",
+        "color": "#04AA6D",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z\"/></svg>"
+      },
+      {
+        "nameEn": "GitHub",
+        "nameAr": "جيت هاب",
+        "url": "https://github.com/",
+        "color": "#181717",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z\"/></svg>"
+      }
+    ]
+  },
+  {
+    "id": "design",
+    "category": "التصميم",
+    "sites": [
+      {
+        "nameEn": "Figma",
+        "nameAr": "فيجما",
+        "url": "https://www.figma.com/",
+        "color": "#F24E1E",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M8 24c2.208 0 4-1.792 4-4v-4H8c-2.208 0-4 1.792-4 4s1.792 4 4 4zm0-12h4V8H8c-2.208 0-4 1.792-4 4s1.792 4 4 4zm0-8h4V0H8C5.792 0 4 1.792 4 4s1.792 4 4 4zm8 4c2.208 0 4-1.792 4-4s-1.792-4-4-4-4 1.792-4 4 1.792 4 4 4zm0 2c-2.208 0-4 1.792-4 4s1.792 4 4 4 4-1.792 4-4-1.792-4-4-4z\"/></svg>"
+      }
+    ]
+  },
+  {
+    "id": "gamedev",
+    "category": "تطوير الألعاب",
+    "sites": [
+      {
+        "nameEn": "Unity",
+        "nameAr": "يونيتي",
+        "url": "https://unity.com/",
+        "color": "#ffffff",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z\"/></svg>"
+      },
+      {
+        "nameEn": "Unreal",
+        "nameAr": "أنريل",
+        "url": "https://www.unrealengine.com/",
+        "color": "#ffffff",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z\"/></svg>"
+      },
+      {
+        "nameEn": "Godot",
+        "nameAr": "جودو",
+        "url": "https://godotengine.org/",
+        "color": "#478CBF",
+        "icon": "<svg viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z\"/></svg>"
+      },
+      {
+        "nameEn": "Blender",
+        "nameAr": "بلندر",
+        "url": "https://www.blender.org/",
+        "c
