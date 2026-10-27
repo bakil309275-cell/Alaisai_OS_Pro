@@ -24,4 +24,5 @@ jobs:
           sleep 2
           python tests/e2e.py
           python tests/e2e2.py
+          python tests/e2e3.py
           python tests/audit.py
