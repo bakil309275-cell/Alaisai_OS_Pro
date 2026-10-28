@@ -1,0 +1,1 @@
+{"id": "neon-rush-alaisai-pro", "name": "نيون رش — العيسائي برو", "version": "1.0.0", "description": "لعبة عربية لتجنب العوائق وجمع العملات مع متجر سفن وحفظ محلي.", "entry": "index.html", "icon": "🚀", "category": "games", "rtl": true, "scripts": ["main.js"], "styles": ["style.css"]}
