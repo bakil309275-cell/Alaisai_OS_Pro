@@ -9,7 +9,15 @@ const repo = path.resolve(import.meta.dirname, '..');
 const root = opt('--out') ? path.resolve(opt('--out')) : path.join(repo, 'catalog');
 const check = argv.includes('--check');
 const FILE_ORDER = ['manifest.json', 'index.html', 'main.js', 'style.css'];
-const KEEP = '.gitkeep', MAX_FILES = 100, MAX_FILE = 500000, MAX_TOTAL = 2000000;
+const KEEP = '.gitkeep', MAX_FILES = 300, MAX_FILE = 500000, MAX_BIN = 4200000, MAX_TOTAL = 14000000;
+// نفس تصنيف التطبيق (Addons.fromBytes): نص UTF-8 سليم يبقى نصاً، وغيره (صور/خطوط/صوت...) يُخزَّن base64 مع bin:true
+const BIN_EXT = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'woff', 'woff2', 'ttf', 'otf', 'eot', 'mp3', 'wav', 'ogg', 'm4a', 'mp4', 'webm', 'mov', 'pdf', 'zip', 'gz', '7z', 'rar', 'wasm', 'bin', 'db', 'sqlite', 'apk', 'exe', 'dll', 'so', 'psd', 'xlsx', 'docx', 'pptx']);
+const extOf = (n) => { const b = n.split('/').pop(); return b.includes('.') ? b.split('.').pop().toLowerCase() : ''; };
+const readFile = (file, name) => {
+  const buf = fs.readFileSync(file); let text = null;
+  if (!BIN_EXT.has(extOf(name))) { try { text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(buf); if (text.includes('\0')) text = null; } catch (e) { text = null; } }
+  return text !== null && text.length <= MAX_FILE ? { name, content: text } : { name, content: buf.toString('base64'), bin: true };
+};
 // نفس قواعد التطبيق (Store.validName / Store.validPath)
 const BAD = /[\u0000-\u001f\u007f\\/:*?"<>|]/, RESERVED = ['__proto__', 'constructor', 'prototype'];
 const validName = (n) => n.length >= 1 && n.length <= 60 && n === n.trim() && !BAD.test(n) && !/^\.|\.$/.test(n) && !RESERVED.includes(n);
@@ -32,9 +40,10 @@ for (const srcDir of sources) {
         .sort((a, b) => (FILE_ORDER.indexOf(a) + 99) % 99 - (FILE_ORDER.indexOf(b) + 99) % 99 || a.localeCompare(b));
       if (!names.includes('manifest.json')) throw new Error('manifest.json missing');
       if (names.length > MAX_FILES) throw new Error('too many files');
-      const files = names.map((n) => ({ name: n, content: fs.readFileSync(path.join(dir, n), 'utf8') }));
-      if (files.some((f) => f.content.length > MAX_FILE) || files.reduce((s, f) => s + f.content.length, 0) > MAX_TOTAL) throw new Error('add-on too large');
-      const manifest = JSON.parse(files.find((f) => f.name === 'manifest.json').content);
+      const files = names.map((n) => readFile(path.join(dir, n), n));
+      if (files.some((f) => f.content.length > (f.bin ? MAX_BIN : MAX_FILE)) || files.reduce((s, f) => s + f.content.length, 0) > MAX_TOTAL) throw new Error('add-on too large');
+      const mf = files.find((f) => f.name === 'manifest.json'); if (mf.bin) throw new Error('manifest.json must be UTF-8 text');
+      const manifest = JSON.parse(mf.content);
       if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) throw new Error('manifest.json must be an object');
       if (lenient) manifest.id = id; else if (manifest.id !== id) throw new Error(`manifest.id (${manifest.id}) must equal folder name (${id})`);
       if (!VER_RE.test(manifest.version || '')) { if (lenient) manifest.version = '1.0.0'; else throw new Error('manifest.version must be x.y.z'); }
