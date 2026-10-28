@@ -1,1 +1,1 @@
-{"id": "neon-rush-alaisai-pro", "name": "نيون رش — مغامرة المجرات", "version": "2.0.0", "description": "حركة حرة وإطلاق تلقائي، مستويات وزعماء وهدايا يومية ومهام ومتجر سفن.", "entry": "index.html", "icon": "🚀", "category": "games", "rtl": true, "scripts": ["main.js"], "styles": ["style.css"]}
+{"id": "neon-rush-alaisai-pro", "name": "نيون رش — العيسائي برو", "version": "1.0.0", "description": "لعبة عربية لتجنب العوائق وجمع العملات مع متجر سفن وحفظ محلي.", "entry": "index.html", "icon": "🚀", "category": "games", "rtl": true, "scripts": ["main.js"], "styles": ["style.css"]}
