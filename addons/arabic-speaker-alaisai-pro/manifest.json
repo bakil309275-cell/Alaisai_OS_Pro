@@ -1,0 +1,1 @@
+{"id": "arabic-speaker-alaisai-pro", "name": "الناطق العربي — القلم المساعد", "version": "3.0.0", "description": "قارئ نصوص بواجهة مبسطة وقلم عائم داخل نافذة الإضافة ولصق وقراءة بموافقة المستخدم. لا يظهر فوق التطبيقات الأخرى دون تكامل Android أصلي.", "entry": "index.html", "icon": "🖊️", "category": "tools", "rtl": true, "scripts": ["main.js"], "styles": ["style.css"]}
