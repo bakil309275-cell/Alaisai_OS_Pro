@@ -3,7 +3,13 @@
   const E = UI.esc;
   // أسماء الإضافات بأي لغة، ومسارات الملفات مجلدات متداخلة (src/bridge/File.js). التحقق في Store ليتطابق مع التخزين
   const NAME_RE = { test: (n) => Store.validName(n) }, FILE_RE = { test: (p) => Store.validPath(p) }, VER_RE = /^\d{1,4}\.\d{1,4}\.\d{1,4}$/;
-  const MAX_FILES = 100, MAX_FILE = 500000, MAX_TOTAL = 2000000;
+  // حدود الإضافة: النص حتى 500 ألف حرف للملف؛ الملف الثنائي (صورة/خط/صوت...) يُخزَّن base64 حتى ~3 ميغابايت؛ الإضافة كلها حتى ~10 ميغابايت و300 ملف
+  const MAX_FILES = 300, MAX_FILE = 500000, MAX_BIN = 4200000, MAX_TOTAL = 14000000;
+  const MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', bmp: 'image/bmp', ico: 'image/x-icon', svg: 'image/svg+xml',
+    woff: 'font/woff', woff2: 'font/woff2', ttf: 'font/ttf', otf: 'font/otf', mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', m4a: 'audio/mp4', mp4: 'video/mp4', webm: 'video/webm', pdf: 'application/pdf' };
+  const BIN_EXT = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'woff', 'woff2', 'ttf', 'otf', 'eot', 'mp3', 'wav', 'ogg', 'm4a', 'mp4', 'webm', 'mov', 'pdf', 'zip', 'gz', '7z', 'rar', 'wasm', 'bin', 'db', 'sqlite', 'apk', 'exe', 'dll', 'so', 'psd', 'xlsx', 'docx', 'pptx']);
+  const extOf = (n) => { const b = String(n).split('/').pop(); return b.includes('.') ? b.split('.').pop().toLowerCase() : ''; };
+  const B64_RE = /^[A-Za-z0-9+/]*={0,2}$/;
   // أساس مظهر الإضافات: متغيرات داكن/فاتح يمكن للإضافة استخدامها (var(--bg), var(--fg), var(--accent)...)
   const BASE_CSS = ':root{--bg:#fff;--fg:#1b1f2a;--muted:#555e70;--card:#f1f3f8;--line:#cfd5e0;--accent:#0b6e9c;--accent-fg:#fff;--danger:#b4174f}' +
     'html[data-theme=dark]{--bg:#16161d;--fg:#f1f2f6;--muted:#b4bacb;--card:#23232d;--line:#3d3d4d;--accent:#4cc9f0;--accent-fg:#04202a;--danger:#ff7aa8}' +
@@ -15,7 +21,20 @@
   const cssSafe = (s) => s.replace(/<\/(style)/gi, '<\\/$1');
 
   const Addons = {
-    NAME_RE, FILE_RE, KEEP, normPath,
+    NAME_RE, FILE_RE, KEEP, normPath, MAX_FILES, MAX_FILE, MAX_BIN, MAX_TOTAL, B64_RE,
+    // ---- الملفات الثنائية: {name, content: base64, bin: true}. النصية: {name, content} ----
+    mime(name) { return MIME[extOf(name)] || null; },
+    isImage(f) { return (MIME[extOf(f.name)] || '').startsWith('image/'); },
+    // يحوّل بايتات ملف إلى سجل: نص UTF-8 سليم (بلا فقد) أو ثنائي. النص الأكبر من الحد يُحفظ ثنائياً كي لا يُرفض
+    fromBytes(name, u8) {
+      let text = null;
+      if (!BIN_EXT.has(extOf(name))) { try { text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(u8); if (text.includes('\0')) text = null; } catch (e) { text = null; } }
+      if (text !== null && text.length <= MAX_FILE) return { name, content: text };
+      return { name, content: Sec.b64(u8), bin: true };
+    },
+    toBytes(f) { return f.bin ? Sec.unb64(f.content) : new TextEncoder().encode(f.content); },
+    rawSize(f) { return f.bin ? Math.max(0, (f.content.length * 3 >> 2) - (f.content.endsWith('==') ? 2 : f.content.endsWith('=') ? 1 : 0)) : new Blob([f.content]).size; },
+    dataUrl(f) { const m = MIME[extOf(f.name)] || 'application/octet-stream'; return 'data:' + m + ';base64,' + (f.bin ? f.content : Sec.b64(new TextEncoder().encode(f.content))); },
     list() { return Store.db.explorer.addons; },
     get(name) { return Store.db.explorer.addons.find((a) => a.name === name); },
     file(addon, name) { return addon.files.find((f) => f.name === name); },
@@ -61,27 +80,34 @@
       const r = this.manifest(addon);
       if (r.error) throw new Error(r.error);
       const m = r.manifest;
-      const txt = (n) => { const f = this.file(addon, n); return f ? f.content : ''; };
+      const txt = (n) => { const f = this.file(addon, n); return f && !f.bin ? f.content : ''; };
+      const dirOf = (p) => (p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : '');
+      // مراجع الصور والخطوط والوسائط المحلية تُضمَّن كروابط data: لأن الإضافة تعمل داخل صندوق معزول بلا شبكة
+      const asset = (ref, from) => { if (!ref || ref[0] === '#' || !isLocalRef(ref)) return null; const f = this.file(addon, normPath((from ? from + '/' : '') + ref)); return f && (f.bin || MIME[extOf(f.name)]) ? this.dataUrl(f) : null; };
+      const cssUrls = (css, from) => css.replace(/url\(\s*(["']?)([^)"']+)\1\s*\)/gi, (m, q, u) => { const d = asset(u, from); return d ? `url("${d}")` : m; });
+      const htmlAssets = (h) => cssUrls(h.replace(/\b(src|poster)\s*=\s*(["'])([^"']+)\2/gi, (m, a, q, u) => { const d = asset(u, ''); return d ? `${a}=${q}${d}${q}` : m; })
+        .replace(/<link\b[^>]*>/gi, (m) => (/rel\s*=\s*["']?[^"'>]*icon/i.test(m) ? m.replace(/\bhref\s*=\s*(["'])([^"']+)\1/i, (mm, q, u) => { const d = asset(u, ''); return d ? `href=${q}${d}${q}` : mm; }) : m)), '');
       const used = new Set();
       let body = txt('index.html'), headExtra = '';
       if (/<!doctype|<html|<body/i.test(body)) { // مستند كامل: نأخذ body وأنماط head فقط (DOMParser لا ينفّذ شيئاً)
         const d = new DOMParser().parseFromString(body, 'text/html');
-        headExtra = [...d.head.querySelectorAll('style')].map((x) => `<style>${cssSafe(x.textContent)}</style>`).join('');
+        headExtra = [...d.head.querySelectorAll('style')].map((x) => `<style>${cssSafe(cssUrls(x.textContent, ''))}</style>`).join('');
         body = d.body.innerHTML;
       }
       if (!body.trim()) body = '<main id="app"></main>';
       // مراجع الملفات المحلية في index.html (script src / link href) تُدمج من ملفات الإضافة بمساراتها
       body = body.replace(/<script\b[^>]*?\bsrc\s*=\s*(["'])([^"']+)\1[^>]*>\s*<\/script>/gi, (m, q, src) => {
         if (!isLocalRef(src)) return m; const p = normPath(src), f = this.file(addon, p);
-        if (!f) return m; used.add(p); return `<script>\n${jsSafe(f.content)}\n<\/script>`; });
+        if (!f || f.bin) return m; used.add(p); return `<script>\n${jsSafe(f.content)}\n<\/script>`; });
       body = body.replace(/<link\b[^>]*>/gi, (m) => {
         if (!/rel\s*=\s*["']?stylesheet/i.test(m)) return m; const h = m.match(/\bhref\s*=\s*(["'])([^"']+)\1/); if (!h || !isLocalRef(h[2])) return m;
-        const p = normPath(h[2]), f = this.file(addon, p); if (!f) return m; used.add(p); return `<style>${cssSafe(f.content)}</style>`; });
-      const css = m.styles.filter((n) => !used.has(normPath(n))).map((n) => cssSafe(txt(n))).join('\n');
+        const p = normPath(h[2]), f = this.file(addon, p); if (!f || f.bin) return m; used.add(p); return `<style>${cssSafe(cssUrls(f.content, dirOf(p)))}</style>`; });
+      body = htmlAssets(body);
+      const css = m.styles.filter((n) => !used.has(normPath(n))).map((n) => cssSafe(cssUrls(txt(n), dirOf(normPath(n))))).join('\n');
       const js = m.scripts.filter((n) => !used.has(normPath(n))).map((n) => `<script>\n${jsSafe(txt(n))}\n<\/script>`).join('\n');
       // Alaisai.file(path) / Alaisai.files(): قراءة ملفات الإضافة النصية (بيانات، قوالب...) من أي مجلد فيها
       const skip = new Set(['manifest.json', 'index.html', ...used, ...m.scripts.map(normPath), ...m.styles.map(normPath)]); // ما نُفّذ أصلاً لا يُكرَّر
-      const map = {}; addon.files.forEach((f) => { if (!skip.has(f.name) && f.name.split('/').pop() !== KEEP) map[f.name] = f.content; });
+      const map = {}; addon.files.forEach((f) => { if (!skip.has(f.name) && f.name.split('/').pop() !== KEEP) map[f.name] = f.bin ? this.dataUrl(f) : f.content; });
       const fileApi = '<script>(function(){var F=' + JSON.stringify(map).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029') +
         ';function n(p){var o=[];String(p).split(/[?#]/)[0].split("/").forEach(function(s){if(!s||s===".")return;if(s==="..")o.pop();else o.push(s)});return o.join("/")}' +
         'Alaisai.file=function(p){p=n(p);return Object.prototype.hasOwnProperty.call(F,p)?F[p]:null};Alaisai.files=function(){return Object.keys(F)}})()<\/script>';
@@ -93,7 +119,7 @@
       const r = this.manifest(addon);
       return { format: 'alaisai-addon', version: 1, id: addon.name,
         manifest: r.manifest || { id: addon.name, name: addon.name },
-        files: addon.files.map((f) => ({ name: f.name, content: f.content })) };
+        files: addon.files.map((f) => (f.bin ? { name: f.name, content: f.content, bin: true } : { name: f.name, content: f.content })) };
     },
     validatePackage(pkg) {
       const bad = (m) => { throw new Error(m); };
@@ -105,8 +131,10 @@
       const files = pkg.files.map((f) => {
         if (!f || typeof f.name !== 'string' || !FILE_RE.test(f.name) || typeof f.content !== 'string') bad('مسار ملف غير صالح داخل الحزمة: ' + String(f && f.name).slice(0, 60));
         if (seen.has(f.name)) bad('أسماء ملفات مكررة'); seen.add(f.name);
-        if (f.content.length > MAX_FILE) bad(`الملف ${f.name} كبير جداً`);
-        total += f.content.length; return { name: f.name, content: f.content };
+        const bin = f.bin === true;
+        if (bin && (!B64_RE.test(f.content) || f.content.length % 4)) bad(`محتوى الملف ${f.name} غير صالح`);
+        if (f.content.length > (bin ? MAX_BIN : MAX_FILE)) bad(`الملف ${f.name} كبير جداً`);
+        total += f.content.length; return bin ? { name: f.name, content: f.content, bin: true } : { name: f.name, content: f.content };
       });
       if (total > MAX_TOTAL) bad('حجم الإضافة كبير جداً');
       const addon = { name: pkg.id, source: 'local', files };

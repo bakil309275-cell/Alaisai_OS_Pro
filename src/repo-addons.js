@@ -16,12 +16,12 @@
     tracked() { return (Sync.cfg.addonShas = Sync.cfg.addonShas || {}); },
 
     // بصمة Git blob لنص: sha1("blob <len>\0" + bytes) لنقارن مع ما في المستودع دون تنزيله
-    async blobSha(text) {
-      const body = new TextEncoder().encode(text), head = new TextEncoder().encode('blob ' + body.length + '\0');
+    async blobSha(x) { // نص أو بايتات
+      const body = typeof x === 'string' ? new TextEncoder().encode(x) : x, head = new TextEncoder().encode('blob ' + body.length + '\0');
       const all = new Uint8Array(head.length + body.length); all.set(head); all.set(body, head.length);
       return hex(new Uint8Array(await crypto.subtle.digest('SHA-1', all)));
     },
-    async localShas(addon) { const o = {}; for (const f of addon.files) o[f.name] = await this.blobSha(f.content); return o; },
+    async localShas(addon) { const o = {}; for (const f of addon.files) o[f.name] = await this.blobSha(Addons.toBytes(f)); return o; },
     same(a, b) { const ka = Object.keys(a || {}), kb = Object.keys(b || {}); return ka.length === kb.length && ka.every((k) => a[k] === b[k]); },
 
     // شجرة المستودع تحت addons/: { name: { file: {sha, path} } }
@@ -81,6 +81,11 @@
       return this._scanning;
     },
 
+    async fetchBytes(path) {
+      const r = await Sync.gh(`${Sync.base()}/contents/${encPath(path)}?ref=${enc(Sync.cfg.branch)}`, { accept: 'application/vnd.github.raw+json' });
+      if (!r.ok) throw new Error('تعذّر تنزيل ' + path + ' (' + r.status + ')');
+      return new Uint8Array(await r.arrayBuffer());
+    },
     async fetchFile(path) {
       const r = await Sync.gh(`${Sync.base()}/contents/${encPath(path)}?ref=${enc(Sync.cfg.branch)}`, { accept: 'application/vnd.github.raw+json' });
       if (!r.ok) throw new Error('تعذّر تنزيل ' + path + ' (' + r.status + ')');
@@ -90,7 +95,7 @@
     // ينزّل إضافة المستودع إلى المستكشف (ويثبّتها على سطح المكتب إن طُلب)
     async fetchInto(it, { install = false, keepDesktop = false } = {}) {
       const files = [];
-      for (const n of Object.keys(it.files)) files.push({ name: n, content: await this.fetchFile(it.files[n].path) });
+      for (const n of Object.keys(it.files)) files.push(Addons.fromBytes(n, await this.fetchBytes(it.files[n].path)));
       const { addon } = Addons.validatePackage({ format: 'alaisai-addon', version: 1, id: it.name, files });
       Addons.put(addon, 'repo');
       this.tracked()[it.name] = it.remoteMap; await Sync.saveCfg();
@@ -106,9 +111,10 @@
       return n;
     },
 
-    async putFile(path, text, sha) {
+    async putFile(path, data, sha) { // data: نص، أو سجل ملف إضافة {content, bin}
+      const b64 = typeof data === 'string' ? Sec.textToB64(data) : data.bin ? data.content : Sec.textToB64(data.content);
       const r = await Sync.gh(`${Sync.base()}/contents/${encPath(path)}`, { method: 'PUT',
-        body: { message: 'Alaisai: ' + path, content: Sec.textToB64(text), branch: Sync.cfg.branch, ...(sha ? { sha } : {}) } });
+        body: { message: 'Alaisai: ' + path, content: b64, branch: Sync.cfg.branch, ...(sha ? { sha } : {}) } });
       if (!r.ok) throw new Sync.SyncError('http', 'تعذّر نشر ' + path + ' (' + r.status + ')');
     },
     async delFile(path, sha) {
@@ -176,7 +182,7 @@
       if (!this.enabled()) return { skipped: true };
       const tree = await this.remoteTree(), t = this.tracked();
       let wrote = 0, removed = 0;
-      const put = async (path, text, sha) => { await this.putFile(path, text, sha); wrote++; };
+      const put = async (path, data, sha) => { await this.putFile(path, data, sha); wrote++; };
       const del = async (path, sha) => { await this.delFile(path, sha); removed++; };
       for (const addon of Addons.list()) {
         if (addon.source === 'catalog') continue; // الكتالوج العام مصدره المستودع أصلاً
@@ -184,7 +190,7 @@
         if (this.same(lm, rm)) { t[addon.name] = rm; continue; }
         if (t[addon.name] && !Object.keys(rm).length) continue; // حُذفت من المستودع بعد نشرها: لا نعيد رفعها (تظهر في المتجر «محذوفة من المستودع»)
         if (t[addon.name] && !this.same(t[addon.name], rm)) continue; // تغيّر في المستودع: لا نكتب فوقه
-        for (const f of addon.files) if (lm[f.name] !== (rf[f.name] || {}).sha) await put(`${DIR}/${addon.name}/${f.name}`, f.content, (rf[f.name] || {}).sha);
+        for (const f of addon.files) if (lm[f.name] !== (rf[f.name] || {}).sha) await put(`${DIR}/${addon.name}/${f.name}`, f, (rf[f.name] || {}).sha);
         for (const n of Object.keys(rf)) if (!(n in lm)) await del(rf[n].path, rf[n].sha);
         t[addon.name] = lm;
       }

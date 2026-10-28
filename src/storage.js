@@ -122,7 +122,8 @@
         .map((r) => ({ id: r.id || rid(), email: str(r.email, 200), text: str(r.text, 5000), ts: Number(r.ts) || Number(r.id) || Date.now() }));
 
       const fileList = (arr) => (Array.isArray(arr) ? arr : []).filter((f) => f && validPath(f.name))
-        .slice(0, 200).map((f) => ({ name: f.name, content: str(f.content, 500000) }));
+        .slice(0, 300).map((f) => (f.bin === true ? { name: f.name, content: str(f.content, 4200000), bin: true } : { name: f.name, content: str(f.content, 500000) }))
+        .filter((f) => !f.bin || (/^[A-Za-z0-9+/]*={0,2}$/.test(f.content) && f.content.length % 4 === 0)); // ثنائي تالف يُسقَط
       const dedupe = (arr) => { const u = new Set(); return arr.filter((f) => !u.has(f.name) && u.add(f.name)); };
       const ex = raw.explorer && typeof raw.explorer === 'object' ? raw.explorer : extras.explorer || {};
       const explorer = {
@@ -131,7 +132,7 @@
           const names = new Set();
           return (Array.isArray(ex.addons) ? ex.addons : []).filter((a) => a && validName(a.name) && !names.has(a.name) && names.add(a.name))
             .slice(0, 100).map((a) => ({ name: a.name, source: ['catalog', 'import', 'local', 'repo'].includes(a.source) ? a.source : 'local',
-              files: dedupe(fileList(a.files)).slice(0, 100) }));
+              files: dedupe(fileList(a.files)).slice(0, 300) }));
         })(),
         labCode: str(ex.labCode, 500000),
       };

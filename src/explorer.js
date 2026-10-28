@@ -12,7 +12,8 @@
 
     data() { return Store.db.explorer; },
     files(folder) { return folder === 'system' ? this.data().system : Addons.get(folder)?.files; },
-    size(c) { const b = new Blob([c]).size; return b < 1024 ? b + ' B' : (b / 1024).toFixed(1) + ' KB'; },
+    size(f) { const b = Addons.rawSize(f); return b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(1) + ' MB'; },
+    icon(f) { return f.bin ? (Addons.isImage(f) ? '🖼' : '📦') : '📄'; },
 
     mount(el) {
       this.el = el; this.nav = { view: 'root' };
@@ -52,23 +53,32 @@
               return `<div class="file-item"><span class="name" dir="auto" role="button" tabindex="0" data-ex="opendir" data-dir="${E(full)}">📁 ${E(d2)}</span><span class="badge">${cnt} ملف</span>
               <button class="btn btn-sm btn-danger" data-ex="deldir" data-dir="${E(full)}" aria-label="حذف المجلد ${E(d2)}">🗑</button></div>`; }).join('')}
             ${ls.files.map((f) => { const base = f.name.slice(dir ? dir.length + 1 : 0);
-              return `<div class="file-item"><span class="name" dir="auto" role="button" tabindex="0" data-ex="edit" data-file="${E(f.name)}">📄 ${E(base)}</span>
-              <span class="badge">${this.size(f.content)}</span>
-              <button class="btn btn-sm" data-ex="edit" data-file="${E(f.name)}">✏️ تعديل</button>
+              return `<div class="file-item"><span class="name" dir="auto" role="button" tabindex="0" data-ex="edit" data-file="${E(f.name)}">${this.icon(f)} ${E(base)}</span>
+              <span class="badge">${this.size(f)}</span>
+              <button class="btn btn-sm" data-ex="edit" data-file="${E(f.name)}">${f.bin ? '👁 عرض' : '✏️ تعديل'}</button>
               <button class="btn btn-sm btn-danger" data-ex="delfile" data-file="${E(f.name)}" aria-label="حذف ${E(base)}">🗑</button></div>`; }).join('')}
             ${!ls.dirs.length && !ls.files.length ? '<p style="color:var(--muted)">📭 المجلد فارغ</p>' : ''}
             <div style="margin-top:10px"><button class="btn btn-primary" data-ex="newfile">➕ ملف جديد</button> <button class="btn btn-primary" data-ex="newdir">📁 مجلد جديد</button> <button class="btn btn-success" data-ex="upload">⬆️ رفع ملف أو مجلد</button>
             ${isAddon && !dir ? '<button class="btn btn-danger" data-ex="deladdon">🗑 حذف الإضافة</button>' : ''}</div>
-            <p style="color:var(--muted);margin-top:8px;font-size:.9rem">يمكنك كتابة مسار كامل عند الإنشاء، مثل <code dir="ltr">src/bridge/Adapter.js</code>، فتُنشأ المجلدات تلقائياً. أو استخدم «رفع ملف أو مجلد» لنقل ملفاتك النصية (كود، JSON، CSS، SVG…) من جهازك دفعة واحدة.</p></div>${dir ? '' : this.labHtml()}`;
+            <p style="color:var(--muted);margin-top:8px;font-size:.9rem">يمكنك كتابة مسار كامل عند الإنشاء، مثل <code dir="ltr">src/bridge/Adapter.js</code>، فتُنشأ المجلدات تلقائياً. أو استخدم «رفع ملف أو مجلد» لنقل أي شيء من جهازك دفعة واحدة: كود وصور وأيقونات وخطوط وصوت (حتى نحو 3 ميغابايت للملف و10 للإضافة).</p></div>${dir ? '' : this.labHtml()}`;
       } else if (n.view === 'file') {
-        h = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="btn btn-sm" data-ex="opendir" data-dir="${E(n.file.includes('/') ? n.file.slice(0, n.file.lastIndexOf('/')) : '')}">⬅ رجوع</button><h3 dir="ltr" class="ltr">✏️ ${E(n.file)}</h3></div>
+        const cur = this.files(n.folder).find((x) => x.name === n.file), back = E(n.file.includes('/') ? n.file.slice(0, n.file.lastIndexOf('/')) : '');
+        if (cur && cur.bin) {
+          const u = Addons.dataUrl(cur), mt = Addons.mime(cur.name) || '';
+          const view = mt.startsWith('image/') ? `<img src="${u}" alt="${E(n.file)}" style="max-width:100%;max-height:60vh;display:block;margin:0 auto;background:repeating-conic-gradient(#8883 0 25%,transparent 0 50%) 0 0/16px 16px">`
+            : mt.startsWith('audio/') ? `<audio controls src="${u}" style="width:100%"></audio>` : mt.startsWith('video/') ? `<video controls src="${u}" style="max-width:100%"></video>`
+            : '<p style="color:var(--muted)">ملف ثنائي: لا معاينة له هنا، لكنه محفوظ ويُنشر مع الإضافة.</p>';
+          h = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="btn btn-sm" data-ex="opendir" data-dir="${back}">⬅ رجوع</button><h3 dir="ltr" class="ltr">${this.icon(cur)} ${E(n.file)}</h3></div>
+            <div class="panel">${view}<p style="color:var(--muted);margin-top:8px">الحجم: ${this.size(cur)}</p>
+            <button class="btn btn-success" data-ex="download">⬇ تنزيل</button> <button class="btn btn-danger" data-ex="delfile" data-file="${E(n.file)}">🗑 حذف</button></div>`;
+        } else h = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button class="btn btn-sm" data-ex="opendir" data-dir="${back}">⬅ رجوع</button><h3 dir="ltr" class="ltr">✏️ ${E(n.file)}</h3></div>
           <div class="panel"><textarea id="ex-editor" class="field code-editor" style="min-height:360px" aria-label="محتوى الملف" spellcheck="false"></textarea>
           <div style="margin-top:10px"><button class="btn btn-success" data-ex="savefile">💾 حفظ</button>
           <button class="btn" data-ex="tolab">🧪 نسخ إلى بيئة التجربة</button>
           <button class="btn" data-ex="opendir" data-dir="${E(n.file.includes('/') ? n.file.slice(0, n.file.lastIndexOf('/')) : '')}">❌ إلغاء</button></div></div>`;
       }
       this.el.innerHTML = h;
-      if (n.view === 'file') this.el.querySelector('#ex-editor').value = this.files(n.folder).find((f) => f.name === n.file)?.content || '';
+      if (n.view === 'file' && this.el.querySelector('#ex-editor')) this.el.querySelector('#ex-editor').value = this.files(n.folder).find((f) => f.name === n.file)?.content || '';
       const lab = this.el.querySelector('#lab-code'); if (lab) lab.value = d.labCode || '<h1>مرحباً</h1>\n<script>\n  document.body.append("الوقت: " + new Date().toLocaleTimeString());\n<\/script>';
     },
 
@@ -76,7 +86,7 @@
     checkNew(full, folder, isDir) {
       if (!Addons.FILE_RE.test(full)) return 'مسار غير صالح: لا يُسمح بـ \\ : * ? " < > | ولا بـ .. ولا بأكثر من 8 مستويات';
       const arr = this.files(folder) || [], parts = full.split('/');
-      if (arr.filter((f) => f.name.split('/').pop() !== Addons.KEEP).length >= 100) return 'بلغت الحد الأقصى للملفات (100)';
+      if (arr.filter((f) => f.name.split('/').pop() !== Addons.KEEP).length >= Addons.MAX_FILES) return `بلغت الحد الأقصى للملفات (${Addons.MAX_FILES})`;
       for (let i = 1; i < parts.length; i++) if (arr.some((f) => f.name === parts.slice(0, i).join('/'))) return 'لا يمكن إنشاء مجلد باسم ملف موجود: ' + parts.slice(0, i).join('/');
       if (arr.some((f) => f.name === full)) return 'الاسم موجود مسبقاً كملف';
       if (arr.some((f) => f.name.startsWith(full + '/'))) return 'الاسم موجود مسبقاً كمجلد';
@@ -94,7 +104,7 @@
     },
 
     // ---- رفع ملفات أو مجلدات من الجهاز إلى المجلد الحالي ----
-    // الملفات النصية فقط (UTF-8): الصور والملفات الثنائية تُتجاهل مع ذكر السبب، لأن التخزين نصي
+    // كل شيء يُرفع: النصوص كما هي، والصور والخطوط والصوت وغيرها تُخزَّن ثنائياً (base64) وتعمل داخل الإضافة
     pick(dirMode) {
       return new Promise((resolve) => {
         const input = this._input = Object.assign(document.createElement('input'), { type: 'file', multiple: true });
@@ -112,13 +122,10 @@
         if (SKIP_DIR.test(rel) || SKIP_FILE.test(rel)) continue; // مخلّفات لا قيمة لها: تُتجاهل بصمت
         const full = base + rel;
         if (!Addons.FILE_RE.test(full)) { skipped.push([rel, 'اسم أو مسار غير صالح']); continue; }
-        if (f.size > 1500000) { skipped.push([rel, 'أكبر من الحد المسموح']); continue; }
-        let text;
-        try { text = new TextDecoder('utf-8', { fatal: true }).decode(await f.arrayBuffer()); } catch (e) { text = null; }
-        if (text === null || text.includes('\0')) { skipped.push([rel, 'ملف غير نصي (صورة أو ملف ثنائي)']); continue; }
-        text = text.replace(/^\uFEFF/, '');
-        if (text.length > 500000) { skipped.push([rel, 'أكبر من 500 ألف حرف']); continue; }
-        items.set(full, text);
+        if (f.size > 3100000) { skipped.push([rel, 'أكبر من 3 ميغابايت']); continue; }
+        const rec = Addons.fromBytes(full, new Uint8Array(await f.arrayBuffer()));
+        if (rec.content.length > (rec.bin ? Addons.MAX_BIN : Addons.MAX_FILE)) { skipped.push([rel, 'أكبر من 3 ميغابايت']); continue; }
+        items.set(full, rec);
       }
       return { items, skipped };
     },
@@ -131,24 +138,24 @@
       const real = () => arr.filter((f) => f.name.split('/').pop() !== Addons.KEEP);
       let total = real().reduce((t, f) => t + f.content.length, 0), count = real().length, fresh = 0, replaced = 0;
       const ok = [];
-      for (const [full, text] of items) {
+      for (const [full, rec] of items) {
         const parts = full.split('/');
         let bad = '';
         for (let i = 1; i < parts.length && !bad; i++) if (arr.some((f) => f.name === parts.slice(0, i).join('/'))) bad = 'يوجد ملف بنفس اسم المجلد: ' + parts.slice(0, i).join('/');
         if (!bad && arr.some((f) => f.name.startsWith(full + '/'))) bad = 'يوجد مجلد بنفس الاسم';
         const old = arr.find((f) => f.name === full);
-        if (!bad && !old && count + 1 > 100) bad = 'بلغت الحد الأقصى (100 ملف)';
-        if (!bad && total - (old ? old.content.length : 0) + text.length > 2000000) bad = 'تجاوز الحجم الإجمالي المسموح (2 ميغابايت)';
+        if (!bad && !old && count + 1 > Addons.MAX_FILES) bad = `بلغت الحد الأقصى (${Addons.MAX_FILES} ملف)`;
+        if (!bad && total - (old ? old.content.length : 0) + rec.content.length > Addons.MAX_TOTAL) bad = 'تجاوز الحجم الإجمالي المسموح للإضافة (نحو 10 ميغابايت)';
         if (bad) { skipped.push([full.slice(base.length), bad]); continue; }
-        total += text.length - (old ? old.content.length : 0); if (!old) count++;
-        old ? replaced++ : fresh++; ok.push([full, text]);
+        total += rec.content.length - (old ? old.content.length : 0); if (!old) count++;
+        old ? replaced++ : fresh++; ok.push([full, rec]);
       }
       if (!ok.length) { await this.reportSkipped(skipped, 'لم يُرفع أي ملف'); return; }
       if (replaced && !(await UI.confirm(`سيُرفع ${ok.length} ملف: ${fresh} جديد و${replaced} سيستبدل ملفاً موجوداً بالاسم نفسه. المتابعة؟`, { okText: 'رفع', danger: false }))) return;
-      for (const [full, text] of ok) {
+      for (const [full, rec] of ok) {
         this.dropKeeps(arr, full);
-        const old = arr.find((f) => f.name === full);
-        if (old) old.content = text; else arr.push({ name: full, content: text });
+        const i = arr.findIndex((f) => f.name === full);
+        if (i >= 0) arr[i] = rec; else arr.push(rec);
       }
       Store.save();
       if (folder !== 'system' && ok.some(([n2]) => n2 === 'manifest.json')) { try { Addons.syncRegistry(folder); } catch (e) { /* manifest غير صالح: يظهر تحذيره في الصفحة */ } }
@@ -178,7 +185,7 @@
         else if (a === 'opendir') { this.nav = { view: 'folder', folder: n.folder, dir: ds.dir || '' }; this.render(); }
         else if (a === 'edit') { this.nav = { view: 'file', folder: n.folder, file: ds.file }; this.render(); }
         else if (a === 'savefile') {
-          const f = this.files(n.folder).find((x) => x.name === n.file); if (!f) return;
+          const f = this.files(n.folder).find((x) => x.name === n.file); if (!f || f.bin) return;
           f.content = this.el.querySelector('#ex-editor').value.slice(0, 500000); Store.save();
           if (n.folder !== 'system' && n.file === 'manifest.json') Addons.syncRegistry(n.folder);
           UI.toast('✅ تم حفظ الملف', 'success');
@@ -192,6 +199,10 @@
           const isDir = asDir(v.name), full = (dir ? dir + '/' : '') + clean(v.name), arr = this.files(n.folder);
           this.dropKeeps(arr, full); // أول ملف في مجلد يزيل ملف الحفظ المؤقت
           arr.push({ name: isDir ? full + '/' + Addons.KEEP : full, content: isDir ? '' : '// ملف جديد\n' }); Store.save(); this.render();
+        } else if (a === 'download') {
+          const f = this.files(n.folder).find((x) => x.name === n.file); if (!f) return;
+          const url = URL.createObjectURL(new Blob([Addons.toBytes(f)], { type: Addons.mime(f.name) || 'application/octet-stream' }));
+          const l = Object.assign(document.createElement('a'), { href: url, download: f.name.split('/').pop() }); document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
         } else if (a === 'upload') {
           await this.upload(n.folder, n.dir || '');
         } else if (a === 'delfile') {
