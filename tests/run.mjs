@@ -106,4 +106,26 @@ await t('كل سكربتات index.html موجودة ومسجّلة في SW', ()
   const html = fs.readFileSync('index.html', 'utf8'), sw = fs.readFileSync('sw.js', 'utf8');
   for (const m of html.matchAll(/<script[^>]+src="([^"]+)"/g)) { assert.ok(fs.existsSync(m[1]), m[1]); assert.ok(sw.includes(`'./${m[1]}'`), 'غير مخزّن في SW: ' + m[1]); }
 });
+await t('ملف ثنائي: ذهاب وإياب بلا فقد، والنص بـ BOM يبقى حرفياً', () => {
+  const png = nodeCrypto.randomBytes(5000), rec = Addons.fromBytes('img/a.png', new Uint8Array(png));
+  assert.equal(rec.bin, true); assert.ok(Addons.B64_RE.test(rec.content) && rec.content.length % 4 === 0);
+  assert.deepEqual(Buffer.from(Addons.toBytes(rec)), png); assert.equal(Addons.rawSize(rec), 5000);
+  const bom = Buffer.concat([Buffer.from([0xEF, 0xBB, 0xBF]), Buffer.from('مرحبا\r\nx')]), t1 = Addons.fromBytes('a.txt', new Uint8Array(bom));
+  assert.ok(!t1.bin); assert.deepEqual(Buffer.from(Addons.toBytes(t1)), bom);
+  const bad = Addons.fromBytes('data.json', new Uint8Array([0xff, 0xfe, 0x00, 0x41])); assert.equal(bad.bin, true);
+  assert.equal(Addons.fromBytes('x.svg', new Uint8Array(Buffer.from('<svg/>'))).bin, undefined);
+  assert.equal(Addons.fromBytes('big.txt', new Uint8Array(Buffer.alloc(600000, 97))).bin, true); // نص أكبر من الحد يُحفظ ثنائياً بدل أن يُرفض
+  assert.ok(Addons.dataUrl(rec).startsWith('data:image/png;base64,'));
+});
+await t('حزمة إضافة بملف ثنائي: تُقبل وتُرفض التالفة', () => {
+  const png = Buffer.from('iVBORw0KGgo=', 'base64').toString('base64');
+  const pkg = { format: 'alaisai-addon', version: 1, id: 'صور', files: [{ name: 'manifest.json', content: '{"name":"s","version":"1.0.0"}' }, { name: 'img/a.png', content: png, bin: true }] };
+  const r = Addons.validatePackage(pkg); assert.equal(r.addon.files[1].bin, true);
+  assert.equal(Addons.toPackage(r.addon).files[1].bin, true);
+  const bad = JSON.parse(JSON.stringify(pkg)); bad.files[1].content = 'ليس base64!'; assert.throws(() => Addons.validatePackage(bad));
+});
+await t('التخزين يحفظ الثنائي ويُسقط التالف', async () => {
+  const d = await Store.migrate({ config: {}, registry: [], explorer: { addons: [{ name: 'p', files: [{ name: 'manifest.json', content: '{}' }, { name: 'a.png', content: 'iVBORw0KGgo=', bin: true }, { name: 'b.png', content: 'bad!!', bin: true }] }] } });
+  assert.deepEqual(d.explorer.addons[0].files.map((f) => f.name), ['manifest.json', 'a.png']); assert.equal(d.explorer.addons[0].files[1].bin, true);
+});
 console.log(`\n${n} اختبار ناجح`);

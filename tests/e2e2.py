@@ -175,6 +175,22 @@ with sync_playwright() as p:
     check('نُشرت ملفات الإضافة المحلية في addons/ بالمستودع', all(('addons/demo/'+n) in gh.files for n in ['manifest.json','index.html','main.js','style.css']), str([k for k in gh.files if k.startswith('addons')]))
     check('ملفات الإضافة في المستودع نص عادي مطابق', b'Alaisai' in gh.files.get('addons/demo/main.js',b''))
     check('نُشرت المجلدات المتداخلة بمساراتها لإضافة باسم عربي', all(('addons/لعبتي الأولى/'+n) in gh.files for n in ['manifest.json','src/bridge/AisaiAdapter.js','data/cfg.json','index.html']), str([k for k in gh.files if k.startswith('addons')]))
+    # ملفات ثنائية (صور): تُنشر بايتات حقيقية وتصل من المستودع بلا تلف، ولا تُعاد كتابتها بلا داعٍ
+    BIN=bytes(range(256))*4+b'\x89PNG\x00\xff'
+    page.evaluate("(b)=>{const a=Addons.get('demo');a.files.push({name:'img/x.png',content:b,bin:true});Store.save()}", base64.b64encode(BIN).decode())
+    page.evaluate("Sync.syncAddons()"); page.wait_for_timeout(2500)
+    check('نُشر الملف الثنائي في المستودع بايتاً ببايت', gh.files.get('addons/demo/img/x.png')==BIN, str(len(gh.files.get('addons/demo/img/x.png',b''))))
+    puts=len([l for l in gh.log if l[0]=='PUT' and 'addons/demo/img' in l[1]]); page.evaluate("Sync.syncAddons()"); page.wait_for_timeout(1500)
+    check('لا إعادة نشر للصورة غير المتغيرة (مقارنة SHA صحيحة)', len([l for l in gh.log if l[0]=='PUT' and 'addons/demo/img' in l[1]])==puts)
+    BIN2=bytes((i*7)%256 for i in range(3000))
+    gh.files['addons/صور المستودع/manifest.json']=json.dumps({'name':'صور','icon':'🖼','version':'1.0.0'},ensure_ascii=False).encode()
+    gh.files['addons/صور المستودع/index.html']=b'<main>x</main>'; gh.files['addons/صور المستودع/img/y.png']=BIN2
+    page.evaluate("Sync.check()"); page.wait_for_timeout(2500)
+    page.evaluate("RepoAddons.install('صور المستودع')"); page.wait_for_timeout(1500)
+    got=page.evaluate("(()=>{const f=(Addons.get('صور المستودع')||{files:[]}).files.find(x=>x.name==='img/y.png');return f?[!!f.bin,f.content]:null})()")
+    check('الصورة من المستودع وصلت ثنائية وسليمة', got is not None and got[0] and base64.b64decode(got[1])==BIN2, str(got and got[0]))
+    check('إضافة الصور بقيت «محدّثة» بعد التثبيت (SHA يطابق)', page.evaluate("RepoAddons.items.find(i=>i.name==='صور المستودع').state")=='current')
+    page.evaluate("RepoAddons.purge('صور المستودع')"); page.wait_for_timeout(1200)
     gh.files['addons/إضافة المستودع/manifest.json']=json.dumps({'name':'إضافة من المستودع','icon':'📦','version':'1.0.0'},ensure_ascii=False).encode()
     gh.files['addons/إضافة المستودع/lib/util.js']=b'window.U=1'; gh.files['addons/إضافة المستودع/index.html']=b'<main id="m">x</main>'
     page.evaluate("Sync.check()"); page.wait_for_timeout(2500)
