@@ -1,16 +1,1 @@
-{
-  "id": "shatranj-alaisai-pro",
-  "name": "شطرانج العيسائي برو",
-  "version": "2.0.3",
-  "description": "شطرنج عربي كامل القواعد: لاعبان محليان أو ضد الكمبيوتر، تبييت وأخذ بالتجاوز وترقية، كش مات وتعادل، تراجع وسجل نقلات. يعمل محلياً بلا اتصال.",
-  "entry": "index.html",
-  "icon": "♞",
-  "category": "games",
-  "rtl": true,
-  "scripts": [
-    "main.js"
-  ],
-  "styles": [
-    "style.css"
-  ]
-}
+{"id":"shatranj-alaisai-pro","name":"شطرانج العيسائي برو","version":"1.1.0","description":"لعبة شطرنج عربية للاعبين مع لعب محلي ومشاركة الجلسة.","entry":"index.html","icon":"♞","category":"games","rtl":true,"scripts":["main.js"],"styles":["style.css"]}
