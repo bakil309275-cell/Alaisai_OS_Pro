@@ -1,16 +1,12 @@
 {
   "id": "letters-kingdom-arabic",
   "name": "مملكة الحروف",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "لعبة عربية تجمع الكلمات وبناء المملكة: 60 مستوى، 6 مناطق، 3 أنواع ألغاز، سلاسل، إنجازات، هدايا متصاعدة، وتلميحات وإعلانات مكافأة اختيارية.",
   "entry": "index.html",
   "icon": "✦",
   "category": "games",
   "rtl": true,
-  "scripts": [
-    "main.js"
-  ],
-  "styles": [
-    "style.css"
-  ]
+  "scripts": ["main.js"],
+  "styles": ["style.css"]
 }
