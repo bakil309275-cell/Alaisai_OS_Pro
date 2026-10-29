@@ -1,0 +1,16 @@
+{
+  "id": "letters-kingdom-arabic",
+  "name": "مملكة الحروف",
+  "version": "1.0.1",
+  "description": "لعبة عربية تجمع الكلمات وبناء المملكة: ركّب الكلمات، افتح الأجزاء، اجمع العملات، واستخدم تلميحات وإعلانات مكافأة اختيارية.",
+  "entry": "index.html",
+  "icon": "✦",
+  "category": "games",
+  "rtl": true,
+  "scripts": [
+    "main.js"
+  ],
+  "styles": [
+    "style.css"
+  ]
+}
