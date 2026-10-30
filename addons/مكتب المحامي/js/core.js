@@ -27,15 +27,16 @@ const STATUS = {
 const KINDS = ['مدنية', 'تجارية', 'جزائية', 'أحوال شخصية', 'عمالية', 'إدارية', 'عقارية', 'إيجارات', 'أخرى'];
 const ROLES = ['مدعي', 'مدعى عليه', 'متهم', 'مجني عليه', 'مستأنف', 'مستأنف ضده', 'طالب', 'مطلوب ضده', 'أخرى'];
 
-const DB = { s: { office: '', lawyer: '', phone: '', city: '', cur: 'ريال' }, clients: [], cases: [] };
+const DB = { s: { office: '', lawyer: '', phone: '', city: '', cur: 'ريال' }, clients: [], cases: [], tpls: [] };
 const Meta = { bytes: 0, limit: 256 * 1024, full: false, saving: false, lastSaved: 0 };
 const LIMIT = 256 * 1024;
 
 const normalize = (o) => {
   const x = o && typeof o === 'object' ? o : {};
   DB.s = Object.assign({ office: '', lawyer: '', phone: '', city: '', cur: 'ريال' }, x.s || {});
-  DB.clients = Array.isArray(x.clients) ? x.clients : [];
-  DB.cases = (Array.isArray(x.cases) ? x.cases : []).map((c) => Object.assign({ hearings: [], tasks: [], payments: [], expenses: [], notes: [], docs: [] }, c));
+  DB.clients = (Array.isArray(x.clients) ? x.clients : []).map((c) => Object.assign({ files: [] }, c));
+  DB.tpls = Array.isArray(x.tpls) ? x.tpls : [];
+  DB.cases = (Array.isArray(x.cases) ? x.cases : []).map((c) => Object.assign({ hearings: [], tasks: [], payments: [], expenses: [], notes: [], docs: [], files: [] }, c));
 };
 
 async function pack(obj) {
@@ -58,7 +59,7 @@ function flush() {
   clearTimeout(saveTimer);
   saveChain = saveChain.then(async () => {
     try {
-      const p = await pack({ v: 1, s: DB.s, clients: DB.clients, cases: DB.cases });
+      const p = await pack({ v: 1, s: DB.s, clients: DB.clients, cases: DB.cases, tpls: DB.tpls });
       Meta.bytes = JSON.stringify(p).length + 8;
       await Alaisai.set('db', p);
       Meta.full = false; Meta.lastSaved = Date.now();
