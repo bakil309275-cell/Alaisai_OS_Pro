@@ -1,0 +1,1 @@
+/* Original application scripts are preserved inside index.html. */
