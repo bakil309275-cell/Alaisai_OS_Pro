@@ -1,6 +1,6 @@
 /* Alaisai OS - Service Worker
  * غيّر VERSION عند كل إصدار ليصل التحديث للمستخدمين. */
-const VERSION = '2.6.0';
+const VERSION = '2.7.0';
 const BUILD = 'dev'; // يستبدله سير العمل برمز الإيداع عند النشر ليصل التحديث للجميع
 const CACHE = `alaisai-${VERSION}-${BUILD}`;
 const CORE = [
@@ -17,6 +17,7 @@ const CORE = [
   './src/ui.js',
   './src/security.js',
   './src/storage.js',
+  './src/vault.js',
   './src/apps.js',
   './src/addons.js',
   './src/catalog.js',
