@@ -1,1 +1,10 @@
-
+{
+  "id": "medical",
+  "name": "الطب والأدوية",
+  "version": "1.0.0",
+  "description": "إدارة الأطباء والمستشفيات والصيدليات والأدوية والحجوزات والحسابات المالية.",
+  "entry": "index.html",
+  "lang": "ar",
+  "dir": "rtl",
+  "permissions": ["storage", "files"]
+}
