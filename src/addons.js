@@ -155,6 +155,7 @@
       Store.db.registry = Store.db.registry.filter((a) => !(a.type === 'addon' && a.content === name));
       Store.db.registry.forEach((a, i) => (a.order = i));
       delete Store.db.appData['addon:' + name];
+      if (window.Vault) Vault.clear('addon:' + name);
       Store.save();
     },
 

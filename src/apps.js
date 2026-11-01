@@ -11,7 +11,8 @@
     'function c(o,a){return new Promise(function(r,j){var i=++n;p[i]=[r,j];parent.postMessage({alaisai:1,id:i,op:o,args:a},"*")})}' +
     'window.Alaisai={version:1,env:' + JSON.stringify(env).replace(/</g, '\\u003c') + ',toast:function(m){return c("toast",[String(m)])},' +
     'get:function(k){return c("get",[k]).then(function(v){return v==null?null:JSON.parse(v)})},set:function(k,v){return c("set",[k,JSON.stringify(v)])},' +
-    'remove:function(k){return c("remove",[k])},keys:function(){return c("keys",[])}};' +
+    'remove:function(k){return c("remove",[k])},keys:function(){return c("keys",[])},' +
+    'vault:{put:function(k,b,n){return b.arrayBuffer().then(function(a){return c("vput",[k,n||b.name||k,b.type,a])})},get:function(k){return c("vget",[k]).then(function(r){return r&&{name:r.name,type:r.type,size:r.size,blob:new Blob([r.data],{type:r.type})}})},remove:function(k){return c("vdel",[k])},list:function(){return c("vlist",[])},usage:function(){return c("vusage",[])}}};' +
     'addEventListener("keydown",function(e){if(e.key==="Escape")setTimeout(function(){if(!e.defaultPrevented)c("escape",[])},0)})})();';
 
   Viewer.bridge = (frame, ns, label) => {
@@ -33,6 +34,13 @@
         }
         if (m.op === 'escape') { if (!document.querySelector('#dialog-root .dialog')) OS.closeStage(); return ok(m.id, true); }
         if (m.op === 'keys') return ok(m.id, Object.keys(Store.db.appData[ns] || {}));
+        if (m.op === 'vlist' || m.op === 'vusage') { if (!window.Vault) return fail(m.id, 'الخزنة غير متاحة'); (m.op === 'vlist' ? Vault.list(ns) : Vault.usage(ns)).then((r) => ok(m.id, r), (er) => fail(m.id, String(er && er.message || 'خطأ'))); return; }
+        if (m.op === 'vput' || m.op === 'vget' || m.op === 'vdel') {
+          const k = a[0]; if (typeof k !== 'string' || !KEY.test(k) || BAD.includes(k)) return fail(m.id, 'مفتاح غير صالح');
+          if (!window.Vault) return fail(m.id, 'الخزنة غير متاحة');
+          const pr = m.op === 'vput' ? Vault.put(ns, k, a[1], a[2], a[3]) : m.op === 'vget' ? Vault.get(ns, k) : Vault.del(ns, k);
+          pr.then((r) => ok(m.id, r), (er) => fail(m.id, String(er && er.message || 'خطأ'))); return;
+        }
         const key = a[0];
         if (typeof key !== 'string' || !KEY.test(key) || BAD.includes(key)) return fail(m.id, 'مفتاح غير صالح');
         if (m.op === 'get') { const d = Store.db.appData[ns]; return ok(m.id, d && Object.prototype.hasOwnProperty.call(d, key) ? d[key] : null); }
