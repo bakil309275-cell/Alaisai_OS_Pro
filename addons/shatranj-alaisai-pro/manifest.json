@@ -1,1 +1,0 @@
-{"id":"shatranj-alaisai-pro","name":"شطرانج العيسائي برو","version":"1.0.0","description":"لعبة شطرنج عربية للاعبين مع دعم Bluetooth ورمز الشبكة.","entry":"index.html","icon":"♞","category":"games","rtl":true,"scripts":["main.js"],"styles":["style.css"]}
