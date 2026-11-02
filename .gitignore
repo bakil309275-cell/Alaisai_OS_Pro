@@ -3,3 +3,5 @@ node_modules/
 *.log
 __pycache__/
 *.pyc
+tools/sectors/out/
+tools/sectors/shots/*.png
