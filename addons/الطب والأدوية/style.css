@@ -83,3 +83,12 @@ html[data-theme=dark] .st-0{background:#223250;color:#a9c4f2}html[data-theme=dar
  .sheet,.sheet.wide{inset:auto 0 0 0;width:100%;max-height:92vh;border-radius:16px 16px 0 0}#toast{bottom:84px}.stats{grid-template-columns:repeat(3,1fr)}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.pickb{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;width:100%;text-align:start}.pickb .ic{width:18px;height:18px;flex:none;color:var(--muted)}.pickb span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pickb:focus-visible{outline:2px solid var(--a);outline-offset:1px}
+.pk .box{max-height:min(86vh,640px);display:flex;flex-direction:column;gap:10px;padding:16px}.pk h3{margin:0;font-size:16px}.pl{list-style:none;margin:0;padding:0;overflow-y:auto;border:1px solid var(--line);border-radius:10px}
+.pl li{display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--line);padding-inline-end:4px}.pl li:last-child{border-bottom:0}.pl .none{padding:14px;color:var(--muted);justify-content:center}
+.po{flex:1;display:flex;align-items:center;gap:12px;min-height:50px;padding:6px 12px;text-align:start}.po small{color:var(--muted)}
+.rd{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--muted);display:grid;place-items:center}.rd.on{border-color:var(--a)}.rd.on::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--a)}html[data-theme=dark] .rd.on{border-color:var(--a2)}html[data-theme=dark] .rd.on::after{background:var(--a2)}
+.pl .dng:hover,.pl .dng:focus-visible{color:var(--bad)}.pl .ok{color:var(--ok)}.pl .lk{display:grid;place-items:center;width:38px;color:var(--muted);opacity:.6}.pl .lk .ic{width:16px;height:16px}
+.pl li.ed{padding:6px}.pl li.ed input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--a);border-radius:10px;padding:8px 12px;min-height:42px}
+.padd{display:flex;gap:8px}.padd input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-height:44px}
