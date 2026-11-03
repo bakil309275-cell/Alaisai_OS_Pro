@@ -10,7 +10,7 @@ JS='''(async()=>{const o=document.getElementById('o');const r={};try{
 const b=new Blob([new Uint8Array([1,2,3,250,251,252])],{type:'application/octet-stream'});
 await Alaisai.vault.put('a1',b,'x.bin');r.list=await Alaisai.vault.list();const g=await Alaisai.vault.get('a1');r.bytes=[...new Uint8Array(await g.blob.arrayBuffer())];r.name=g.name;
 r.usage=await Alaisai.vault.usage();try{await Alaisai.vault.put('bad key',b)}catch(e){r.badKey=e.message}
-try{await Alaisai.vault.put('big',new Blob([new Uint8Array(26*1048576)]))}catch(e){r.big=e.message}
+try{await Alaisai.vault.put('big',new Blob([new Uint8Array(40*1048576)]));r.big='ok';await Alaisai.vault.remove('big')}catch(e){r.big=e.message}
 await Alaisai.vault.remove('a1');r.after=(await Alaisai.vault.list()).length;r.none=await Alaisai.vault.get('a1')}catch(e){r.err=e.message}
 o.textContent=JSON.stringify(r)})()'''
 with sync_playwright() as p:
@@ -23,7 +23,7 @@ with sync_playwright() as p:
     check('القراءة بايتاً ببايت', r['bytes']==[1,2,3,250,251,252] and r['name']=='x.bin')
     check('الاستخدام', r['usage']=={'count':1,'bytes':6}, str(r['usage']))
     check('مفتاح غير صالح يُرفض', 'مفتاح' in r.get('badKey',''), str(r))
-    check('ملف أكبر من 25 م.ب يُرفض', '25' in r.get('big',''), str(r))
+    check('ملف 40 م.ب يُقبل (لا سقف سوى سعة الجهاز)', r.get('big')=='ok', str(r))
     check('الحذف', r['after']==0 and r['none'] is None)
     errs=[e for e in errs if 'serviceWorker' not in e]; check('لا أخطاء JS', not errs, str(errs))
     b.close()
