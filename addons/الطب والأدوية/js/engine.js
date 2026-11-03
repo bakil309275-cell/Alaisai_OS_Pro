@@ -2,6 +2,7 @@
 /* ===== المحرك المشترك لإضافات القطاعات (الإعداد في cfg.js) ===== */
 const S = { tab: 'home', list: CFG.lists[0].id, q: '', filter: '', bfilter: 'all', seg: 'posts', bq: '' };
 const TABS = [['home', 'الرئيسية', 'home'], ['cat', 'الكتالوج', 'grid'], ['book', CFG.book.tab, 'cal'], ['msg', 'العروض والرسائل', 'chat'], ['me', 'ملفي', 'user']];
+const lf = (l) => l.fields.map((f) => (f.t === 'select' ? Object.assign({}, f, { key: l.id + '.' + f.n, scope: 'rec:' + l.id }) : f));
 const lcfg = (id) => CFG.lists.find((l) => l.id === id);
 const recs = (id) => DB.lists[id] || (DB.lists[id] = []);
 const isMoney = (f) => f.t === 'money';
@@ -60,7 +61,7 @@ const avatar = (n) => `<span class="av" style="--s:${n}px">${DB.profile.logo ? `
 /* ----- الكتالوج ----- */
 function vCat() {
   const l = lcfg(S.list), q = norm(S.q), fl = S.filter, all = recs(l.id);
-  const fo = l.filter ? (l.fields.find((f) => f.n === l.filter).o || []) : [];
+  const fo = l.filter ? optValues(Object.assign({ key: l.id + '.' + l.filter }, l.fields.find((f) => f.n === l.filter))) : [];
   let list = all.filter((r) => (fl === '__hide' ? r.hide : !r.hide && (!fl || r[l.filter] === fl)) && (!q || norm(l.fields.map((f) => r[f.n]).join(' ')).includes(q)));
   list = list.slice().sort((a, b) => (b.created || 0) - (a.created || 0));
   const seg = CFG.lists.length > 1 ? `<div class="seg" role="tablist">${CFG.lists.map((x) => `<button role="tab" aria-selected="${x.id === l.id}" class="${x.id === l.id ? 'on' : ''}" data-act="list" data-l="${x.id}">${E(x.title)}<i>${recs(x.id).length}</i></button>`).join('')}</div>` : '';
@@ -91,11 +92,11 @@ function photoEditor(el, ids, max = 6) {
   return { ids: () => cur.slice(), commit: () => dropPhotos(removed), cancel: () => dropPhotos(added) };
 }
 const photoBox = () => (hasVault() ? '<div class="fld"><span>الصور</span><div class="phe"></div></div>' : '<p class="note">إرفاق الصور يحتاج العيسائي برو 2.7.0 أو أحدث.</p>');
-const visField = () => ({ n: 'vis', l: 'النشر', t: 'select', o: [['pub', 'عام (يظهر في الكتالوج المشارَك)'], ['prv', 'خاص (لي فقط)']], half: 1 });
+const visField = () => ({ n: 'vis', fix: 1, l: 'النشر', t: 'select', o: [['pub', 'عام (يظهر في الكتالوج المشارَك)'], ['prv', 'خاص (لي فقط)']], half: 1 });
 
 /* ----- سجلات الكتالوج ----- */
 function recForm(l, r) {
-  const isNew = !r, fields = l.fields.concat([visField()]);
+  const isNew = !r, fields = lf(l).concat([visField()]);
   const el = form(isNew ? 'إضافة ' + l.single : 'تعديل ' + l.single, fields, r || { vis: 'pub' }, async (o) => {
     const rec = isNew ? { id: uid(), created: Date.now(), photos: [] } : r; Object.assign(rec, o); if (pe) { rec.photos = pe.ids(); pe.commit(); }
     if (isNew) recs(l.id).push(rec); persist(); render(); toast('حُفظ');
@@ -121,7 +122,7 @@ async function recMenu(l, r) {
 
 /* ----- الحجوزات والطلبات ----- */
 const bookFields = () => [{ n: 'name', l: CFG.book.nameLabel, req: 1 }, { n: 'phone', l: 'الهاتف', t: 'tel', half: 1 }, { n: 'what', l: CFG.book.itemLabel, half: 1, o: CFG.book.itemFrom ? recs(CFG.book.itemFrom).map((r) => r[lcfg(CFG.book.itemFrom).primary]) : undefined }]
-  .concat(CFG.book.qtyLabel ? [{ n: 'qty', l: CFG.book.qtyLabel, t: 'number', half: 1 }] : []).concat([{ n: 'date', l: CFG.book.dateLabel, t: 'date', half: 1 }, { n: 'time', l: 'الوقت', t: 'time', half: 1 }, { n: 'agreed', l: 'المبلغ المتفق عليه', t: 'money', half: 1 }, { n: 'status', l: 'الحالة', t: 'select', o: CFG.book.statuses, half: 1 }, { n: 'note', l: 'ملاحظات', t: 'textarea', rows: 2 }]);
+  .concat(CFG.book.qtyLabel ? [{ n: 'qty', l: CFG.book.qtyLabel, t: 'number', half: 1 }] : []).concat([{ n: 'date', l: CFG.book.dateLabel, t: 'date', half: 1 }, { n: 'time', l: 'الوقت', t: 'time', half: 1 }, { n: 'agreed', l: 'المبلغ المتفق عليه', t: 'money', half: 1 }, { n: 'status', l: 'الحالة', t: 'select', fix: 1, key: 'book.status', scope: 'book', o: CFG.book.statuses, half: 1 }, { n: 'note', l: 'ملاحظات', t: 'textarea', rows: 2 }]);
 function bRow(b) {
   return `<div class="row" data-id="${b.id}"><button class="rb" data-act="viewBook" data-id="${b.id}"><span class="when"><b>${E(b.date ? fShort(b.date) : '—')}</b><small>${E(b.time || '')}</small></span><span class="main"><strong>${E(b.name)}</strong><small>${E([b.what, b.qty && 'عدد ' + b.qty].filter(Boolean).join(' · '))}</small></span>${stBadge(b.status)}${bRest(b) > 0 ? `<span class="amt">${E(fNum(bRest(b)))}</span>` : ''}</button></div>`;
 }
@@ -173,7 +174,7 @@ function vMsg() {
   const list = DB.inquiries.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   return seg + `<div class="bar"><button class="btn pri grow" data-act="newInq">${ic('plus')}تسجيل استفسار</button></div>` + (list.length ? `<div class="list">${list.map((i) => `<button class="row rb" data-act="viewInq" data-id="${i.id}"><span class="main"><strong>${E(i.from)}</strong><small>${E(i.text)}</small></span><span class="tag ${i.status === 'جديد' ? 'bad' : ''}">${E(i.status)}</span></button>`).join('')}</div>` : emptyBox('لا استفسارات', 'سجّل ما يصلك من أسئلة واتساب أو الاتصال لتتابع الردود ولا يضيع شيء.', ''));
 }
-const postFields = () => [{ n: 'kind', l: 'النوع', t: 'select', o: CFG.postKinds, half: 1 }, { n: 'date', l: 'التاريخ', t: 'date', half: 1 }, { n: 'title', l: 'العنوان', req: 1 }, { n: 'text', l: 'النص', t: 'textarea', rows: 5 }, visField()];
+const postFields = () => [{ n: 'kind', l: 'النوع', t: 'select', key: 'post.kind', scope: 'post', o: CFG.postKinds, half: 1 }, { n: 'date', l: 'التاريخ', t: 'date', half: 1 }, { n: 'title', l: 'العنوان', req: 1 }, { n: 'text', l: 'النص', t: 'textarea', rows: 5 }, visField()];
 function postForm(p, preset) {
   const isNew = !p;
   const el = form(isNew ? 'منشور جديد' : 'تعديل المنشور', postFields(), p || preset || { kind: CFG.postKinds[0], date: today(), vis: 'pub' }, (o) => { const rec = isNew ? { id: uid(), photos: [] } : p; Object.assign(rec, o); if (pe) { rec.photos = pe.ids(); pe.commit(); } if (isNew) DB.posts.push(rec); persist(); render(); toast('حُفظ'); }, { extra: photoBox(), onClose: () => pe && pe.cancel(), del: !isNew, delMsg: 'حذف هذا المنشور؟', onDel: () => { dropPhotos(p.photos); DB.posts = DB.posts.filter((x) => x !== p); persist(); render(); } });
@@ -197,7 +198,7 @@ async function draftPost() {
   const el = sheet('اقتراح نص منشور', `<p class="note">اختر عنصراً وأكتب لك نصاً جاهزاً تعدّله كما تشاء. هذا مساعد قواعد محلي وليس نموذج ذكاء اصطناعي.</p><div class="list">${all.slice(0, 40).map((x, i) => `<button class="row rb" data-i="${i}"><span class="main"><strong>${E(x.r[x.l.primary])}</strong><small>${E(x.l.single)}</small></span></button>`).join('')}</div>`, { noFocus: true });
   $$('[data-i]', el).forEach((b) => { b.onclick = () => { const { l, r } = all[+b.dataset.i]; const bf = l.fields.find((f) => f.n === l.badge); const lines = [CFG.draft(r, l), '', ...l.fields.filter((f) => f.n !== l.primary && f.n !== l.badge && f.t !== 'textarea').map((f) => [f.l, fval(f, r)]).filter((x) => x[1]).slice(0, 4).map(([a, c]) => '• ' + a + ': ' + c), bf && r[bf.n] ? '💰 ' + bf.l + ': ' + fval(bf, r) : '', '', 'للحجز والاستفسار تواصل معنا' + (DB.profile.phones[0] ? ' على ' + DB.profile.phones[0].v : '')]; closeSheet(true); postForm(null, { kind: CFG.postKinds[0], date: today(), vis: 'pub', title: r[l.primary], text: lines.filter((x) => x !== undefined).join('\n').replace(/\n{3,}/g, '\n\n'), photos: [] }); }; });
 }
-const inqFields = () => [{ n: 'from', l: 'اسم صاحب الاستفسار', req: 1, half: 1 }, { n: 'phone', l: 'الهاتف', t: 'tel', half: 1 }, { n: 'text', l: 'الاستفسار', t: 'textarea', req: 1, rows: 4 }, { n: 'date', l: 'التاريخ', t: 'date', half: 1 }, { n: 'status', l: 'الحالة', t: 'select', o: ['جديد', 'تم الرد', 'مغلق'], half: 1 }];
+const inqFields = () => [{ n: 'from', l: 'اسم صاحب الاستفسار', req: 1, half: 1 }, { n: 'phone', l: 'الهاتف', t: 'tel', half: 1 }, { n: 'text', l: 'الاستفسار', t: 'textarea', req: 1, rows: 4 }, { n: 'date', l: 'التاريخ', t: 'date', half: 1 }, { n: 'status', l: 'الحالة', t: 'select', fix: 1, key: 'inq.status', scope: 'inq', o: ['جديد', 'تم الرد', 'مغلق'], half: 1 }];
 function inqForm(i) { const isNew = !i; form(isNew ? 'استفسار جديد' : 'تعديل الاستفسار', inqFields(), i || { date: today(), status: 'جديد' }, (o) => { if (isNew) DB.inquiries.push(Object.assign({ id: uid() }, o)); else Object.assign(i, o); persist(); render(); toast('حُفظ'); }, { del: !isNew, delMsg: 'حذف هذا الاستفسار؟', onDel: () => { DB.inquiries = DB.inquiries.filter((x) => x !== i); persist(); render(); } }); }
 function viewInq(i) {
   const reply = `مرحباً ${i.from}، شكراً لتواصلك مع ${DB.profile.name || CFG.name}. بخصوص استفسارك: `;
@@ -209,18 +210,18 @@ function viewInq(i) {
 /* ----- ملفي ----- */
 function listRows(k, title, ph) { return `<div class="sec-h"><h3>${title}</h3><button class="btn small quiet" data-act="addC" data-k="${k}">${ic('plus')}إضافة</button></div>${DB.profile[k].length ? `<div class="list">${DB.profile[k].map((c, i) => `<div class="row"><span class="main"><strong dir="auto">${E(c.v)}</strong><small>${E(c.t || '')}</small></span><button class="icon s" data-act="editC" data-k="${k}" data-i="${i}" aria-label="تعديل">${ic('edit')}</button></div>`).join('')}</div>` : `<p class="calm sm">${ph}</p>`}`; }
 function vMe() {
-  const p = DB.profile, pct = Math.min(100, Math.round(Meta.bytes / LIMIT * 100));
+  const p = DB.profile;
   return `<section class="card-id me">${avatar(88)}<div class="ci-t"><h1>${E(p.name || 'بلا اسم بعد')}</h1><p>${E(p.kind || CFG.tagline)}</p><div class="qas"><button class="qa" data-act="editMe">${ic('edit')}تعديل الملف</button><button class="qa" data-act="logo">${ic('camera')}الشعار</button></div></div></section>` +
     (p.bio ? `<p class="bio">${E(p.bio)}</p>` : '') +
     `<dl class="facts">${[...(CFG.profileExtra || []).map((f) => [f.l, p.extra[f.n]]), ['العنوان', addrText()], ['العملة', p.cur]].filter((x) => x[1]).map(([k, v]) => `<div><dt>${E(k)}</dt><dd>${E(v)}</dd></div>`).join('')}</dl>` +
     listRows('phones', 'أرقام الهاتف', 'أضف رقماً أو أكثر ليظهر في الكتالوج.') + listRows('emails', 'البريد الإلكتروني', 'أضف بريداً.') + listRows('banks', 'الحسابات البنكية', 'تظهر لعملائك عند السداد.') + listRows('links', 'روابط التواصل', 'واتساب، فيسبوك، تلغرام…') +
     `<div class="sec-h"><h3>الصورة الترحيبية</h3></div><div class="splash-set"><label class="sw"><input type="checkbox" id="sp-on"${p.splash.on ? ' checked' : ''}> تفعيل الصورة الترحيبية</label><select id="sp-mode" aria-label="متى تظهر"><option value="first"${p.splash.mode === 'first' ? ' selected' : ''}>عند الفتح الأول فقط</option><option value="every"${p.splash.mode === 'every' ? ' selected' : ''}>كل مرة تُفتح الإضافة</option></select><div class="foot"><button class="btn quiet small" data-act="splashPick">${ic('img')}اختيار الصورة</button><button class="btn quiet small" data-act="splashTest">معاينة</button><button class="btn quiet small" data-act="splashDel">إزالة</button></div></div>` +
     `<div class="sec-h"><h3>مشاركة ونسخ احتياطي</h3></div><div class="grid2"><button class="btn pri" data-act="exportCatalog">${ic('globe')}كتالوج للمشاركة</button><button class="btn quiet" data-act="shareMe">${ic('share')}مشاركة بطاقتي</button><button class="btn quiet" data-act="export">${ic('down')}نسخة احتياطية</button><button class="btn quiet" data-act="import">${ic('up')}استيراد نسخة</button></div>` +
-    `<div class="store"><div class="meterb" aria-hidden="true"><i class="${pct > 85 ? 'hot' : ''}" style="width:${Math.max(2, pct)}%"></i></div><p id="vuse" class="calm sm">البيانات ${pct}% من المساحة.</p></div>` +
+    `<div class="store"><p id="vuse" class="calm sm">التخزين بلا حد من الإضافة؛ الحد هو سعة جهازك فقط.</p></div>` +
     `<div class="sec-h"><h3>القفل</h3></div><div class="foot"><button class="btn quiet" data-act="lockSet">${ic('lock')}${localStorageLock ? 'تغيير' : 'تفعيل'} قفل الإضافة بكلمة مرور</button></div><p class="note">القفل يحجب الشاشة عن غيرك على جهازك، ولا يشفّر البيانات.</p>`;
 }
 let localStorageLock = false;
-const meFields = () => [{ n: 'name', l: 'اسم الجهة أو الشخص', req: 1 }, { n: 'kind', l: 'النوع', o: CFG.kinds, half: 1 }, { n: 'cur', l: 'العملة', half: 1 }].concat((CFG.profileExtra || []).map((f) => Object.assign({ half: 1 }, f))).concat([{ n: 'bio', l: 'نبذة أو سيرة', t: 'textarea', rows: 4 }, { n: 'country', l: 'الدولة', half: 1 }, { n: 'gov', l: 'المحافظة', half: 1 }, { n: 'dir', l: 'المديرية', half: 1 }, { n: 'iso', l: 'العزلة أو الحي', half: 1 }, { n: 'street', l: 'الشارع' }, { n: 'map', l: 'رابط الموقع (Google Maps)', t: 'url' }]);
+const meFields = () => [{ n: 'name', l: 'اسم الجهة أو الشخص', req: 1 }, { n: 'kind', l: 'النوع', t: 'select', key: 'me.kind', scope: 'me', blank: 1, o: CFG.kinds, half: 1 }, { n: 'cur', l: 'العملة', half: 1 }].concat((CFG.profileExtra || []).map((f) => Object.assign({ half: 1 }, f))).concat([{ n: 'bio', l: 'نبذة أو سيرة', t: 'textarea', rows: 4 }, { n: 'country', l: 'الدولة', half: 1 }, { n: 'gov', l: 'المحافظة', half: 1 }, { n: 'dir', l: 'المديرية', half: 1 }, { n: 'iso', l: 'العزلة أو الحي', half: 1 }, { n: 'street', l: 'الشارع' }, { n: 'map', l: 'رابط الموقع (Google Maps)', t: 'url' }]);
 function editMe() {
   const p = DB.profile, vals = Object.assign({}, p.addr, p.extra, { name: p.name, kind: p.kind, cur: p.cur, bio: p.bio, map: p.map });
   form('ملف ' + CFG.name, meFields(), vals, (o) => { p.name = o.name; p.kind = o.kind; p.cur = o.cur || 'ريال'; p.bio = o.bio; p.map = o.map; ['country', 'gov', 'dir', 'iso', 'street'].forEach((k) => { p.addr[k] = o[k]; }); (CFG.profileExtra || []).forEach((f) => { p.extra[f.n] = o[f.n]; }); persist(); render(); toast('حُفظ الملف'); });
@@ -237,3 +238,13 @@ async function showSplash(force) {
   const end = () => { z.classList.add('out'); setTimeout(() => z.remove(), 500); }; z.onclick = end; setTimeout(end, 2800); if (!force) { DB.seen = 1; persist(); }
 }
 const vm = (x) => x;
+
+/* ----- ربط القوائم المنسدلة بالسجلات: عدّ الاستخدام وإعادة التسمية ----- */
+function optHolders(f) {
+  const sc = f.scope || '';
+  if (sc.indexOf('rec:') === 0) return recs(sc.slice(4));
+  if (sc === 'post') return DB.posts; if (sc === 'book') return DB.bookings; if (sc === 'inq') return DB.inquiries;
+  if (sc === 'me') return [DB.profile]; return [];
+}
+function optUse(f, v) { return optHolders(f).filter((r) => r[f.n] === v).length; }
+function optRename(f, a, b) { optHolders(f).forEach((r) => { if (r[f.n] === a) r[f.n] = b; }); persist(); render(); }
