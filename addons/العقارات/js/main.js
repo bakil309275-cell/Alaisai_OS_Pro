@@ -8,7 +8,7 @@ function render() {
   hydrate($('#view')); if (S.tab === 'me') vaultUse();
   $$('.chips .on,.seg .on').forEach((x) => { try { x.scrollIntoView({ inline: 'center', block: 'nearest' }); } catch (e) { /* لا شيء */ } });
 }
-async function vaultUse() { const o = $('#vuse'); if (!o || !hasVault()) return; try { const u = await Alaisai.vault.usage(); o.textContent = 'البيانات ' + Math.min(100, Math.round(Meta.bytes / LIMIT * 100)) + '% من المساحة. الصور: ' + u.count + ' ملف، ' + (u.bytes / 1048576).toFixed(1) + ' م.ب على هذا الجهاز.'; } catch (e) { /* لا شيء */ } }
+async function vaultUse() { const o = $('#vuse'); if (!o || !hasVault()) return; try { const u = await Alaisai.vault.usage(); const mb = (n) => (n / 1048576 < 0.1 ? Math.max(1, Math.round(n / 1024)) + ' ك.ب' : (n / 1048576).toFixed(1) + ' م.ب'); o.textContent = 'التخزين بلا حد من الإضافة، والحد سعة جهازك فقط. السجلات: ' + mb(Meta.bytes) + ' • الصور والملفات: ' + u.count + ' (' + mb(u.bytes) + ') على هذا الجهاز.'; } catch (e) { /* لا شيء */ } }
 function goto(t, l, s) { S.tab = t; if (l) { S.list = l; S.filter = ''; S.q = ''; } if (s) S.seg = s; render(); scrollTo(0, 0); }
 const byId = (arr, id) => arr.find((x) => x.id === id);
 
