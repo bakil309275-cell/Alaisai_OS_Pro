@@ -45,7 +45,7 @@ const IC = {
   bell: '<path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15zM10 21h4"/>', bulb: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.900c.6.5 1 1.200 1 2.100h5c0-.9.4-1.600 1-2.100A6 6 0 0 0 12 3z"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>', camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
   coin: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v10M9.5 9.5c0-1 1-1.7 2.5-1.7s2.5.7 2.5 1.7-1 1.5-2.5 1.9-2.5.9-2.5 2 1 1.8 2.5 1.8 2.5-.8 2.5-1.8"/>',
-  back: '<path d="M9 5l7 7-7 7"/>', gear: '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>',
+  chev: '<path d="M6 9l6 6 6-6"/>', back: '<path d="M9 5l7 7-7 7"/>', gear: '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>',
   wa: '<path d="M4 20l1.2-4A8 8 0 1 1 8 18.8z"/><path d="M9 9.500c0 3 2.500 5.500 5.500 5.500l1-1.500-2-1-.8.800c-.8-.4-1.600-1.200-2-2l.8-.8-1-2z"/>',
   star: '<path d="M12 4l2.4 5 5.600.7-4.100 3.800 1.100 5.500L12 16.300 7 19l1.100-5.500L4 9.700 9.600 9z"/>',
 };
@@ -53,7 +53,7 @@ const ic = (n, c = '') => `<svg class="ic ${c}" viewBox="0 0 24 24" aria-hidden=
 
 /* ===== البيانات ===== */
 const LIMIT = 256 * 1024;
-const DB = { profile: { name: '', kind: '', bio: '', cur: 'ريال', phones: [], emails: [], banks: [], links: [], addr: {}, map: '', extra: {}, splash: { on: false, mode: 'first' } }, lists: {}, bookings: [], inquiries: [], posts: [], seen: 0 };
+const DB = { profile: { name: '', kind: '', bio: '', cur: 'ريال', phones: [], emails: [], banks: [], links: [], addr: {}, map: '', extra: {}, splash: { on: false, mode: 'first' } }, lists: {}, opts: {}, bookings: [], inquiries: [], posts: [], seen: 0 };
 const Meta = { bytes: 0, full: false };
 const emptyProfile = () => ({ name: '', kind: '', bio: '', cur: 'ريال', phones: [], emails: [], banks: [], links: [], addr: {}, map: '', extra: {}, splash: { on: false, mode: 'first' } });
 function normalize(o) {
@@ -63,6 +63,7 @@ function normalize(o) {
   ['phones', 'emails', 'banks', 'links'].forEach((k) => { if (!Array.isArray(DB.profile[k])) DB.profile[k] = []; });
   DB.lists = x.lists && typeof x.lists === 'object' ? x.lists : {};
   CFG.lists.forEach((l) => { if (!Array.isArray(DB.lists[l.id])) DB.lists[l.id] = []; });
+  DB.opts = x.opts && typeof x.opts === 'object' && !Array.isArray(x.opts) ? x.opts : {};
   DB.bookings = (Array.isArray(x.bookings) ? x.bookings : []).map((b) => Object.assign({ payments: [] }, b));
   DB.inquiries = Array.isArray(x.inquiries) ? x.inquiries : [];
   DB.posts = Array.isArray(x.posts) ? x.posts : [];
@@ -80,17 +81,23 @@ async function unpack(p) {
   const b = atob(p.d), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
   return JSON.parse(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text());
 }
+/* البيانات تُحفظ في مساحة الإضافة؛ وإن كبرت عن حدّها تنتقل تلقائياً إلى خزنة الملفات، فالحد الفعلي هو سعة الجهاز */
+async function saveDb(p) {
+  const big = JSON.stringify(p).length > LIMIT * 0.8;
+  if (big && hasVault()) { await Alaisai.vault.put('db.big', new Blob([JSON.stringify(p)], { type: 'application/json' }), 'db.json'); await Alaisai.set('db', { big: 1, t: Date.now() }); return; }
+  await Alaisai.set('db', p); if (hasVault()) { try { await Alaisai.vault.remove('db.big'); } catch (e) { /* لا شيء */ } }
+}
 let saveTimer = 0, chain = Promise.resolve();
 const persist = () => { clearTimeout(saveTimer); saveTimer = setTimeout(flush, 350); };
 function flush() {
   clearTimeout(saveTimer);
   chain = chain.then(async () => {
-    try { const p = await pack({ v: 1, profile: DB.profile, lists: DB.lists, bookings: DB.bookings, inquiries: DB.inquiries, posts: DB.posts, seen: DB.seen }); Meta.bytes = JSON.stringify(p).length + 8; await Alaisai.set('db', p); Meta.full = false; }
-    catch (e) { Meta.full = true; toast('تعذّر الحفظ: امتلأت مساحة الإضافة. صدّر نسخة واحذف ما لا تحتاجه.'); }
+    try { const p = await pack({ v: 1, profile: DB.profile, lists: DB.lists, opts: DB.opts, bookings: DB.bookings, inquiries: DB.inquiries, posts: DB.posts, seen: DB.seen }); Meta.bytes = JSON.stringify(p).length + 8; await saveDb(p); Meta.full = false; }
+    catch (e) { Meta.full = true; toast('تعذّر الحفظ: امتلأت مساحة الجهاز. صدّر نسخة واحذف ما لا تحتاجه.'); }
   });
   return chain;
 }
-async function load() { try { const p = await Alaisai.get('db'); if (p) { normalize(await unpack(p)); Meta.bytes = JSON.stringify(p).length + 8; return; } } catch (e) { toast('تعذّرت قراءة البيانات'); } normalize({}); }
+async function load() { try { let p = await Alaisai.get('db'); if (p && p.big && hasVault()) { const r = await Alaisai.vault.get('db.big'); p = r ? JSON.parse(await r.blob.text()) : null; } if (p) { normalize(await unpack(p)); Meta.bytes = JSON.stringify(p).length + 8; return; } } catch (e) { toast('تعذّرت قراءة البيانات'); } normalize({}); }
 let toastT = 0;
 function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 3000); }
 
