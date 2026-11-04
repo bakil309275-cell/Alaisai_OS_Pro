@@ -1,6 +1,6 @@
 /* Alaisai OS - Service Worker
  * غيّر VERSION عند كل إصدار ليصل التحديث للمستخدمين. */
-const VERSION = '2.7.1';
+const VERSION = '2.8.0';
 const BUILD = 'dev'; // يستبدله سير العمل برمز الإيداع عند النشر ليصل التحديث للجميع
 const CACHE = `alaisai-${VERSION}-${BUILD}`;
 const CORE = [
@@ -23,6 +23,7 @@ const CORE = [
   './src/catalog.js',
   './src/repo-addons.js',
   './src/sync.js',
+  './src/control.js',
   './src/explorer.js',
   './src/admin.js',
   './src/main.js',
@@ -77,7 +78,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   // فهرس المتجر: الشبكة أولاً كي يختفي المحذوف فوراً، وبالكاش عند انقطاع الاتصال
-  if (url.pathname.endsWith('/catalog/index.json')) {
+  if (url.pathname.endsWith('/catalog/index.json') || url.pathname.endsWith('/control/channel.json')) {
     event.respondWith((async () => {
       try { const res = await fetch(req, { cache: 'no-store' }); if (res.ok) (await caches.open(CACHE)).put(req, res.clone()); return res; }
       catch (_) { return (await caches.match(req)) || Response.error(); }
