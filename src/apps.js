@@ -11,7 +11,7 @@
     'function c(o,a){return new Promise(function(r,j){var i=++n;p[i]=[r,j];parent.postMessage({alaisai:1,id:i,op:o,args:a},"*")})}' +
     'window.Alaisai={version:1,env:' + JSON.stringify(env).replace(/</g, '\\u003c') + ',toast:function(m){return c("toast",[String(m)])},' +
     'get:function(k){return c("get",[k]).then(function(v){return v==null?null:JSON.parse(v)})},set:function(k,v){return c("set",[k,JSON.stringify(v)])},' +
-    'remove:function(k){return c("remove",[k])},keys:function(){return c("keys",[])},' +
+    'remove:function(k){return c("remove",[k])},keys:function(){return c("keys",[])},contact:function(o){return c("contact",[o||{}])},' +
     'vault:{put:function(k,b,n){return b.arrayBuffer().then(function(a){return c("vput",[k,n||b.name||k,b.type,a])})},get:function(k){return c("vget",[k]).then(function(r){return r&&{name:r.name,type:r.type,size:r.size,blob:new Blob([r.data],{type:r.type})}})},remove:function(k){return c("vdel",[k])},list:function(){return c("vlist",[])},usage:function(){return c("vusage",[])}}};' +
     'addEventListener("keydown",function(e){if(e.key==="Escape")setTimeout(function(){if(!e.defaultPrevented)c("escape",[])},0)})})();';
 
@@ -31,6 +31,12 @@
           const now = Date.now(); if (now - last > 1000) { last = now; burst = 0; }
           if (++burst > 3) return fail(m.id, 'كثرة الإشعارات');
           UI.toast(String(a[0] || '').slice(0, 200), 'info'); return ok(m.id, true);
+        }
+        if (m.op === 'contact') {
+          const now = Date.now(); if (now - (handler._c || 0) < 2000) return fail(m.id, 'حاول بعد قليل'); handler._c = now;
+          const o = a[0] && typeof a[0] === 'object' ? a[0] : {}, s = (x, n) => String(x == null ? '' : x).slice(0, n);
+          if (window.Control) Control.contact({ kind: ['inq', 'req', 'sub', 'post', 'bug', 'oth'].includes(o.kind) ? o.kind : 'inq', subject: s(o.subject, 100), text: s(o.text, 4000), addon: s(label, 80) });
+          return ok(m.id, true);
         }
         if (m.op === 'escape') { if (!document.querySelector('#dialog-root .dialog')) OS.closeStage(); return ok(m.id, true); }
         if (m.op === 'keys') return ok(m.id, Object.keys(Store.db.appData[ns] || {}));

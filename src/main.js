@@ -29,6 +29,7 @@
       this.registerServiceWorker();
       this.initSyncBadge();
       Sync.init().catch((e) => this.logError(e.message));
+      Control.init().catch((e) => this.logError(e.message));
       this.handleDeepLink();
       this.whatsNew();
       setTimeout(() => this.checkAddonUpdates(), 4000);
@@ -49,6 +50,7 @@
         UI.toast({ auto: '🖥 المظهر: تلقائي', dark: '🌙 المظهر: داكن', light: '☀️ المظهر: فاتح' }[next]);
       });
       document.getElementById('store-btn').addEventListener('click', () => Catalog.open());
+      document.getElementById('news-btn').addEventListener('click', () => Control.open());
       document.getElementById('sync-badge').addEventListener('click', () => Sync.open());
       document.getElementById('install-btn').addEventListener('click', () => this.install());
       document.getElementById('app-search').addEventListener('input', (e) => { this.query = e.target.value; this.renderDesktop(); });
@@ -107,7 +109,8 @@
       document.getElementById('close-stage').focus();
       return vp;
     },
-    openApp(app) {
+    async openApp(app) {
+      if (app.type === 'addon' && window.Control) { let ok = true; try { ok = await Control.gate(app.content); } catch (_) { ok = true; } if (!ok) return; }
       const vp = this._open(app.name, app.type !== 'notes');
       try { Viewer.mount(app, vp); } catch (e) { this.logError(e.message); UI.toast('تعذّر فتح التطبيق', 'error'); }
     },

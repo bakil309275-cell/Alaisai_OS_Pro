@@ -73,7 +73,7 @@
     },
     setTab(t) {
       this.tab = t;
-      const tabs = [['apps', '📱 التطبيقات'], ['logs', '📩 السجلات'], ['system', '⚙️ النظام'], ['backup', '💾 النسخ'], ['sync', '☁️ المزامنة'], ['storage', '📁 الملفات والإضافات']];
+      const tabs = [['apps', '📱 التطبيقات'], ['logs', '📩 السجلات'], ['system', '⚙️ النظام'], ['backup', '💾 النسخ'], ['sync', '☁️ المزامنة'], ['control', '📡 المنصة'], ['storage', '📁 الملفات والإضافات']];
       this.el.querySelector('.tabs').innerHTML = tabs.map(([k, l]) =>
         `<button class="btn" role="tab" aria-selected="${k === t}" data-act="tab" data-tab="${k}">${l}</button>`).join('');
       this.render();
@@ -85,6 +85,7 @@
       else if (this.tab === 'system') this.renderSystem(v);
       else if (this.tab === 'backup') await this.renderBackup(v);
       else if (this.tab === 'sync') Sync.panel(v);
+      else if (this.tab === 'control') Control.panel(v);
       else if (this.tab === 'storage') Explorer.mount(v);
     },
 
