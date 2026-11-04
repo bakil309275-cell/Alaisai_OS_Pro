@@ -176,3 +176,10 @@ label.lbl{display:block;font-size:.9rem;color:var(--muted);margin:10px 0 4px}
 @keyframes splash-out{to{opacity:0;visibility:hidden}}
 @keyframes splash-pop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion: reduce){#splash{animation-duration:.01s;animation-delay:.6s}#splash img{animation:none}}
+
+/* مركز التحكم */
+#news-btn{position:relative}.news-n{position:absolute;top:2px;inset-inline-end:2px;min-width:18px;height:18px;border-radius:9px;background:var(--danger,#d33);color:#fff;font-size:11px;line-height:18px;text-align:center;padding:0 4px}
+.ctl-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}.ctl .muted,.ctl-owner .muted{color:var(--muted)}.sm{font-size:.82rem}
+.ctl-card{background:var(--panel-2);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin:10px 0}.ctl-card.new{border-color:var(--accent)}.ctl-card.lv-urgent{border-inline-start:4px solid var(--danger,#d33)}.ctl-card.lv-warn{border-inline-start:4px solid #d9a400}
+.ctl-card header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.ctl-card header small{margin-inline-start:auto;color:var(--muted)}.ctl-card p{margin:8px 0;white-space:pre-wrap;overflow-wrap:anywhere}.ctl-card footer{display:flex;gap:8px;flex-wrap:wrap}
+.ctl-owner h4{margin:16px 0 6px}.tabs.sub{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.ctl-send{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.ctl-contact .lbl{display:block;margin-top:8px}
