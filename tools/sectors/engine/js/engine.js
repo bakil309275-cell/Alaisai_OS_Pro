@@ -61,11 +61,11 @@ const avatar = (n) => `<span class="av" style="--s:${n}px">${DB.profile.logo ? `
 /* ----- الكتالوج ----- */
 function vCat() {
   const l = lcfg(S.list), q = norm(S.q), fl = S.filter, all = recs(l.id);
-  const fo = l.filter ? optValues(Object.assign({ key: l.id + '.' + l.filter }, l.fields.find((f) => f.n === l.filter))) : [];
-  let list = all.filter((r) => (fl === '__hide' ? r.hide : !r.hide && (!fl || r[l.filter] === fl)) && (!q || norm(l.fields.map((f) => r[f.n]).join(' ')).includes(q)));
+  const fo = l.filter ? optValues(Object.assign({ key: l.id + '.' + l.filter }, l.fields.find((f) => f.n === l.filter))).filter((v) => String(v).indexOf(SEP) < 0) : [];
+  let list = all.filter((r) => (fl === '__hide' ? r.hide : !r.hide && (!fl || inPath(r[l.filter], fl))) && (!q || norm(l.fields.map((f) => r[f.n]).join(' ')).includes(q)));
   list = list.slice().sort((a, b) => (b.created || 0) - (a.created || 0));
   const seg = CFG.lists.length > 1 ? `<div class="seg" role="tablist">${CFG.lists.map((x) => `<button role="tab" aria-selected="${x.id === l.id}" class="${x.id === l.id ? 'on' : ''}" data-act="list" data-l="${x.id}">${E(x.title)}<i>${recs(x.id).length}</i></button>`).join('')}</div>` : '';
-  const chips = (fo.length || all.some((r) => r.hide)) ? `<div class="chips"><button class="chip${!fl ? ' on' : ''}" data-act="flt" data-k="">الكل</button>${fo.filter((o) => all.some((r) => r[l.filter] === o)).map((o) => `<button class="chip${fl === o ? ' on' : ''}" data-act="flt" data-k="${E(o)}">${E(o)}</button>`).join('')}${all.some((r) => r.hide) ? `<button class="chip${fl === '__hide' ? ' on' : ''}" data-act="flt" data-k="__hide">المخفي</button>` : ''}</div>` : '';
+  const chips = (fo.length || all.some((r) => r.hide)) ? `<div class="chips"><button class="chip${!fl ? ' on' : ''}" data-act="flt" data-k="">الكل</button>${fo.filter((o) => all.some((r) => inPath(r[l.filter], o))).map((o) => `<button class="chip${fl === o ? ' on' : ''}" data-act="flt" data-k="${E(o)}">${E(o)}</button>`).join('')}${all.some((r) => r.hide) ? `<button class="chip${fl === '__hide' ? ' on' : ''}" data-act="flt" data-k="__hide">المخفي</button>` : ''}</div>` : '';
   return seg + `<div class="bar"><label class="search">${ic('search')}<input id="cq" type="search" placeholder="ابحث في ${E(l.title)}" value="${E(S.q)}" autocomplete="off"></label><button class="btn pri" data-act="newRec">${ic('plus')}<span>${E(l.single)}</span></button></div>${chips}` +
     (list.length ? `<div class="list">${list.map((r) => cRow(l, r)).join('')}</div>` : (all.length ? emptyBox('لا نتائج', 'غيّر البحث أو الفلتر.') : emptyBox('لا ' + l.title + ' بعد', l.empty || 'أضف أول ' + l.single + ' ليظهر هنا وفي الكتالوج الذي تشاركه.', `<button class="btn pri" data-act="newRec">${ic('plus')}إضافة ${E(l.single)}</button>`)));
 }
@@ -186,9 +186,10 @@ function viewPost(p) {
   hydrate(el); $('[data-k=share]', el).onclick = () => shareText(postText(p), p.title); $('[data-k=more]', el).onclick = () => postMenu(p);
 }
 async function postMenu(p) {
-  const k = await menu(p.title, [{ k: 'edit', l: 'تعديل', i: 'edit' }, { k: 'copy', l: 'نسخ', i: 'copy' }, { k: 'share', l: 'مشاركة', i: 'share' }, { k: 'print', l: 'طباعة', i: 'print' }, { k: 'vis', l: p.vis === 'prv' ? 'نشر للعامة' : 'جعله خاصاً', i: p.vis === 'prv' ? 'globe' : 'lock' }, { k: 'hide', l: p.hide ? 'إظهار' : 'إخفاء', i: p.hide ? 'eye' : 'eyeoff' }, { k: 'del', l: 'حذف', i: 'trash', danger: 1 }]);
+  const k = await menu(p.title, [{ k: 'edit', l: 'تعديل', i: 'edit' }, { k: 'copy', l: 'نسخ', i: 'copy' }, { k: 'share', l: 'مشاركة', i: 'share' }, { k: 'print', l: 'طباعة', i: 'print' }, { k: 'plat', l: 'إرسال للنشر على منصة العيسائي برو', i: 'globe' }, { k: 'vis', l: p.vis === 'prv' ? 'نشر للعامة' : 'جعله خاصاً', i: p.vis === 'prv' ? 'globe' : 'lock' }, { k: 'hide', l: p.hide ? 'إظهار' : 'إخفاء', i: p.hide ? 'eye' : 'eyeoff' }, { k: 'del', l: 'حذف', i: 'trash', danger: 1 }]);
   if (k === 'edit') postForm(p); if (k === 'copy') copyText(postText(p)); if (k === 'share') shareText(postText(p), p.title);
   if (k === 'print') printHTML(`<div class="paper">${letterhead()}<h2 class="ph">${E(p.title)}</h2><div class="paper-body">${E(p.text || '').replace(/\n/g, '<br>')}</div></div>`);
+  if (k === 'plat') { if (Alaisai.contact) Alaisai.contact({ kind: 'post', subject: 'طلب نشر: ' + p.title, text: postText(p) }); else toast('حدّث العيسائي برو لتفعيل هذه الميزة'); }
   if (k === 'vis') { p.vis = p.vis === 'prv' ? 'pub' : 'prv'; persist(); render(); } if (k === 'hide') { p.hide = !p.hide; persist(); render(); }
   if (k === 'del' && await ask('حذف المنشور؟', 'حذف')) { dropPhotos(p.photos); DB.posts = DB.posts.filter((x) => x !== p); persist(); render(); }
 }
@@ -246,5 +247,5 @@ function optHolders(f) {
   if (sc === 'post') return DB.posts; if (sc === 'book') return DB.bookings; if (sc === 'inq') return DB.inquiries;
   if (sc === 'me') return [DB.profile]; return [];
 }
-function optUse(f, v) { return optHolders(f).filter((r) => r[f.n] === v).length; }
-function optRename(f, a, b) { optHolders(f).forEach((r) => { if (r[f.n] === a) r[f.n] = b; }); persist(); render(); }
+function optUse(f, v) { return optHolders(f).filter((r) => inPath(r[f.n], v)).length; }
+function optRename(f, a, b) { optHolders(f).forEach((r) => { if (inPath(r[f.n], a)) r[f.n] = b + String(r[f.n]).slice(a.length); }); persist(); render(); }

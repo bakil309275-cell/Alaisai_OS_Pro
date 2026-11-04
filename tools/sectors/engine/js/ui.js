@@ -13,67 +13,92 @@ function fieldHTML(f, v) {
 }
 /* ===== القوائم المنسدلة القابلة للتعديل: اختيار + تعديل + حذف + إضافة ===== */
 const optKey = (f) => f.key || f.n;
-function optsOf(f) { /* [قيمة، نص، مقفل؟] */
-  const base = (f.o || []).map((o) => (Array.isArray(o) ? o.slice(0, 2) : [o, o])), c = DB.opts[optKey(f)];
-  if (f.fix) return base.map((x) => x.concat(1)).concat((Array.isArray(c) ? c : []).map((s) => [s, s]));
-  return Array.isArray(c) ? c.map((s) => [s, s]) : base;
+const SEP = ' › ', MAXLV = 5; /* قوائم هرمية حتى 5 مستويات: القيمة المخزّنة هي المسار كاملاً بين › */
+const nodeOf = (x) => (typeof x === 'string' ? { n: x, c: [] } : { n: String(x.n), c: (x.c || []).map(nodeOf) });
+const nodeOut = (x) => (x.c.length ? { n: x.n, c: x.c.map(nodeOut) } : x.n);
+const baseOf = (f) => (f.o || []).map((o) => (Array.isArray(o) ? o.slice(0, 2) : [o, o]));
+function userTree(f) { const c = DB.opts[optKey(f)]; if (Array.isArray(c)) return c.map(nodeOf); return f.fix ? [] : baseOf(f).map((b) => ({ n: String(b[1]), c: [] })); }
+function flatTree(nodes, pre, lv, out, ip) { nodes.forEach((n, i) => { const id = ip.concat(i), p = pre ? pre + SEP + n.n : n.n; out.push({ p, n: n.n, lv, id, kids: n.c.length }); flatTree(n.c, p, lv + 1, out, id); }); return out; }
+const inPath = (v, p) => v === p || String(v).indexOf(p + SEP) === 0;
+function optsOf(f) { /* [قيمة، نص، مقفل؟] مسطّحة بترتيب الشجرة */
+  const L = f.fix ? baseOf(f).map((x) => [x[0], x[1], 1]) : [];
+  return L.concat(flatTree(userTree(f), '', 1, [], []).map((r) => [r.p, r.p]));
 }
 const optLabel = (f, v) => { const o = optsOf(f).find((x) => String(x[0]) === String(v)); return o ? o[1] : v; };
 const optValues = (f) => optsOf(f).map((o) => o[0]);
+function nodeAt(tree, id) { let arr = tree, n = null; for (let k = 0; k < id.length; k++) { n = arr[id[k]]; if (!n) return null; if (k < id.length - 1) arr = n.c; } return n; }
+function parentArr(tree, id) { return id.length < 2 ? tree : nodeAt(tree, id.slice(0, -1)).c; }
 function openPicker(f, cur, set) {
-  const d = document.createElement('div'); d.className = 'ask pk'; let ed = -1, nv = '';
-  const free = () => optsOf(f).filter((o) => !o[2]).map((o) => o[0]);
-  const lockedN = () => optsOf(f).filter((o) => o[2]).length;
-  const store = (arr) => { DB.opts[optKey(f)] = arr; persist(); };
+  const d = document.createElement('div'); d.className = 'ask pk'; let ed = -1, nv = '', under = null; /* under: مسار العقدة التي يُضاف تحتها فرع */
+  const lockedN = () => (f.fix ? baseOf(f).length : 0);
+  const store = (tree) => { DB.opts[optKey(f)] = tree.map(nodeOut); persist(); };
   const close = () => { d.remove(); };
-  const use = (v) => (typeof optUse === 'function' ? optUse(f, v) : 0);
+  const use = (p) => (typeof optUse === 'function' ? optUse(f, p) : 0);
+  const open = new Set(); const fold = (p) => { const a = String(p).split(SEP); for (let k = 1; k < a.length; k++) open.add(a.slice(0, k).join(SEP)); }; fold(cur);
+  const rowOf = (i) => { const L = optsOf(f), ti = i - lockedN(); return { L, ti, r: ti >= 0 ? flatTree(userTree(f), '', 1, [], [])[ti] : null }; };
   const draw = () => {
-    const L = optsOf(f), known = L.some((o) => String(o[0]) === String(cur)), custom = Array.isArray(DB.opts[optKey(f)]) && (!f.fix || DB.opts[optKey(f)].length > 0);
-    d.innerHTML = `<div class="veil"></div><div class="box" role="dialog" aria-label="${E(f.l)}"><h3>${E(f.l)}</h3><ul class="pl">${cur && !known ? `<li><button type="button" class="po" data-cur><i class="rd on"></i><span>${E(cur)} <small>(الحالي)</small></span></button></li>` : ''}${L.map((o, i) => (ed === i
-      ? `<li class="ed"><input data-ev value="${E(o[1])}" maxlength="60" aria-label="الاسم الجديد"><button type="button" class="icon s ok" data-ok="${i}" aria-label="حفظ">${ic('check')}</button><button type="button" class="icon s" data-no aria-label="إلغاء">${ic('x')}</button></li>`
-      : `<li><button type="button" class="po" data-i="${i}" role="radio" aria-checked="${String(o[0]) === String(cur)}"><i class="rd${String(o[0]) === String(cur) ? ' on' : ''}"></i><span>${E(o[1])}</span></button>${o[2] ? `<span class="lk" title="خيار أساسي لا يُعدَّل">${ic('lock')}</span>` : `<button type="button" class="icon s" data-e="${i}" aria-label="تعديل ${E(o[1])}">${ic('edit')}</button><button type="button" class="icon s dng" data-d="${i}" aria-label="حذف ${E(o[1])}">${ic('trash')}</button>`}</li>`)).join('')}${!L.length ? '<li class="none">القائمة فارغة، أضف خياراً بالأسفل</li>' : ''}</ul><div class="padd"><input data-nv placeholder="إضافة خيار جديد…" maxlength="60" value="${E(nv)}" aria-label="خيار جديد"><button type="button" class="btn pri" data-add>${ic('plus')}إضافة</button></div><div class="actions">${custom ? '<button type="button" class="btn quiet small" data-reset>استعادة الأصل</button>' : ''}${cur && !f.req ? '<button type="button" class="btn quiet small" data-clr>بدون اختيار</button>' : ''}<span class="grow"></span><button type="button" class="btn quiet" data-x>إغلاق</button></div></div>`;
-    const t = ed >= 0 ? $('[data-ev]', d) : null; if (t) { t.focus(); t.select(); }
+    const L = optsOf(f), tr = flatTree(userTree(f), '', 1, [], []), known = L.some((o) => String(o[0]) === String(cur)), custom = Array.isArray(DB.opts[optKey(f)]) && (!f.fix || DB.opts[optKey(f)].length > 0), anyKids = tr.some((r) => r.kids);
+    const un = under ? nodeAt(userTree(f), under) : null;
+    const rows = L.map((o, i) => [o, i]).filter(([o, i]) => (i < lockedN() || (() => { const a = String(o[0]).split(SEP); for (let k = 1; k < a.length; k++) if (!open.has(a.slice(0, k).join(SEP))) return false; return true; })()));
+    d.innerHTML = `<div class="veil"></div><div class="box" role="dialog" aria-label="${E(f.l)}"><h3>${E(f.l)}</h3><ul class="pl" role="tree">${cur && !known ? `<li><button type="button" class="po" data-cur><i class="rd on"></i><span>${E(cur)} <small>(الحالي)</small></span></button></li>` : ''}${rows.map(([o, i]) => {
+      const r = i >= lockedN() ? tr[i - lockedN()] : null, sel = String(o[0]) === String(cur);
+      if (ed === i) return `<li class="ed" style="--lv:${r ? r.lv - 1 : 0}"><input data-ev value="${E(r ? r.n : o[1])}" maxlength="60" aria-label="الاسم الجديد"><button type="button" class="icon s ok" data-ok="${i}" aria-label="حفظ">${ic('check')}</button><button type="button" class="icon s" data-no aria-label="إلغاء">${ic('x')}</button></li>`;
+      const tg = r && r.kids ? `<button type="button" class="tg${open.has(o[0]) ? ' o' : ''}" data-t="${i}" aria-expanded="${open.has(o[0])}" aria-label="${open.has(o[0]) ? 'طيّ' : 'فتح'} ${E(r.n)}">${ic('chev')}</button>` : '<span class="tg0"></span>';
+      const sub = r && r.lv < MAXLV ? `<button type="button" class="icon s" data-a="${i}" aria-label="إضافة فرع تحت ${E(r.n)}" title="إضافة فرع">${ic('plus')}</button>` : '';
+      return `<li class="tn" role="treeitem" aria-level="${r ? r.lv : 1}" style="--lv:${r ? r.lv - 1 : 0}">${tg}<button type="button" class="po" data-i="${i}" role="radio" aria-checked="${sel}"><i class="rd${sel ? ' on' : ''}"></i><span>${E(r ? r.n : o[1])}</span></button>${o[2] ? `<span class="lk" title="خيار أساسي لا يُعدَّل">${ic('lock')}</span>` : `${sub}<button type="button" class="icon s" data-e="${i}" aria-label="تعديل ${E(o[1])}">${ic('edit')}</button><button type="button" class="icon s dng" data-d="${i}" aria-label="حذف ${E(o[1])}">${ic('trash')}</button>`}</li>`;
+    }).join('')}${!L.length ? '<li class="none">القائمة فارغة، أضف خياراً بالأسفل</li>' : ''}</ul>${under ? `<p class="underp">فرع جديد تحت «${E(un ? un.n : '')}» <button type="button" class="btn quiet small" data-nou>إلغاء</button></p>` : ''}<div class="padd"><input data-nv placeholder="${under ? 'اسم الفرع الجديد…' : 'إضافة خيار جديد…'}" maxlength="60" value="${E(nv)}" aria-label="خيار جديد"><button type="button" class="btn pri" data-add>${ic('plus')}إضافة</button></div><div class="actions">${anyKids ? '<button type="button" class="btn quiet small" data-xall>فتح الكل</button><button type="button" class="btn quiet small" data-call>طيّ الكل</button>' : ''}${custom ? '<button type="button" class="btn quiet small" data-reset>استعادة الأصل</button>' : ''}${cur && !f.req ? '<button type="button" class="btn quiet small" data-clr>بدون اختيار</button>' : ''}<span class="grow"></span><button type="button" class="btn quiet" data-x>إغلاق</button></div></div>`;
+    const t = ed >= 0 ? $('[data-ev]', d) : null; if (t) { t.focus(); t.select(); } else if (under) { const q = $('[data-nv]', d); if (q) q.focus(); }
   };
   const add = () => {
     const v = ($('[data-nv]', d).value || '').trim(); if (!v) return toast('اكتب الخيار الجديد أولاً');
-    const ex = optsOf(f).find((o) => norm(o[1]) === norm(v));
-    if (!ex) { const mine = free(); mine.push(v); store(f.fix ? mine : optsOf(f).map((o) => o[0]).concat(v)); }
-    set(ex ? ex[0] : v); close();
+    if (v.indexOf('›') >= 0) return toast('لا تستخدم الرمز › في الاسم');
+    const tree = userTree(f), arr = under ? (nodeAt(tree, under) || {}).c || tree : tree, par = under ? flatTree(tree, '', 1, [], []).find((r) => r.id.join('.') === under.join('.')) : null;
+    let ex = arr.find((n) => norm(n.n) === norm(v)); if (!ex) { ex = { n: v, c: [] }; arr.push(ex); store(tree); }
+    const path = (par ? par.p + SEP : '') + ex.n;
+    if (under) { open.add(par.p); nv = ''; toast('أُضيف الفرع'); return draw(); }
+    set(path); close();
   };
   d.addEventListener('click', async (e) => {
     const b = e.target.closest('button,.veil'); if (!b) return;
     if (b.classList.contains('veil') || b.hasAttribute('data-x')) return close();
     if (b.hasAttribute('data-add')) return add();
     if (b.hasAttribute('data-cur')) return close();
+    if (b.hasAttribute('data-nou')) { under = null; return draw(); }
+    if (b.hasAttribute('data-xall')) { flatTree(userTree(f), '', 1, [], []).forEach((r) => { if (r.kids) open.add(r.p); }); return draw(); }
+    if (b.hasAttribute('data-call')) { open.clear(); return draw(); }
+    if (b.dataset.t != null) { const p = optsOf(f)[+b.dataset.t][0]; open.has(p) ? open.delete(p) : open.add(p); return draw(); }
+    if (b.dataset.a != null) { const { r } = rowOf(+b.dataset.a); if (r) { under = r.id; open.add(r.p); nv = $('[data-nv]', d).value; } return draw(); }
     if (b.dataset.i != null) { set(optsOf(f)[+b.dataset.i][0]); return close(); }
     if (b.dataset.e != null) { nv = $('[data-nv]', d).value; ed = +b.dataset.e; return draw(); }
     if (b.hasAttribute('data-no')) { ed = -1; return draw(); }
     if (b.hasAttribute('data-clr')) { set(''); return close(); }
     if (b.dataset.ok != null) {
-      const i = +b.dataset.ok, L = optsOf(f), old = L[i][0], v = ($('[data-ev]', d).value || '').trim();
-      if (!v) return toast('اكتب الاسم');
-      if (v !== old && L.some((o, k) => k !== i && norm(o[1]) === norm(v))) return toast('هذا الخيار موجود');
-      if (v !== old) {
-        if (f.fix) { const mine = free(); mine[i - lockedN()] = v; store(mine); } else { const all = L.map((o) => o[0]); all[i] = v; store(all); }
-        if (typeof optRename === 'function') optRename(f, old, v);
-        if (String(cur) === String(old)) { cur = v; set(v); }
+      const i = +b.dataset.ok, { r } = rowOf(i), v = ($('[data-ev]', d).value || '').trim();
+      if (!r) return; if (!v) return toast('اكتب الاسم'); if (v.indexOf('›') >= 0) return toast('لا تستخدم الرمز › في الاسم');
+      const tree = userTree(f), sib = parentArr(tree, r.id), nd = nodeAt(tree, r.id), old = r.p;
+      if (v !== r.n && sib.some((x) => x !== nd && norm(x.n) === norm(v))) return toast('هذا الخيار موجود');
+      if (v !== r.n) {
+        nd.n = v; const np = (r.p.indexOf(SEP) >= 0 ? r.p.slice(0, r.p.lastIndexOf(SEP) + SEP.length) : '') + v; store(tree);
+        if (typeof optRename === 'function') optRename(f, old, np);
+        if (inPath(String(cur), old)) { cur = np + String(cur).slice(old.length); set(cur); }
+        if (open.has(old)) { open.delete(old); open.add(np); }
       }
       ed = -1; return draw();
     }
     if (b.dataset.d != null) {
-      const i = +b.dataset.d, L = optsOf(f), v = L[i][0], n = use(v);
-      if (!(await ask('حذف «' + L[i][1] + '» من القائمة؟' + (n ? ' هو مستخدم في ' + n + ' سجل وستبقى قيمته فيها.' : ''), 'حذف'))) return;
-      if (f.fix) { const mine = free(); mine.splice(i - lockedN(), 1); store(mine); } else store(L.map((o) => o[0]).filter((_, k) => k !== i));
-      if (String(cur) === String(v)) { cur = ''; set(''); }
+      const i = +b.dataset.d, { r } = rowOf(i); if (!r) return; const n = use(r.p);
+      if (!(await ask('حذف «' + r.n + '»' + (r.kids ? ' مع كل فروعه' : '') + ' من القائمة؟' + (n ? ' هو مستخدم في ' + n + ' سجل وستبقى قيمته فيها.' : ''), 'حذف'))) return;
+      const tree = userTree(f), sib = parentArr(tree, r.id); sib.splice(r.id[r.id.length - 1], 1); store(tree);
+      if (inPath(String(cur), r.p)) { cur = ''; set(''); }
       return draw();
     }
     if (b.hasAttribute('data-reset')) {
       if (!(await ask('استعادة قائمة «' + f.l + '» الأصلية؟ تُحذف إضافاتك وتعديلاتك على القائمة فقط، وتبقى السجلات.', 'استعادة'))) return;
-      delete DB.opts[optKey(f)]; persist(); return draw();
+      delete DB.opts[optKey(f)]; persist(); under = null; return draw();
     }
   });
   d.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); if (ed >= 0) { ed = -1; draw(); } else close(); return; }
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); if (ed >= 0) { ed = -1; draw(); } else if (under) { under = null; draw(); } else close(); return; }
     if (e.key === 'Enter') { if (e.target.matches('[data-ev]')) { e.preventDefault(); $('[data-ok]', d).click(); } else if (e.target.matches('[data-nv]')) { e.preventDefault(); add(); } }
   });
   document.body.appendChild(d); draw();
