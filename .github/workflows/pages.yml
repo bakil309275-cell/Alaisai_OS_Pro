@@ -31,7 +31,7 @@ jobs:
       - name: تجهيز الموقع
         run: |
           mkdir _site
-          cp -r index.html 404.html privacy.html terms.html manifest.json sw.js favicon.ico robots.txt sitemap.xml .nojekyll assets src catalog .well-known _site/
+          cp -r index.html 404.html privacy.html terms.html manifest.json sw.js favicon.ico robots.txt sitemap.xml .nojekyll assets src catalog control .well-known _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with: { path: _site }
