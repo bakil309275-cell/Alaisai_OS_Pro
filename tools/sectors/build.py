@@ -1,4 +1,4 @@
-import json,os,shutil,base64,subprocess
+import json,os,shutil,base64,subprocess,sys
 R=os.path.dirname(os.path.abspath(__file__)); OUT=R+'/out'; ENG=R+'/engine'
 def F(n,l,t='text',**k): d={'n':n,'l':l}; (t!='text') and d.__setitem__('t',t); d.update(k); return d
 ST=['جديد','مؤكد','مكتمل','ملغي']
@@ -74,3 +74,8 @@ for c in S:
     json.dump(dict(format='alaisai-addon',version=1,id=c['folder'],manifest=dict(m,id=c['folder']),files=files),open(f"{OUT}/{c['folder']}.alaisai-addon.json",'w'),ensure_ascii=False)
     print(c['folder'],os.path.getsize(f"{OUT}/{c['folder']}.alaisai-addon.json"))
 json.dump([dict(id=c['id'],folder=c['folder']) for c in S],open(R+'/sectors.json','w'),ensure_ascii=False)
+if '--to-addons' in sys.argv:  # ينسخ الإضافات المبنية إلى مجلد addons/ في جذر المشروع (فتظهر في المتجر)
+    dest = os.path.abspath(os.path.join(R, '..', '..', 'addons'))
+    for c in S:
+        t = os.path.join(dest, c['folder']); shutil.rmtree(t, ignore_errors=True); shutil.copytree(os.path.join(OUT, c['folder']), t)
+    print('نُسخت', len(S), 'إضافات إلى', dest)
