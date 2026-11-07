@@ -16,6 +16,8 @@ jobs:
         run: node tools/build-catalog.mjs
       - name: اختبارات الوحدة
         run: node tests/run.mjs
+      - name: Worker tests
+        run: node tools/worker/test.mjs
       - name: متصفح (Playwright)
         run: |
           pip install playwright pillow
@@ -27,4 +29,8 @@ jobs:
           python tests/e2e3.py
           python tests/e2e4.py
           python tests/e2e5.py
+          python tests/e2e6.py
+          python tests/e2e7.py
+          python tests/e2e8.py
+          python tests/e2e9.py
           python tests/audit.py
