@@ -3,8 +3,8 @@ import vm from 'node:vm'; import fs from 'node:fs'; import nodeCrypto from 'node
 const ctx = { console, TextEncoder, TextDecoder, crypto: nodeCrypto.webcrypto, btoa, atob, Blob, setTimeout, clearTimeout, navigator: {}, localStorage: { getItem: () => null, setItem() {}, removeItem() {} }, document: {}, matchMedia: () => ({ matches: false }) };
 ctx.window = ctx; ctx.globalThis = ctx; vm.createContext(ctx);
 ctx.Viewer = { head: (x) => '<head>' + x + '</head>' }; ctx.OS = { renderDesktop() {} }; ctx.DOMParser = class { parseFromString() { return { head: { querySelectorAll: () => [] }, body: { innerHTML: '' } }; } };
-for (const f of ['src/version.js', 'src/ui.js', 'src/security.js', 'src/storage.js', 'src/addons.js']) vm.runInContext(fs.readFileSync(f, 'utf8'), ctx, { filename: f });
-const { Sec, Store, UI, Addons } = ctx;
+for (const f of ['src/version.js', 'src/ui.js', 'src/tree.js', 'src/security.js', 'src/storage.js', 'src/addons.js']) vm.runInContext(fs.readFileSync(f, 'utf8'), ctx, { filename: f });
+const { Sec, Store, UI, Addons, Tree } = ctx;
 let n = 0; const t = async (name, fn) => { try { await fn(); n++; console.log('✓', name); } catch (e) { console.log('✗', name, '\n ', e.message); process.exitCode = 1; } };
 
 await t('sha256 يطابق Node على عدة مدخلات', () => {
@@ -127,5 +127,18 @@ await t('حزمة إضافة بملف ثنائي: تُقبل وتُرفض الت
 await t('التخزين يحفظ الثنائي ويُسقط التالف', async () => {
   const d = await Store.migrate({ config: {}, registry: [], explorer: { addons: [{ name: 'p', files: [{ name: 'manifest.json', content: '{}' }, { name: 'a.png', content: 'iVBORw0KGgo=', bin: true }, { name: 'b.png', content: 'bad!!', bin: true }] }] } });
   assert.deepEqual(d.explorer.addons[0].files.map((f) => f.name), ['manifest.json', 'a.png']); assert.equal(d.explorer.addons[0].files[1].bin, true);
+});
+await t('الأقسام الهرمية: تنظيف حتى 5 مستويات وارتباط التطبيق', async () => {
+  const deep = (k) => (k ? [{ id: 'n' + k, name: 'م' + k, c: deep(k - 1) }] : []);
+  const d = await Store.migrate({ config: {}, registry: [{ id: 'a1', name: 'x', icon: '1', type: 'html', content: '<p>', sec: 'n3' }, { id: 'a2', name: 'y', icon: '2', type: 'html', content: '<p>', sec: 'ghost' }], sections: deep(7) });
+  assert.equal(Tree.flat(d.sections).length, 5); assert.equal(d.registry[0].sec, 'n3'); assert.equal(d.registry[1].sec, '');
+  assert.equal(Tree.label(d.sections, 'n3'), 'م7 › م6 › م5 › م4 › م3');
+});
+await t('مولّد QR: أبعاد صحيحة ونمط الزوايا لكل إصدار', () => {
+  const c2 = { window: {}, TextEncoder }; vm.createContext(c2); vm.runInContext(fs.readFileSync('src/qr.js', 'utf8'), c2); const QR = c2.window.QR;
+  for (const [txt, ver] of [['a', 1], ['x'.repeat(30), 3], ['x'.repeat(60), 4], ['x'.repeat(120), 7], ['x'.repeat(200), 10]]) {
+    const m = QR.matrix(txt); assert.equal(m.length, 17 + 4 * ver, txt.length + ''); assert.ok(m[0][0] && m[0][6] && m[6][0] && m[6][6] && !m[1][1] && m[2][2] && m[m.length - 1][0] && !m[m.length - 8][0], 'finder');
+  }
+  assert.throws(() => QR.matrix('x'.repeat(300)));
 });
 console.log(`\n${n} اختبار ناجح`);
