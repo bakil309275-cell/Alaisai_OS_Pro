@@ -3,6 +3,17 @@
   "version": 1,
   "addons": [
     {
+      "id": "quick-browser",
+      "name": "المتصفح السريع",
+      "icon": "🌐",
+      "version": "1.0.0",
+      "description": "المتصفح السريع: روابط مواقعك المفضلة",
+      "author": "المالك",
+      "file": "addons/quick-browser.alaisai-addon.json",
+      "size": 12168,
+      "sha256": "ea29697b433ef372126014e62d16270d5c9f85faf09eeb62df443576603492d1"
+    },
+    {
       "id": "quick-browser-dev",
       "name": "المتصفح السريع - بوابة المحترفين",
       "icon": "🌐",
