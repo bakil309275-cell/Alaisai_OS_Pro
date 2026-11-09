@@ -16,7 +16,7 @@ open('/tmp/p1.png','wb').write(png(200,40,40)); open('/tmp/p2.png','wb').write(p
 with sync_playwright() as p:
     b=p.chromium.launch(args=['--no-sandbox']); ctx=b.new_context(viewport={'width':W,'height':860 if W>600 else 800},service_workers='block',accept_downloads=True); page=ctx.new_page()
     errs=[]; page.on('pageerror',lambda e:errs.append(str(e)))
-    page.goto(BASE); page.wait_for_selector('.app-card'); page.wait_for_timeout(500)
+    page.goto(BASE); page.wait_for_selector('.start-card'); page.wait_for_timeout(500)
     page.evaluate("""p=>{const a=Addons.validatePackage(p);Addons.put({name:p.id,files:a.files||p.files},'local');Addons.install(p.id)}""",pkg)
     def op():
         page.locator('.app-card',has_text=folder.split()[0]).first.click(); page.wait_for_timeout(1500); return page.frame_locator('iframe').first

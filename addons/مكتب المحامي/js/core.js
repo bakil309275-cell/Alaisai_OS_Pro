@@ -24,10 +24,9 @@ const rel = (s) => { const n = diff(s, today()); if (n === 0) return 'اليوم
 const STATUS = {
   'جارية': '#1d6b5d', 'مؤجلة': '#a9822c', 'محجوزة للحكم': '#3b5a7a', 'مستأنفة': '#7a4a8a', 'منتهية': '#7b8582',
 };
-const KINDS = ['مدنية', 'تجارية', 'جزائية', 'أحوال شخصية', 'عمالية', 'إدارية', 'عقارية', 'إيجارات', 'أخرى'];
 const ROLES = ['مدعي', 'مدعى عليه', 'متهم', 'مجني عليه', 'مستأنف', 'مستأنف ضده', 'طالب', 'مطلوب ضده', 'أخرى'];
 
-const DB = { s: { office: '', lawyer: '', phone: '', city: '', cur: 'ريال' }, clients: [], cases: [], tpls: [] };
+const DB = { s: { office: '', lawyer: '', phone: '', city: '', cur: 'ريال' }, clients: [], cases: [], tpls: [], opts: { kinds: [] } };
 const Meta = { bytes: 0, limit: 256 * 1024, full: false, saving: false, lastSaved: 0 };
 const LIMIT = 256 * 1024;
 
@@ -36,6 +35,7 @@ const normalize = (o) => {
   DB.s = Object.assign({ office: '', lawyer: '', phone: '', city: '', cur: 'ريال' }, x.s || {});
   DB.clients = (Array.isArray(x.clients) ? x.clients : []).map((c) => Object.assign({ files: [] }, c));
   DB.tpls = Array.isArray(x.tpls) ? x.tpls : [];
+  const ks = kClean(x.opts && x.opts.kinds); DB.opts = { kinds: ks.length ? ks : DEF_KINDS() };
   DB.cases = (Array.isArray(x.cases) ? x.cases : []).map((c) => Object.assign({ hearings: [], tasks: [], payments: [], expenses: [], notes: [], docs: [], files: [] }, c));
 };
 
@@ -59,7 +59,7 @@ function flush() {
   clearTimeout(saveTimer);
   saveChain = saveChain.then(async () => {
     try {
-      const p = await pack({ v: 1, s: DB.s, clients: DB.clients, cases: DB.cases, tpls: DB.tpls });
+      const p = await pack({ v: 1, s: DB.s, clients: DB.clients, cases: DB.cases, tpls: DB.tpls, opts: DB.opts });
       Meta.bytes = JSON.stringify(p).length + 8;
       await Alaisai.set('db', p);
       Meta.full = false; Meta.lastSaved = Date.now();
@@ -74,7 +74,8 @@ function flush() {
 async function load() {
   try {
     const p = await Alaisai.get('db');
-    if (p) { const o = await unpack(p); normalize(o); Meta.bytes = JSON.stringify(p).length + 8; }
+    normalize(p ? await unpack(p) : null);
+    if (p) Meta.bytes = JSON.stringify(p).length + 8;
   } catch (e) { toast('تعذّرت قراءة البيانات المحفوظة'); }
 }
 let toastT = 0;

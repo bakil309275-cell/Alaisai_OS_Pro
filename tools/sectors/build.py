@@ -22,7 +22,7 @@ S.append(dict(id='trip',folder='السفر والرحلات',name='السفر و
   dict(id='extras',title='خدمات إضافية',single='خدمة',primary='name',sub=[],badge='price',fields=[F('name','الخدمة',req=True,ph='تأشيرة، فندق، نقل…'),F('price','السعر','money'),F('desc','الوصف','textarea',rows=2)])],
  book=dict(tab='الحجوزات',single='حجز',nameLabel='اسم المسافر',itemLabel='الرحلة أو الباقة',itemFrom='trips',qtyLabel='عدد الأفراد',dateLabel='تاريخ السفر',statuses=ST,open=['جديد','مؤكد'],done='مكتمل',closed=['ملغي','مكتمل'],upcoming='رحلات ومواعيد قادمة',empty='سجّل حجوزات المسافرين، وتابع الدفعات وسندات السداد والمتبقي على كل حجز.'),
  postKinds=['عرض سفر','إعلان رحلة','منشور'],searchHint='ابحث عن رحلة أو باقة أو مسافر…',active='أكثر العملاء تعاملاً'))
-S.append(dict(id='agri',folder='الزراعة',name='الزراعة',icon='🌱',emoji='🌱',intro='متوفر الآن:',glyph='grid',
+S.append(dict(id='agri',folder='الخدمات الزراعية',name='الخدمات الزراعية',icon='🌱',emoji='🌱',intro='متوفر الآن:',glyph='grid',
  desc='إدارة متجر أو مورّد زراعي: أسمدة ومبيدات بتنبيه النفاد والصلاحية، إرشادات زراعية، طلبات المزارعين وسداداتهم.',
  pal=dict(a='#4d6b21',a2='#b4d77a',a3='#e8c46a',plate='#223208',rail='#131a0c',card='#243516'),
  tagline='زراعة وإمداد',kinds=['متجر أسمدة ومبيدات','مورّد زراعي','مزرعة','مهندس زراعي','شركة زراعية'],profileExtra=[F('spec','المجال')],

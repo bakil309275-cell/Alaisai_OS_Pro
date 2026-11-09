@@ -58,9 +58,9 @@
               <button class="btn btn-sm" data-ex="edit" data-file="${E(f.name)}">${f.bin ? '👁 عرض' : '✏️ تعديل'}</button>
               <button class="btn btn-sm btn-danger" data-ex="delfile" data-file="${E(f.name)}" aria-label="حذف ${E(base)}">🗑</button></div>`; }).join('')}
             ${!ls.dirs.length && !ls.files.length ? '<p style="color:var(--muted)">📭 المجلد فارغ</p>' : ''}
-            <div style="margin-top:10px"><button class="btn btn-primary" data-ex="newfile">➕ ملف جديد</button> <button class="btn btn-primary" data-ex="newdir">📁 مجلد جديد</button> <button class="btn btn-success" data-ex="upload">⬆️ رفع ملف أو مجلد</button>
+            <div style="margin-top:10px"><button class="btn btn-primary" data-ex="upload">➕ إضافة ملفات أو مجلد</button>
             ${isAddon && !dir ? '<button class="btn btn-danger" data-ex="deladdon">🗑 حذف الإضافة</button>' : ''}</div>
-            <p style="color:var(--muted);margin-top:8px;font-size:.9rem">يمكنك كتابة مسار كامل عند الإنشاء، مثل <code dir="ltr">src/bridge/Adapter.js</code>، فتُنشأ المجلدات تلقائياً. أو استخدم «رفع ملف أو مجلد» لنقل أي شيء من جهازك دفعة واحدة: كود وصور وأيقونات وخطوط وصوت (حتى نحو 3 ميغابايت للملف و10 للإضافة).</p></div>${dir ? '' : this.labHtml()}`;
+            <p style="color:var(--muted);margin-top:8px;font-size:.9rem">يمكنك كتابة مسار كامل عند الإنشاء، مثل <code dir="ltr">src/bridge/Adapter.js</code>، فتُنشأ المجلدات تلقائياً. أو استخدم «إضافة ملفات أو مجلد» لنقل أي شيء من جهازك دفعة واحدة: كود وصور وأيقونات وخطوط وصوت (حتى نحو 3 ميغابايت للملف و10 للإضافة).</p></div>${dir ? '' : this.labHtml()}`;
       } else if (n.view === 'file') {
         const cur = this.files(n.folder).find((x) => x.name === n.file), back = E(n.file.includes('/') ? n.file.slice(0, n.file.lastIndexOf('/')) : '');
         if (cur && cur.bin) {
@@ -103,22 +103,13 @@
       if (!arr.some((f) => f.name.startsWith(dir + '/'))) arr.push({ name: dir + '/' + Addons.KEEP, content: '' });
     },
 
-    // ---- رفع ملفات أو مجلدات من الجهاز إلى المجلد الحالي ----
+    // ---- إضافة ملفات أو مجلدات من الجهاز إلى المجلد الحالي (نافذة Uploader) ----
     // كل شيء يُرفع: النصوص كما هي، والصور والخطوط والصوت وغيرها تُخزَّن ثنائياً (base64) وتعمل داخل الإضافة
-    pick(dirMode) {
-      return new Promise((resolve) => {
-        const input = this._input = Object.assign(document.createElement('input'), { type: 'file', multiple: true });
-        if (dirMode) input.webkitdirectory = true;
-        input.onchange = () => resolve([...input.files]);
-        input.addEventListener('cancel', () => resolve([]));
-        input.click();
-      });
-    },
     async readUploads(list, base) {
       const SKIP_DIR = /(^|\/)(\.git|node_modules|__MACOSX)(\/|$)/, SKIP_FILE = /(^|\/)(\.DS_Store|Thumbs\.db|desktop\.ini)$/i;
       const items = new Map(), skipped = [];
-      for (const f of list) {
-        const rel = (f.webkitRelativePath || f.name).replace(/\\/g, '/').replace(/^\/+/, '');
+      for (const { path, file: f } of list) {
+        const rel = path.replace(/\\/g, '/').replace(/^\/+/, '');
         if (SKIP_DIR.test(rel) || SKIP_FILE.test(rel)) continue; // مخلّفات لا قيمة لها: تُتجاهل بصمت
         const full = base + rel;
         if (!Addons.FILE_RE.test(full)) { skipped.push([rel, 'اسم أو مسار غير صالح']); continue; }
@@ -130,9 +121,10 @@
       return { items, skipped };
     },
     async upload(folder, dir) {
-      const ch = await UI.dialog({ title: '⬆️ رفع من جهازك', okText: 'اختيار', fields: [{ id: 'k', label: 'ماذا تريد رفعه؟', type: 'select', options: [['files', '📄 ملف أو عدة ملفات'], ['dir', '📁 مجلد كامل بكل ما فيه']] }] });
+      const ch = await Uploader.choose({ title: '➕ إضافة إلى ' + (dir || 'المجلد الحالي') });
       if (!ch) return;
-      const list = await this.pick(ch.k === 'dir'); if (!list.length) return;
+      if (ch.create) return this.act(ch.create === 'dir' ? 'newdir' : 'newfile', {});
+      const list = ch.files; if (!list.length) return;
       const arr = this.files(folder), base = dir ? dir + '/' : '';
       const { items, skipped } = await this.readUploads(list, base);
       const real = () => arr.filter((f) => f.name.split('/').pop() !== Addons.KEEP);

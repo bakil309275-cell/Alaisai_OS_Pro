@@ -1,12 +1,14 @@
 # المشاركة والإطلاق: python3 tests/e2e9.py (يتطلب خادماً على 8765؛ يفك QR بـ cv2 إن وُجدت)
 import sys,base64,io
 from playwright.sync_api import sync_playwright
+import sys,os; sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+from seed import seeded
 BASE='http://localhost:8765/index.html'; fails=[]
 def check(n,c,x=''):
     print(('✓ ' if c else '✗ ')+n,'' if c else x)
     if not c: fails.append(n)
 with sync_playwright() as p:
-    b=p.chromium.launch(args=['--no-sandbox']); page=b.new_context(viewport={'width':360,'height':740},service_workers='block').new_page(); errs=[]; page.on('pageerror',lambda e:errs.append(str(e)))
+    b=seeded(p.chromium.launch(args=['--no-sandbox'])); page=b.new_context(viewport={'width':360,'height':740},service_workers='block').new_page(); errs=[]; page.on('pageerror',lambda e:errs.append(str(e)))
     page.goto(BASE); page.wait_for_selector('.app-card'); page.wait_for_timeout(600)
     btns=page.locator('.bar-actions .icon-btn:visible'); n=btns.count(); boxes=[btns.nth(i).bounding_box() for i in range(n)]
     check('أزرار الشريط كلها داخل الشاشة (360px)', all(bx and bx['x']>=0 and bx['x']+bx['width']<=360 for bx in boxes), str(boxes))

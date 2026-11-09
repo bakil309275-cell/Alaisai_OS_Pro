@@ -73,7 +73,7 @@
     },
     setTab(t) {
       this.tab = t;
-      const tabs = [['apps', '📱 التطبيقات'], ['logs', '📩 السجلات'], ['system', '⚙️ النظام'], ['backup', '💾 النسخ'], ['sync', '☁️ المزامنة'], ['control', '📡 المنصة'], ['storage', '📁 الملفات والإضافات']];
+      const tabs = [['apps', '📱 التطبيقات'], ['logs', '📩 السجلات'], ['system', '⚙️ النظام'], ['backup', '💾 النسخ'], ['sync', '☁️ المزامنة'], ['control', '📡 المنصة'], ['gitflash', '⚡ GitFlash'], ['storage', '📁 الملفات والإضافات']];
       this.el.querySelector('.tabs').innerHTML = tabs.map(([k, l]) =>
         `<button class="btn" role="tab" aria-selected="${k === t}" data-act="tab" data-tab="${k}">${l}</button>`).join('');
       this.render();
@@ -86,6 +86,7 @@
       else if (this.tab === 'backup') await this.renderBackup(v);
       else if (this.tab === 'sync') Sync.panel(v);
       else if (this.tab === 'control') Control.panel(v);
+      else if (this.tab === 'gitflash') GitFlash.panel(v);
       else if (this.tab === 'storage') Explorer.mount(v);
     },
 
@@ -99,8 +100,7 @@
           <button class="btn btn-sm" data-act="down" data-id="${E(a.id)}" aria-label="أسفل" ${i === reg.length - 1 ? 'disabled' : ''}>⬇</button>
           <button class="btn btn-sm" data-act="edit" data-id="${E(a.id)}">✏️ تعديل</button>
           <button class="btn btn-sm btn-danger" data-act="delapp" data-id="${E(a.id)}" aria-label="حذف">🗑</button></div>`).join('') +
-        '<button class="btn btn-success" style="width:100%;margin-top:10px" data-act="add">➕ إضافة تطبيق جديد</button>' +
-        '<button class="btn" style="width:100%;margin-top:8px" data-act="sections">📂 إدارة أقسام الشاشة الرئيسية</button>';
+        '<button class="btn btn-success" style="width:100%;margin-top:10px" data-act="add">➕ إضافة تطبيق جديد</button>'
     },
     refresh() { Store.save(); OS.renderDesktop(); this.render(); },
     moveTo(fromId, toId) {
@@ -115,7 +115,6 @@
       const fields = [
         { id: 'name', label: 'الاسم', value: app?.name || '', required: true, maxlength: 60 },
         { id: 'icon', label: 'الأيقونة (إيموجي)', value: app?.icon || '📦', maxlength: 8 }];
-      if ((Store.db.sections || []).length) fields.push({ id: 'sec', label: 'القسم', type: 'select', value: app?.sec || '', options: [['', 'بلا قسم']].concat(Tree.options(Store.db.sections)) });
       if (!isAddon) fields.push(
         { id: 'type', label: 'النوع', type: 'select', value: app?.type || 'html', options: NEW_TYPES.map((k) => [k, TYPE_LABEL[k]]) },
         { id: 'content', label: 'المحتوى (كود HTML/JS أو الرابط؛ لا يلزم للملاحظات)', type: 'textarea', value: app?.content || '', mono: true, rows: 8 });
@@ -131,7 +130,6 @@
         } });
       if (!v) return;
       const data = { name: v.name.trim(), icon: v.icon.trim() || '📦' };
-      if (v.sec != null) data.sec = v.sec;
       if (!isAddon) Object.assign(data, { type: v.type, content: v.type === 'notes' ? '' : v.type === 'url' ? Viewer.normalizeUrl(v.content) : v.content });
       if (app) Object.assign(app, data);
       else reg.push({ id: 'app_' + Store.rid(), ...data, order: reg.length });
@@ -240,7 +238,6 @@
           if (j >= 0 && j < reg.length) this.moveTo(ds.id, reg[j].id);
         }
         else if (a === 'add') await this.editApp(null);
-        else if (a === 'sections') OS.manageSections();
         else if (a === 'edit') await this.editApp(ds.id);
         else if (a === 'delapp') {
           const app = Store.db.registry.find((x) => x.id === ds.id);

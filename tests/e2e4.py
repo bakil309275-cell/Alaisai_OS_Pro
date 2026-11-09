@@ -1,6 +1,8 @@
 # خزنة الملفات للإضافات (Alaisai.vault): python3 tests/e2e4.py (يتطلب خادماً على 8765)
 import sys
 from playwright.sync_api import sync_playwright
+import sys,os; sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+from seed import seeded
 BASE='http://localhost:8765/index.html'; fails=[]
 def check(n,c,x=''):
     print(('✓ ' if c else '✗ ')+n,'' if c else x)
@@ -14,7 +16,7 @@ try{await Alaisai.vault.put('big',new Blob([new Uint8Array(40*1048576)]));r.big=
 await Alaisai.vault.remove('a1');r.after=(await Alaisai.vault.list()).length;r.none=await Alaisai.vault.get('a1')}catch(e){r.err=e.message}
 o.textContent=JSON.stringify(r)})()'''
 with sync_playwright() as p:
-    b=p.chromium.launch(args=['--no-sandbox']); page=b.new_context(service_workers='block').new_page(); errs=[]; page.on('pageerror',lambda e:errs.append(str(e)))
+    b=seeded(p.chromium.launch(args=['--no-sandbox'])); page=b.new_context(service_workers='block').new_page(); errs=[]; page.on('pageerror',lambda e:errs.append(str(e)))
     page.goto(BASE); page.wait_for_selector('.app-card')
     page.evaluate("""([h,j])=>{Addons.put({name:'خزنة',files:[{name:'manifest.json',content:'{"name":"خزنة"}'},{name:'index.html',content:h},{name:'main.js',content:j}]},'local');Addons.install('خزنة')}""",[HTML,JS])
     page.locator('.app-card',has_text='خزنة').first.click(); page.wait_for_timeout(1500)

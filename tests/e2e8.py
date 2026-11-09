@@ -1,6 +1,8 @@
 # مركز التخزين الموحّد: python3 tests/e2e8.py (يتطلب خادماً على 8765 وnode)
 import sys,json,re,subprocess,time
 from playwright.sync_api import sync_playwright
+import sys,os; sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+from seed import seeded
 BASE='http://localhost:8765/index.html'; fails=[]
 def check(n,c,x=''):
     print(('✓ ' if c else '✗ ')+n,'' if c else x)
@@ -30,7 +32,7 @@ def gdrive(route):
     return route.fulfill(status=404,headers=CORS,body='{}')
 try:
   with sync_playwright() as p:
-    b=p.chromium.launch(args=['--no-sandbox']); ctx=b.new_context(viewport={'width':390,'height':800},service_workers='block'); ctx.route('https://www.googleapis.com/**',gdrive); ctx.route('https://accounts.google.com/**',gdrive); pg=ctx.new_page(); errs=[]; pg.on('pageerror',lambda e:errs.append(str(e)))
+    b=seeded(p.chromium.launch(args=['--no-sandbox'])); ctx=b.new_context(viewport={'width':390,'height':800},service_workers='block'); ctx.route('https://www.googleapis.com/**',gdrive); ctx.route('https://accounts.google.com/**',gdrive); pg=ctx.new_page(); errs=[]; pg.on('pageerror',lambda e:errs.append(str(e)))
     pg.goto(BASE); pg.wait_for_selector('.app-card'); pg.wait_for_timeout(800)
     R=lambda js,*a: pg.evaluate(js,*a)
     check('زر المساحات يفتح المركز', True); pg.locator('#hub-btn').click(); pg.wait_for_selector('.hub-src'); check('المصدر المحلي موجود', pg.locator('.hub-src').count()==1)

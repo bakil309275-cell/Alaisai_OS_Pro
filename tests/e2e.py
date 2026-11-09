@@ -1,6 +1,8 @@
 # اختبار شامل في متصفح حقيقي: python3 tests/e2e.py  (يتطلب خادماً على 8765)
 import json, sys, time, pathlib
 from playwright.sync_api import sync_playwright
+import sys,os; sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+from seed import seeded, _patch
 BASE='http://localhost:8765/index.html'; OUT=pathlib.Path('/tmp/claude-0/shots'); OUT.mkdir(exist_ok=True,parents=True)
 legacy=json.load(open('tests/fixtures/legacy-backup-v1.json'))
 fails=[]
@@ -119,7 +121,7 @@ with sync_playwright() as p:
     check('يعمل دون إنترنت', page.locator('.app-card').count()==4)
     ctx.set_offline(False)
     # --- جوال
-    m=b.new_context(viewport={'width':390,'height':780}, device_scale_factor=2); mp=m.new_page(); mp.goto(BASE); mp.wait_for_selector('.app-card'); mp.screenshot(path=str(OUT/'mobile.png'))
+    m=b.new_context(viewport={'width':390,'height':780}, device_scale_factor=2); m.route('**/src/storage.js*', _patch); mp=m.new_page(); mp.goto(BASE); mp.wait_for_selector('.app-card'); mp.screenshot(path=str(OUT/'mobile.png'))
     mp.get_by_text('الملاحظات').first.click(); mp.wait_for_selector('.notes'); mp.screenshot(path=str(OUT/'mobile-notes.png'))
     check('لا تمرير أفقي في الجوال', mp.evaluate("document.documentElement.scrollWidth<=innerWidth"))
     mp.close(); m.close()

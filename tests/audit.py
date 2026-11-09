@@ -1,6 +1,8 @@
 # تدقيق الجودة: قابلية التثبيت (CDP)، SEO، إمكانية الوصول (تباين/أسماء/عناوين)، الأداء. python3 tests/audit.py
 import json, re, sys, os
 from playwright.sync_api import sync_playwright
+import sys,os; sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+from seed import seeded
 BASE='http://localhost:8765/'; fails=[]; warns=[]
 def ok(n,c,x=''):
     print(('✓ ' if c else '✗ ')+n, '' if c else x)
@@ -50,7 +52,7 @@ NAMES_JS = r'''
   return bad; }
 '''
 with sync_playwright() as p:
-    b=p.chromium.launch(args=['--no-sandbox']); ctx=b.new_context(viewport={'width':412,'height':823},device_scale_factor=2,is_mobile=True,has_touch=True)
+    b=seeded(p.chromium.launch(args=['--no-sandbox'])); ctx=b.new_context(viewport={'width':412,'height':823},device_scale_factor=2,is_mobile=True,has_touch=True)
     page=ctx.new_page(); logs=[]
     page.on('console',lambda m: logs.append((m.type,m.text)) if m.type in ('error','warning') else None)
     cdp=ctx.new_cdp_session(page); cdp.send('Page.enable')

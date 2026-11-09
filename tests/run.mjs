@@ -128,11 +128,10 @@ await t('التخزين يحفظ الثنائي ويُسقط التالف', asyn
   const d = await Store.migrate({ config: {}, registry: [], explorer: { addons: [{ name: 'p', files: [{ name: 'manifest.json', content: '{}' }, { name: 'a.png', content: 'iVBORw0KGgo=', bin: true }, { name: 'b.png', content: 'bad!!', bin: true }] }] } });
   assert.deepEqual(d.explorer.addons[0].files.map((f) => f.name), ['manifest.json', 'a.png']); assert.equal(d.explorer.addons[0].files[1].bin, true);
 });
-await t('الأقسام الهرمية: تنظيف حتى 5 مستويات وارتباط التطبيق', async () => {
+await t('الشجرة الهرمية: تنظيف حتى 5 مستويات وتسمية المسار', () => {
   const deep = (k) => (k ? [{ id: 'n' + k, name: 'م' + k, c: deep(k - 1) }] : []);
-  const d = await Store.migrate({ config: {}, registry: [{ id: 'a1', name: 'x', icon: '1', type: 'html', content: '<p>', sec: 'n3' }, { id: 'a2', name: 'y', icon: '2', type: 'html', content: '<p>', sec: 'ghost' }], sections: deep(7) });
-  assert.equal(Tree.flat(d.sections).length, 5); assert.equal(d.registry[0].sec, 'n3'); assert.equal(d.registry[1].sec, '');
-  assert.equal(Tree.label(d.sections, 'n3'), 'م7 › م6 › م5 › م4 › م3');
+  const tr = Tree.clean(deep(7));
+  assert.equal(Tree.flat(tr).length, 5); assert.equal(Tree.label(tr, 'n3'), 'م7 › م6 › م5 › م4 › م3');
 });
 await t('مولّد QR: أبعاد صحيحة ونمط الزوايا لكل إصدار', () => {
   const c2 = { window: {}, TextEncoder }; vm.createContext(c2); vm.runInContext(fs.readFileSync('src/qr.js', 'utf8'), c2); const QR = c2.window.QR;

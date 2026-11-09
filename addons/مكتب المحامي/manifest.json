@@ -6,6 +6,7 @@
   "author": "العيسائي برو",
   "scripts": [
     "js/core.js",
+    "js/tree.js",
     "js/ui.js",
     "js/docs.js",
     "js/files.js",

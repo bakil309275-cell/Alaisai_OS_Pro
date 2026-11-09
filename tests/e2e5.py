@@ -1,6 +1,8 @@
 # مركز التحكم: python3 tests/e2e5.py (يتطلب خادماً على 8765)
 import sys,json,time
 from playwright.sync_api import sync_playwright
+import sys,os; sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+from seed import seeded
 BASE='http://localhost:8765/index.html'; fails=[]
 def check(n,c,x=''):
     print(('✓ ' if c else '✗ ')+n,'' if c else x)
@@ -15,7 +17,7 @@ def dlg(page,ok=True):
     page.wait_for_selector('.dialog'); 
     return page.locator('.dialog')
 with sync_playwright() as p:
-    b=p.chromium.launch(args=['--no-sandbox']); ctx=b.new_context(viewport={'width':390,'height':800},service_workers='block'); ctx.route('**/control/channel.json*',route); page=ctx.new_page(); errs=[]; page.on('pageerror',lambda e:errs.append(str(e)))
+    b=seeded(p.chromium.launch(args=['--no-sandbox'])); ctx=b.new_context(viewport={'width':390,'height':800},service_workers='block'); ctx.route('**/control/channel.json*',route); page=ctx.new_page(); errs=[]; page.on('pageerror',lambda e:errs.append(str(e)))
     STATE['c']=chan(items=[{'id':'a1','kind':'ann','title':'إعلان عام','body':'نص الإعلان','link':'','aud':'all','level':'info','created':now,'expires':0,'pin':False},{'id':'a2','kind':'ann','title':'خاص بإضافة أخرى','body':'x','link':'','aud':'addon:غائبة','level':'info','created':now,'expires':0,'pin':False},{'id':'a3','kind':'post','title':'منتهي','body':'x','link':'','aud':'all','level':'info','created':now-5000,'expires':now-1000,'pin':False}])
     page.goto(BASE); page.wait_for_selector('.app-card'); page.wait_for_timeout(1200)
     page.evaluate("""()=>{Addons.put({name:'اختبار',files:[{name:'manifest.json',content:'{"name":"اختبار"}'},{name:'index.html',content:'<main id=o>ok</main>'}]},'local');Addons.install('اختبار')}""")

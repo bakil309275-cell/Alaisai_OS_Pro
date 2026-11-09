@@ -1,6 +1,8 @@
 # اختبار الإضافات والمتجر والمزامنة (مع خادم GitHub وهمي): python3 tests/e2e2.py
 import json, hashlib, base64, sys, re, urllib.parse
 from playwright.sync_api import sync_playwright
+import sys,os; sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+from seed import seeded
 import fixture_catalog
 BASE='http://localhost:8765/index.html'; PW='Alaisai#2026'; TOKEN='github_pat_testtoken1234567890abcdef'
 fails=[]
@@ -9,37 +11,7 @@ def check(name, cond, extra=''):
     if not cond: fails.append(name)
 
 # ---------- GitHub وهمي ----------
-class GH:
-    def __init__(s): s.files={}; s.log=[]
-    def sha(s,c): return hashlib.sha1(b'blob %d\0'%len(c)+c).hexdigest()  # بصمة Git blob الحقيقية
-    def handle(s, route):
-        req=route.request; url=req.url.split('api.github.com')[1]; path,_,q=url.partition('?')
-        cors={'access-control-allow-origin':'*','access-control-allow-headers':'authorization,accept,content-type,x-github-api-version','access-control-allow-methods':'GET,PUT,POST,DELETE,OPTIONS','content-type':'application/json'}
-        if req.method=='OPTIONS': return route.fulfill(status=204,headers=cors)
-        if req.headers.get('authorization')!='Bearer '+TOKEN: return route.fulfill(status=401,headers=cors,body='{}')
-        s.log.append((req.method,path))
-        m=re.match(r'/repos/me/vault$',path)
-        if m: return route.fulfill(status=200,headers=cors,body=json.dumps({'full_name':'me/vault','private':True,'permissions':{'push':True}}))
-        if path=='/repos/me/vault/branches/main': return route.fulfill(status=200,headers=cors,body='{}')
-        if path.startswith('/repos/me/vault/git/trees/'):
-            return route.fulfill(status=200,headers=cors,body=json.dumps({'truncated':False,'tree':[{'path':k,'type':'blob','sha':s.sha(v)} for k,v in s.files.items()]}))
-        m=re.match(r'/repos/me/vault/contents/(.+)$',path)
-        if m:
-            f=urllib.parse.unquote(m.group(1))
-            if req.method=='DELETE':
-                b=json.loads(req.post_data)
-                if f not in s.files or b.get('sha')!=s.sha(s.files[f]): return route.fulfill(status=409,headers=cors,body='{}')
-                del s.files[f]; return route.fulfill(status=200,headers=cors,body='{}')
-            if req.method=='GET':
-                if f not in s.files: return route.fulfill(status=404,headers=cors,body='{}')
-                if 'raw' in req.headers.get('accept',''): return route.fulfill(status=200,headers={**cors,'content-type':'text/plain; charset=utf-8'},body=s.files[f])
-                c=s.files[f]; return route.fulfill(status=200,headers=cors,body=json.dumps({'type':'file','sha':s.sha(c),'encoding':'base64','content':base64.encodebytes(c).decode()}))
-            if req.method=='PUT':
-                b=json.loads(req.post_data); c=base64.b64decode(b['content'])
-                if f in s.files and b.get('sha')!=s.sha(s.files[f]): return route.fulfill(status=409,headers=cors,body='{"message":"sha mismatch"}')
-                if f not in s.files and b.get('sha'): return route.fulfill(status=422,headers=cors,body='{}')
-                s.files[f]=c; return route.fulfill(status=200,headers=cors,body=json.dumps({'content':{'sha':s.sha(c)}}))
-        route.fulfill(status=404,headers=cors,body='{}')
+from gh_mock import GH
 
 def dialog_pw(page, pw=PW):
     page.wait_for_selector('.dialog'); page.fill('.dialog input[type=password]',pw); page.keyboard.press('Enter')
@@ -51,7 +23,7 @@ def open_admin(page):
     page.wait_for_selector('.tabs',timeout=8000)
 
 with sync_playwright() as p:
-    b=p.chromium.launch(args=['--no-sandbox']); ctx=b.new_context(viewport={'width':1100,'height':800},accept_downloads=True,service_workers='block')
+    b=seeded(p.chromium.launch(args=['--no-sandbox'])); ctx=b.new_context(viewport={'width':1100,'height':800},accept_downloads=True,service_workers='block')
     gh=GH(); ctx.route('https://api.github.com/**',gh.handle); fixture_catalog.install(ctx)
     page=ctx.new_page(); errs=[]; page.on('pageerror',lambda e:errs.append(str(e)))
     page.goto(BASE); page.wait_for_selector('.app-card'); page.wait_for_timeout(600)
@@ -94,12 +66,12 @@ with sync_playwright() as p:
     check('اسم إضافة فيه / يُرفض برسالة', page.locator('.dialog').count()==1 and 'غير صالح' in page.inner_text('.dialog'))
     page.fill('input[name=name]','لعبتي الأولى'); page.keyboard.press('Enter'); page.wait_for_timeout(500)
     check('إضافة باسم عربي مع مسافة تُنشأ', page.evaluate("!!Addons.get('لعبتي الأولى')") and page.locator('.file-item .name').count()==4)
-    page.click('[data-ex=newfile]'); page.fill('input[name=name]','../x.js'); page.keyboard.press('Enter'); page.wait_for_timeout(200)
+    page.click('[data-ex=upload]'); page.click('.up-new summary'); page.click('[data-u=newfile]'); page.fill('input[name=name]','../x.js'); page.keyboard.press('Enter'); page.wait_for_timeout(200)
     check('مسار فيه .. يُرفض', page.locator('.dialog').count()==1); page.fill('input[name=name]','src/bridge/AisaiAdapter.js'); page.keyboard.press('Enter'); page.wait_for_timeout(300)
     check('ملف بمسار src/bridge/AisaiAdapter.js ينشئ المجلدات', page.evaluate("Addons.get('لعبتي الأولى').files.some(f=>f.name==='src/bridge/AisaiAdapter.js')") and page.locator('.file-item .name:has-text("📁 src")').count()==1)
     page.locator('[data-ex=opendir][data-dir=src]').first.click(); page.locator('[data-ex=opendir][data-dir="src/bridge"]').first.click(); page.wait_for_timeout(200)
     check('التنقل داخل المجلدات المتداخلة', 'AisaiAdapter.js' in page.inner_text('.panel'))
-    page.click('[data-ex=newdir]'); page.fill('input[name=name]','assets/صور'); page.keyboard.press('Enter'); page.wait_for_timeout(300)
+    page.click('[data-ex=upload]'); page.click('.up-new summary'); page.click('[data-u=newdir]'); page.fill('input[name=name]','assets/صور'); page.keyboard.press('Enter'); page.wait_for_timeout(300)
     check('مجلد جديد بمسار متداخل يُنشأ (بملف حفظ مخفي)', page.evaluate("Addons.get('لعبتي الأولى').files.some(f=>f.name==='src/bridge/assets/صور/.gitkeep')") and '.gitkeep' not in page.inner_text('.panel'))
     page.locator('[data-ex=deldir][data-dir="src/bridge/assets"]').first.click(); page.wait_for_selector('.dialog button[type=submit]'); page.click('.dialog button[type=submit]'); page.wait_for_timeout(300)
     check('حذف مجلد يحذف ما بداخله فقط', page.evaluate("Addons.get('لعبتي الأولى').files.every(f=>!f.name.startsWith('src/bridge/assets'))") and page.evaluate("Addons.get('لعبتي الأولى').files.some(f=>f.name==='src/bridge/AisaiAdapter.js')"))
@@ -111,21 +83,21 @@ with sync_playwright() as p:
     page.keyboard.press('Escape')
 
     # ===== المتجر =====
-    page.click('#store-btn'); page.wait_for_selector('[data-cat=calculator]')
+    page.click('#store-btn'); page.wait_for_selector('[data-cat=fxa]')
     N=fixture_catalog.count(); check('الكتالوج يعرض كل الإضافات المبنية (%d)'%N, page.locator('[data-cat]').count()==N, str(page.locator('[data-cat]').count()))
-    page.click('[data-cat=calculator]'); page.wait_for_timeout(1200)
-    check('تثبيت الحاسبة من المتجر', 'مثبّتة' in page.inner_text('#cat-list'))
-    page.keyboard.press('Escape'); page.locator('.app-card:has-text("الحاسبة")').click(); page.wait_for_timeout(800)
+    page.click('[data-cat=fxa]'); page.wait_for_timeout(1200)
+    check('تثبيت إضافة الاختبار أ من المتجر', 'مثبّتة' in page.inner_text('#cat-list'))
+    page.keyboard.press('Escape'); page.locator('.app-card:has-text("اختبار أ")').click(); page.wait_for_timeout(800)
     f=page.frame_locator('.app-frame')
     for k in ['7','×','8','=']: f.locator('#keys button',has_text=re.compile('^'+re.escape(k)+'$')).first.click()
-    check('الحاسبة: 7×8=56', f.locator('#out').inner_text()=='56', f.locator('#out').inner_text())
+    check('اختبار أ: 7×8=56', f.locator('#out').inner_text()=='56', f.locator('#out').inner_text())
     page.screenshot(path='/tmp/claude-0/shots/calc.png'); page.click('#close-stage')
-    page.click('#store-btn'); page.wait_for_selector('[data-cat=todo]'); page.click('[data-cat=todo]'); page.wait_for_timeout(1000); page.keyboard.press('Escape')
-    page.locator('.app-card:has-text("المهام")').click(); page.wait_for_timeout(700)
+    page.click('#store-btn'); page.wait_for_selector('[data-cat=fxb]'); page.click('[data-cat=fxb]'); page.wait_for_timeout(1000); page.keyboard.press('Escape')
+    page.locator('.app-card:has-text("اختبار ب")').click(); page.wait_for_timeout(700)
     f=page.frame_locator('.app-frame'); f.locator('#in').fill('اشتري خبزاً'); f.locator('#f button').click(); page.wait_for_timeout(300)
     page.keyboard.press('Escape'); page.wait_for_timeout(500); page.reload(); page.wait_for_selector('.app-card')
-    page.locator('.app-card:has-text("المهام")').click(); page.wait_for_timeout(900)
-    check('المهام تبقى بعد إعادة التحميل', 'اشتري خبزاً' in page.frame_locator('.app-frame').locator('#list').inner_text())
+    page.locator('.app-card:has-text("اختبار ب")').click(); page.wait_for_timeout(900)
+    check('اختبار ب يبقى بعد إعادة التحميل', 'اشتري خبزاً' in page.frame_locator('.app-frame').locator('#list').inner_text())
     page.keyboard.press('Escape')
 
     # ===== روابط مباشرة =====
@@ -173,6 +145,7 @@ with sync_playwright() as p:
     page.evaluate("Sync.cfg.auto=false"); page.wait_for_timeout(300)
     page.evaluate("Sync.syncAddons()"); page.wait_for_timeout(2500)
     check('نُشرت ملفات الإضافة المحلية في addons/ بالمستودع', all(('addons/demo/'+n) in gh.files for n in ['manifest.json','index.html','main.js','style.css']), str([k for k in gh.files if k.startswith('addons')]))
+    check('الملفات تُنشر دفعة واحدة (commits أقل من الملفات)', 0<len([l for l in gh.log if l==('POST','/repos/me/vault/git/commits')])<len([k2 for k2 in gh.files if k2.startswith('addons')]), str(len([l for l in gh.log if l[0]=='POST'])))
     check('ملفات الإضافة في المستودع نص عادي مطابق', b'Alaisai' in gh.files.get('addons/demo/main.js',b''))
     check('نُشرت المجلدات المتداخلة بمساراتها لإضافة باسم عربي', all(('addons/لعبتي الأولى/'+n) in gh.files for n in ['manifest.json','src/bridge/AisaiAdapter.js','data/cfg.json','index.html']), str([k for k in gh.files if k.startswith('addons')]))
     # ملفات ثنائية (صور): تُنشر بايتات حقيقية وتصل من المستودع بلا تلف، ولا تُعاد كتابتها بلا داعٍ

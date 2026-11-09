@@ -7,7 +7,7 @@
     <meta name="description" content="العيسائي برو: سطح مكتب تطبيقات في المتصفح يعمل دون إنترنت، مع ملاحظات وإضافات ومتجر ومزامنة مشفّرة مع GitHub. بياناتك عندك وحدك.">
     <meta name="robots" content="index,follow">
     <link rel="canonical" href="https://bakil309275-cell.github.io/Alaisai_OS_Pro/">
-    <meta http-equiv="Content-Security-Policy" content="object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'; form-action 'none'">
     <meta name="referrer" content="strict-origin-when-cross-origin">
 
     <meta property="og:type" content="website">
@@ -64,7 +64,6 @@
             <label class="sr-only" for="app-search">بحث في التطبيقات</label>
             <input id="app-search" type="search" placeholder="🔍 ابحث عن تطبيق..." autocomplete="off">
         </div>
-        <nav id="sec-bar" class="sec-bar" aria-label="أقسام التطبيقات"></nav>
         <div id="app-grid" class="grid-container" role="group" aria-label="التطبيقات"></div>
     </main>
 
@@ -99,7 +98,9 @@
 <script src="src/cloud.js" defer></script>
 <script src="src/qr.js" defer></script>
 <script src="src/share.js" defer></script>
-<script src="src/explorer.js" defer></script>
+<script src="src/uploader.js" defer></script>
+<script src="src/gitflash.js" defer></script>
+    <script src="src/explorer.js" defer></script>
 <script src="src/admin.js" defer></script>
 <script src="src/main.js" defer></script>
 </body>

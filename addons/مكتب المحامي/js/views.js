@@ -1,5 +1,5 @@
 'use strict';
-const S = { tab: 'today', caseId: null, clientId: null, q: '', filter: 'جارية', sub: 'hearings', cq: '', month: today().slice(0, 7), day: today() };
+const S = { kind: '', tab: 'today', caseId: null, clientId: null, q: '', filter: 'جارية', sub: 'hearings', cq: '', month: today().slice(0, 7), day: today() };
 const empty = (t, d, btn) => `<div class="empty"><div class="empty-mark">${ic('scale')}</div><h3>${E(t)}</h3><p>${E(d)}</p>${btn || ''}</div>`;
 const dot = (st) => `<i class="dot" style="--c:${STATUS[st] || '#7b8582'}" title="${E(st)}"></i>`;
 const who = (c) => { const cl = client(c.clientId); return cl ? cl.name : ''; };
@@ -34,17 +34,17 @@ function vToday() {
 /* ---------- القضايا ---------- */
 function vCases() {
   const q = norm(S.q), fl = S.filter;
-  let list = DB.cases.filter((c) => (fl === 'all' ? true : c.status === fl) && (!q || norm([c.title, c.number, c.court, c.opponent, c.subject, who(c)].join(' ')).includes(q)));
+  let list = DB.cases.filter((c) => (fl === 'all' ? true : c.status === fl) && inKind(c.kind, S.kind) && (!q || norm([c.title, c.number, c.court, c.opponent, c.subject, who(c)].join(' ')).includes(q)));
   list.sort((a, b) => { const x = nextHearing(a), y = nextHearing(b); if (x && y) return x.date.localeCompare(y.date); if (x) return -1; if (y) return 1; return (b.opened || '').localeCompare(a.opened || ''); });
   const chips = [...Object.keys(STATUS).map((s) => [s, s === 'جارية' ? 'الجارية' : s]), ['all', 'الكل']].map(([k, l]) => [k, l, k === 'all' ? DB.cases.length : DB.cases.filter((c) => c.status === k).length]);
   const items = list.map((c) => { const n = nextHearing(c); return `<button class="row cr" data-act="case" data-id="${c.id}">${dot(c.status)}<span class="main"><strong>${E(caseLabel(c))}</strong><small>${E(sub(c))}</small></span><span class="side">${n ? `<span class="tag">${E(fShort(n.date))}</span>` : `<span class="muted">${E(c.status)}</span>`}${balance(c) > 0 && open(c) ? `<small class="owe">${E(fNum(balance(c)))}</small>` : ''}</span></button>`; }).join('');
-  return `<div class="bar"><label class="search">${ic('search')}<input id="q" type="search" placeholder="ابحث برقم القضية أو الموكّل أو الخصم" value="${E(S.q)}" autocomplete="off"></label></div><div class="chips" role="tablist">${chips.map(([k, l, n]) => `<button class="chip${fl === k ? ' on' : ''}" data-act="filter" data-k="${E(k)}">${E(l)}<i>${n}</i></button>`).join('')}</div>` +
+  return `<div class="bar"><label class="search">${ic('search')}<input id="q" type="search" placeholder="ابحث برقم القضية أو الموكّل أو الخصم" value="${E(S.q)}" autocomplete="off"></label></div>${vKindBar(S.kind)}<div class="chips" role="tablist">${chips.map(([k, l, n]) => `<button class="chip${fl === k ? ' on' : ''}" data-act="filter" data-k="${E(k)}">${E(l)}<i>${n}</i></button>`).join('')}</div>` +
     (items ? `<div class="list">${items}</div>` : (DB.cases.length ? (fl === 'all' ? empty('لا نتائج', 'غيّر البحث ليظهر ما تبحث عنه.') : empty('لا قضايا في «' + (fl === 'جارية' ? 'الجارية' : fl) + '»', q ? 'غيّر البحث.' : 'أضف قضية جديدة أو انقل إليها قضية موجودة دون إعادة تدوينها.', `<button class="btn pri" data-act="addCase">${ic('plus')}إضافة قضية</button>`)) : empty('لا قضايا بعد', 'أضف أول قضية لتبدأ بتتبّع جلساتها وأتعابها.', `<button class="btn pri" data-act="newCase">${ic('plus')}قضية جديدة</button>`)));
 }
 const caseFields = () => [
   { n: 'title', l: 'عنوان القضية', req: 1, ph: 'مثال: نزاع عقاري - أرض الحي الشمالي' },
   { n: 'clientId', l: 'الموكّل', t: 'select', o: [['', '— بلا موكّل —'], ...DB.clients.map((c) => [c.id, c.name])] },
-  { n: 'role', l: 'صفة الموكّل', t: 'select', o: ROLES, half: 1 }, { n: 'kind', l: 'نوع القضية', t: 'select', o: KINDS, half: 1 },
+  { n: 'role', l: 'صفة الموكّل', t: 'select', o: ROLES, half: 1 }, { n: 'kind', l: 'نوع القضية', t: 'tree', half: 1 },
   { n: 'court', l: 'المحكمة أو الجهة', ph: 'مثال: المحكمة التجارية - الدائرة الثانية' },
   { n: 'number', l: 'رقم القضية', half: 1 }, { n: 'year', l: 'السنة', half: 1 },
   { n: 'opponent', l: 'الخصم', half: 1 }, { n: 'opponentLawyer', l: 'محامي الخصم', half: 1 },

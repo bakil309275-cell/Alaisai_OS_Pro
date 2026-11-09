@@ -14,7 +14,6 @@
   const validPath = (p) => typeof p === 'string' && p.length >= 1 && p.length <= 200 && p.split('/').length <= 8
     && p.split('/').every((s) => s.length >= 1 && s.length <= 80 && s === s.trim() && !BAD_CH.test(s) && s !== '.' && s !== '..');
 
-  const WELCOME = '<div style="padding:20px;text-align:center;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:15px;color:white;font-family:system-ui"><h1>أهلاً بك</h1><p>نظام العيسائي الاحترافي جاهز للعمل.</p><button onclick="alert(\'مرحباً!\')" style="padding:10px 20px;border:none;border-radius:8px;background:#4ade80;color:#04200f;cursor:pointer;margin-top:10px">انقر هنا</button></div>';
 
   const Store = {
     SCHEMA, db: null, useLS: false, recovered: false, _conn: null, _timer: null, _pending: null,
@@ -56,12 +55,8 @@
         version: SCHEMA,
         config: { passHash: null, mustChange: false, visits: 0, lock: { fails: 0, until: 0 } },
         settings: { theme: 'auto', seenVersion: '' },
-        registry: [
-          { id: 'app_1', name: 'الترحيب', icon: '✨', type: 'html', content: WELCOME, order: 0, sec: '' },
-          { id: 'app_2', name: 'المتصفح', icon: '🌐', type: 'url', content: 'https://www.bing.com', order: 1, sec: '' },
-          { id: 'app_3', name: 'الملاحظات', icon: '📝', type: 'notes', content: '', order: 2, sec: '' },
-        ],
-        notes: [], reports: [], appData: {}, sections: [],
+        registry: [],
+        notes: [], reports: [], appData: {},
         explorer: {
           system: [
             { name: 'config.json', content: '{\n  "version": "2.0.0",\n  "name": "Alaisai System"\n}' },
@@ -109,7 +104,7 @@
         }
         if (type === 'addon' && !validName(content)) type = 'html';
         return { id, name: str(a.name, 60, 'بدون اسم') || 'بدون اسم', icon: str(a.icon, 8, '📦') || '📦',
-          type, content, order: Number.isFinite(a.order) ? a.order : i, sec: str(a.sec, 32) };
+          type, content, order: Number.isFinite(a.order) ? a.order : i };
       }).sort((x, y) => x.order - y.order).map((a, i) => ({ ...a, order: i }));
 
       const notes = (Array.isArray(raw.notes) ? raw.notes : []).filter((n) => n && typeof n === 'object')
@@ -153,14 +148,10 @@
         });
       }
 
-      // أقسام الشاشة الرئيسية (شجرة حتى 5 مستويات)؛ وارتباط التطبيق بقسم غير موجود يُمسح
-      const sections = Tree.clean(raw.sections);
-      const secIds = new Set(Tree.flat(sections).map((r) => r.node.id));
-      registry.forEach((a) => { if (a.sec && !secIds.has(a.sec)) a.sec = ''; });
       const theme = ['auto', 'dark', 'light'].includes(raw.settings?.theme) ? raw.settings.theme : 'auto';
       const seenVersion = /^[\d.]{1,20}$/.test(raw.settings?.seenVersion || '') ? raw.settings.seenVersion : '';
       return { version: SCHEMA, config: { passHash, mustChange, visits, lock: { fails: 0, until: 0 } },
-        settings: { theme, seenVersion }, registry, notes, reports, appData, explorer, sections };
+        settings: { theme, seenVersion }, registry, notes, reports, appData, explorer };
     },
 
     // ---------- التحميل (مع ترحيل بيانات localStorage القديمة) ----------
@@ -250,7 +241,7 @@
     appDataSize(ns) { const d = this.db.appData[ns] || {}; return Object.keys(d).reduce((n, k) => n + k.length + d[k].length, 0); },
 
     async wipeAll() { // إعادة ضبط المصنع: يمسح كل شيء بما فيه أسرار المزامنة
-      for (const k of ['db', 'backups', 'errlog', 'sync', 'secrets', 'devkey', 'hidden_addons', 'channel', 'ctrl', 'chdraft', 'ownerkey', 'ctrlsec', 'ctrlapi', 'cloud', 'cloudsec', 'poolidx', 'cloudfs']) { try { await this.del(k); } catch (_) {} }
+      for (const k of ['db', 'backups', 'errlog', 'sync', 'secrets', 'devkey', 'hidden_addons', 'channel', 'ctrl', 'chdraft', 'ownerkey', 'ctrlsec', 'ctrlapi', 'cloud', 'cloudsec', 'gfcfg', 'poolidx', 'cloudfs']) { try { await this.del(k); } catch (_) {} }
     },
 
     MAX_APPDATA, TYPES, validName, validPath,

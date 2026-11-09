@@ -67,6 +67,8 @@ const A = {
   newCase: (d) => { if (!DB.clients.length && !DB.cases.length) { /* مسموح بلا موكّل */ } editCase(); if (d.cid) setTimeout(() => { const s = $('#f_clientId'); if (s) s.value = d.cid; }, 0); },
   editCase: () => editCase(cur()),
   filter: (d) => { S.filter = d.k; render(); },
+  kind: (d) => { S.kind = S.kind === d.k ? d.k.split(' › ').slice(0, -1).join(' › ') : d.k; render(); },
+  kinds: () => manageKinds(),
   sub: (d) => { S.sub = d.k; render(); },
   task: (d) => { const k = byId(caseById(d.c || S.caseId).tasks, d.id); k.done = !k.done; persist(); render(); },
   doc: (d) => { const k = byId(cur().docs, d.id); k.have = !k.have; persist(); render(); },
@@ -100,7 +102,7 @@ const A = {
     printHTML(`<div class="paper">${letterhead()}<h2 class="ph">جدول جلسات ${E(fDay(S.day))} ${E(fDate(S.day))}</h2>${l.length ? `<table class="pt"><tr><th>الوقت</th><th>القضية</th><th>الجهة</th><th>الموكّل</th><th>الغرض</th></tr>${l.map((x) => `<tr><td>${E(x.h.time || '')}</td><td>${E(caseLabel(x.c))}${x.c.number ? ' (' + E(x.c.number) + ')' : ''}</td><td>${E(x.c.court)}</td><td>${E(who(x.c))}</td><td>${E(x.h.note)}</td></tr>`).join('')}</table>` : '<p>لا جلسات في هذا اليوم.</p>'}</div>`);
   },
   office: () => form('بيانات المكتب', [{ n: 'office', l: 'اسم المكتب' }, { n: 'lawyer', l: 'اسم المحامي' }, { n: 'phone', l: 'الهاتف', t: 'tel', half: 1 }, { n: 'city', l: 'المدينة', half: 1 }, { n: 'cur', l: 'العملة', ph: 'ريال، دولار، ريال سعودي…' }], DB.s, (o) => { Object.assign(DB.s, o); persist(); render(); }),
-  export: () => { download('نسخة-مكتب-المحامي-' + today() + '.json', JSON.stringify({ format: 'lawyer-office', v: 1, s: DB.s, clients: DB.clients, cases: DB.cases, tpls: DB.tpls })); toast('نُزّلت النسخة'); },
+  export: () => { download('نسخة-مكتب-المحامي-' + today() + '.json', JSON.stringify({ format: 'lawyer-office', v: 1, s: DB.s, clients: DB.clients, cases: DB.cases, tpls: DB.tpls, opts: DB.opts })); toast('نُزّلت النسخة'); },
   import: () => $('#imp').click(),
 };
 function saveHearing(h) {

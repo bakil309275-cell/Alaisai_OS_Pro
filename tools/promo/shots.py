@@ -12,7 +12,7 @@ with sync_playwright() as p:
     pg=ctx.new_page(); pg.goto(BASE); pg.wait_for_selector('.app-card'); pg.wait_for_timeout(800)
     pg.evaluate("""async(S)=>{const idx=await (await fetch('catalog/index.json')).json();
       for(const e of idx.addons){const p=await (await fetch('catalog/'+e.file)).json();const a=Addons.validatePackage(p);Addons.put({name:p.id,files:a.files||p.files},'local');Addons.install(p.id)}
-      Store.db.sections=S;const reg=Store.db.registry;reg.forEach(a=>{if(a.type==='addon'){const n=a.content;a.sec=['الطب والأدوية','السفر والرحلات','الزراعة','العقارات','المنقولات والسلع الثمينة'].includes(n)?'s2':(n==='مكتب المحامي'?'s11':'s3')}});
+      Store.db.sections=S;const reg=Store.db.registry;reg.forEach(a=>{if(a.type==='addon'){const n=a.content;a.sec=['الطب والأدوية','السفر والرحلات','الخدمات الزراعية','العقارات','المنقولات والسلع الثمينة'].includes(n)?'s2':(n==='مكتب المحامي'?'s11':'s3')}});
       Store.save();OS.renderDesktop()}""",SEC)
     pg.wait_for_timeout(600); pg.screenshot(path=OUT+'/shot_home.png')
     pg.locator('#news-btn').click(); pg.wait_for_selector('.ctl-card'); pg.wait_for_timeout(500); pg.locator('.rx[data-k=like]').first.click(); pg.locator('.rx[data-k=love]').first.click(); pg.wait_for_timeout(300); pg.screenshot(path=OUT+'/shot_news.png'); pg.locator('#close-stage').click()

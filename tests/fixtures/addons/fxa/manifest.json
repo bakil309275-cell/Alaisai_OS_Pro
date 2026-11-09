@@ -1,0 +1,14 @@
+{
+ "id": "fxa",
+ "name": "اختبار أ",
+ "icon": "🧪",
+ "version": "1.0.0",
+ "description": "إضافة اختبار",
+ "author": "Alaisai",
+ "styles": [
+  "style.css"
+ ],
+ "scripts": [
+  "main.js"
+ ]
+}

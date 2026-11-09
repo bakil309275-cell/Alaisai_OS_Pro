@@ -69,67 +69,45 @@
     },
 
     // ---------- سطح المكتب (بناء عبر DOM بلا innerHTML للبيانات) ----------
-    query: '', dragId: null, sec: '',
-    secCollapsed() { try { return localStorage.getItem('alaisai_secbar') === '0'; } catch (_) { return false; } },
-    /** شريط الأقسام: صفّ للجذور ثم صفّ لأبناء كل عقدة في مسار المحدّد (حتى 5 مستويات) */
-    renderSections() {
-      const bar = document.getElementById('sec-bar'); if (!bar) return;
-      const S = Store.db.sections || [], reg = Store.db.registry;
-      if (this.sec && !Tree.find(S, this.sec)) this.sec = '';
-      const cnt = (n) => { const ids = new Set(Tree.ids(n)); return reg.filter((a) => ids.has(a.sec)).length; };
-      const sel = this.sec ? Tree.find(S, this.sec) : null, chain = [];
-      if (sel) { let arr = S; sel.path.forEach((nm) => { const n = arr.find((x) => x.name === nm); chain.push(n); arr = n.c; }); }
-      const rows = [S].concat(chain.filter((n) => n.c.length).map((n) => n.c)), selIds = new Set(chain.map((n) => n.id));
-      const collapsed = this.secCollapsed();
-      bar.textContent = '';
-      const mk = (cls, txt, attrs) => { const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = txt; Object.entries(attrs || {}).forEach(([k, v]) => b.setAttribute(k, v)); return b; };
-      const top = document.createElement('div'); top.className = 'sec-row';
-      if (S.length) { const tg = mk('sec-tg' + (collapsed ? '' : ' o'), '◂', { 'aria-label': collapsed ? 'فتح شريط الأقسام' : 'طيّ شريط الأقسام', 'aria-expanded': String(!collapsed), 'data-sec': '#tg' }); top.appendChild(tg); }
-      if (!collapsed || !S.length) {
-        const all = mk('chip' + (!this.sec ? ' on' : ''), 'الكل ' + reg.length, { 'data-sec': '' }); all.dataset.drop = ''; top.appendChild(all);
-        (rows[0] || []).forEach((n) => { const c = mk('chip' + (selIds.has(n.id) ? ' on' : ''), n.name + (n.c.length ? ' ▾' : '') + ' ' + cnt(n), { 'data-sec': n.id }); c.dataset.drop = n.id; top.appendChild(c); });
-      }
-      top.appendChild(mk('chip sec-manage', S.length ? '⚙ الأقسام' : '＋ أقسام', { 'data-sec': '#manage', 'aria-label': 'إدارة الأقسام' }));
-      bar.appendChild(top);
-      if (!collapsed) rows.slice(1).forEach((arr, i) => { const r = document.createElement('div'); r.className = 'sec-row sub'; r.style.setProperty('--lv', i + 1); arr.forEach((n) => { const c = mk('chip' + (selIds.has(n.id) ? ' on' : ''), n.name + (n.c.length ? ' ▾' : '') + ' ' + cnt(n), { 'data-sec': n.id }); c.dataset.drop = n.id; r.appendChild(c); }); bar.appendChild(r); });
-      if (!bar._bound) {
-        bar._bound = true;
-        bar.addEventListener('click', (e) => {
-          const b = e.target.closest('[data-sec]'); if (!b) return; const v = b.dataset.sec;
-          if (v === '#tg') { try { localStorage.setItem('alaisai_secbar', this.secCollapsed() ? '1' : '0'); } catch (_) { /* لا شيء */ } return this.renderSections(); }
-          if (v === '#manage') return this.manageSections();
-          const S2 = Store.db.sections;
-          if (!v) this.sec = '';
-          else if (this.sec === v) { const r = Tree.find(S2, v), par = r && Tree.flat(S2).find((x) => x.node.c.includes(r.node)); this.sec = par ? par.node.id : ''; } // الضغط على المحدّد يرفعه درجة
-          else this.sec = v;
-          this.renderSections(); this.renderDesktop();
+    query: '', dragId: null,
+    /** سطح مكتب فارغ: دعوة لتصفّح المتجر مع قائمة الإضافات الجاهزة وتثبيت بنقرة */
+    renderStart(grid) {
+      const box = document.createElement('div'); box.className = 'start-card';
+      const h = document.createElement('h2'); h.textContent = 'مرحباً بك في العيسائي برو';
+      const p = document.createElement('p'); p.textContent = 'إضافاتك الحقيقية في المتجر. اختر ما يناسب عملك وثبّته بنقرة، فيظهر هنا على سطح المكتب.';
+      const list = document.createElement('div'); list.className = 'start-list'; list.setAttribute('role', 'list');
+      const open = document.createElement('button'); open.type = 'button'; open.className = 'btn btn-primary start-open'; open.textContent = '🛍️ تصفّح متجر الإضافات';
+      open.addEventListener('click', () => Catalog.open());
+      box.append(h, p, list, open); grid.appendChild(box);
+      Catalog.fetchIndex().then((idx) => {
+        if (!box.isConnected) return;
+        idx.slice(0, 12).forEach((e) => {
+          const b = document.createElement('button'); b.type = 'button'; b.className = 'start-item'; b.setAttribute('role', 'listitem');
+          const i = document.createElement('span'); i.className = 'ico'; i.setAttribute('aria-hidden', 'true'); i.textContent = e.icon;
+          const n = document.createElement('b'); n.textContent = e.name;
+          const d = document.createElement('small'); d.textContent = e.description;
+          const t = document.createElement('span'); t.className = 'btn btn-sm btn-success'; t.textContent = 'تثبيت';
+          b.append(i, n, d, t);
+          b.addEventListener('click', async () => {
+            b.disabled = true; t.textContent = '⏳';
+            try { if (await Catalog.install(e, { silent: true })) UI.toast('✅ ثُبّتت «' + e.name + '» وظهرت على سطح المكتب', 'success'); }
+            catch (err) { UI.toast('❌ ' + err.message, 'error', 5000); b.disabled = false; t.textContent = 'تثبيت'; }
+            this.renderDesktop();
+          });
+          list.appendChild(b);
         });
-        bar.addEventListener('dragover', (e) => { const b = e.target.closest('[data-drop]'); if (b && this.dragId) { e.preventDefault(); b.classList.add('drag-over'); } });
-        bar.addEventListener('dragleave', (e) => { const b = e.target.closest('[data-drop]'); if (b) b.classList.remove('drag-over'); });
-        bar.addEventListener('drop', (e) => {
-          const b = e.target.closest('[data-drop]'); if (!b || !this.dragId) return; e.preventDefault();
-          const a = Store.db.registry.find((x) => x.id === this.dragId); this.dragId = null; if (!a) return; a.sec = b.dataset.drop; Store.save(); this.renderSections(); this.renderDesktop();
-          UI.toast(a.sec ? '📂 نُقل «' + a.name + '» إلى ' + Tree.label(Store.db.sections, a.sec) : 'أُخرج «' + a.name + '» من الأقسام', 'success');
-        });
-      }
-    },
-    manageSections() {
-      const S = Store.db.sections;
-      Tree.manage({ title: '📂 أقسام التطبيقات', nodes: S,
-        count: (n) => Store.db.registry.filter((a) => a.sec === n.id).length,
-        onDelete: (n, ids) => Store.db.registry.forEach((a) => { if (ids.includes(a.sec)) a.sec = ''; }),
-        onChange: () => { Store.save(); this.renderSections(); this.renderDesktop(); },
-        select: (n) => { this.sec = n.id; this.renderSections(); this.renderDesktop(); } });
+      }).catch(() => { list.textContent = navigator.onLine ? '' : 'لا يوجد اتصال. افتح المتجر عند توفر الإنترنت.'; });
     },
     renderDesktop() {
       const grid = document.getElementById('app-grid'); if (!grid) return;
-      grid.textContent = ''; this.renderSections();
+      grid.textContent = '';
       const q = this.query.trim().toLowerCase();
-      const secIds = !q && this.sec ? new Set(Tree.ids(Tree.find(Store.db.sections, this.sec).node)) : null;
-      const apps = Store.db.registry.filter((a) => (!q || a.name.toLowerCase().includes(q)) && (!secIds || secIds.has(a.sec)));
+      const apps = Store.db.registry.filter((a) => (!q || a.name.toLowerCase().includes(q)));
+      document.getElementById('store-btn').classList.toggle('pulse', !Store.db.registry.length);
       if (!apps.length) {
-        const d = document.createElement('div'); d.className = 'empty-state';
-        d.textContent = q ? 'لا توجد تطبيقات مطابقة' : this.sec ? 'لا توجد تطبيقات في هذا القسم. اسحب تطبيقاً إلى القسم أو عيّنه من ⚙️ ← التطبيقات ← تعديل.' : 'لا توجد تطبيقات. افتح ⚙️ لإضافة تطبيق.'; grid.appendChild(d); return;
+        if (q || Store.db.registry.length) { const d = document.createElement('div'); d.className = 'empty-state'; d.textContent = 'لا توجد تطبيقات مطابقة'; grid.appendChild(d); }
+        else this.renderStart(grid);
+        return;
       }
       apps.forEach((app) => {
         const card = document.createElement('div');

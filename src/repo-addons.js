@@ -178,30 +178,56 @@
     async republish(name) { delete this.tracked()[name]; await Sync.saveCfg(); this.items = this.items.filter((x) => x.name !== name); await this.mirror(); await this.scan(); },
 
     // ينشر ملفات الإضافات المحلية في addons/<الاسم>/ ويحذف ما حُذف محلياً. لا يمس ما تغيّر في المستودع.
+    /** يحوّل عدة كتابات وحذوفات إلى commit واحد (Git Data API): أسرع بكثير، وتشغيل واحد لنشر الموقع بدل عشرات */
+    async commitBatch(puts, dels, message) {
+      const base = Sync.base(), br = enc(Sync.cfg.branch), ok = (r, what) => { if (!r.ok) throw new Sync.SyncError('http', 'تعذّر ' + what + ' (' + r.status + ')'); return r.json(); };
+      const head = await ok(await Sync.gh(`${base}/git/ref/heads/${br}`), 'قراءة الفرع');
+      const parent = await ok(await Sync.gh(`${base}/git/commits/${head.object.sha}`), 'قراءة آخر commit');
+      const entries = [], queue = puts.slice();
+      await Promise.all(Array.from({ length: Math.min(6, queue.length) }, async () => {
+        for (let x; (x = queue.shift());) {
+          const d = x.data, b64 = typeof d === 'string' ? Sec.textToB64(d) : d.bin ? d.content : Sec.textToB64(d.content);
+          const blob = await ok(await Sync.gh(`${base}/git/blobs`, { method: 'POST', body: { content: b64, encoding: 'base64' } }), 'رفع ' + x.path);
+          entries.push({ path: x.path, mode: '100644', type: 'blob', sha: blob.sha });
+        }
+      }));
+      for (const d of dels) entries.push({ path: d.path, mode: '100644', type: 'blob', sha: null });
+      const tree = await ok(await Sync.gh(`${base}/git/trees`, { method: 'POST', body: { base_tree: parent.tree.sha, tree: entries } }), 'بناء الشجرة');
+      const commit = await ok(await Sync.gh(`${base}/git/commits`, { method: 'POST', body: { message, tree: tree.sha, parents: [head.object.sha] } }), 'إنشاء commit');
+      await ok(await Sync.gh(`${base}/git/refs/heads/${br}`, { method: 'PATCH', body: { sha: commit.sha, force: false } }), 'تحديث الفرع');
+    },
+    /** قائمة بيضاء للحذف: ملفات إضافة واحدة بعينها فقط */
+    deletable(path) {
+      const m = /^(addons|catalog\/src)\/([^/]+)\/(.+)$/.exec(path);
+      return !!(m && Addons.NAME_RE.test(m[2]) && Addons.FILE_RE.test(m[3])) || /^catalog\/addons\/[\w.-]{1,90}\.alaisai-addon\.json$/.test(path);
+    },
     async mirror() {
       if (!this.enabled()) return { skipped: true };
-      const tree = await this.remoteTree(), t = this.tracked();
-      let wrote = 0, removed = 0;
-      const put = async (path, data, sha) => { await this.putFile(path, data, sha); wrote++; };
-      const del = async (path, sha) => { await this.delFile(path, sha); removed++; };
+      const tree = await this.remoteTree(), t = this.tracked(), puts = [], dels = [], after = [];
       for (const addon of Addons.list()) {
         if (addon.source === 'catalog') continue; // الكتالوج العام مصدره المستودع أصلاً
         const rf = tree[addon.name] || {}, rm = this.shaMap(rf), lm = await this.localShas(addon);
         if (this.same(lm, rm)) { t[addon.name] = rm; continue; }
         if (t[addon.name] && !Object.keys(rm).length) continue; // حُذفت من المستودع بعد نشرها: لا نعيد رفعها (تظهر في المتجر «محذوفة من المستودع»)
         if (t[addon.name] && !this.same(t[addon.name], rm)) continue; // تغيّر في المستودع: لا نكتب فوقه
-        for (const f of addon.files) if (lm[f.name] !== (rf[f.name] || {}).sha) await put(`${DIR}/${addon.name}/${f.name}`, f, (rf[f.name] || {}).sha);
-        for (const n of Object.keys(rf)) if (!(n in lm)) await del(rf[n].path, rf[n].sha);
-        t[addon.name] = lm;
+        for (const f of addon.files) if (lm[f.name] !== (rf[f.name] || {}).sha) puts.push({ path: `${DIR}/${addon.name}/${f.name}`, data: f });
+        for (const n of Object.keys(rf)) if (!(n in lm)) dels.push({ path: rf[n].path });
+        after.push(() => { t[addon.name] = lm; });
       }
       for (const name of Object.keys(t)) { // إضافات حُذفت محلياً بعد أن نشرناها
         if (Addons.get(name)) continue;
         const rf = tree[name];
-        if (rf && this.same(this.shaMap(rf), t[name])) for (const n of Object.keys(rf)) await del(rf[n].path, rf[n].sha);
-        delete t[name];
+        if (rf && this.same(this.shaMap(rf), t[name])) for (const n of Object.keys(rf)) dels.push({ path: rf[n].path });
+        after.push(() => { delete t[name]; });
       }
+      const bad = dels.find((d) => !this.deletable(d.path)); if (bad) throw new Error('مسار غير مسموح بحذفه');
+      if (puts.length || dels.length) {
+        const names = [...new Set(puts.concat(dels).map((x) => x.path.split('/')[1]))];
+        await this.commitBatch(puts, dels, 'Alaisai: ' + (names.length > 3 ? names.length + ' إضافات' : names.join('، ')));
+      }
+      after.forEach((f) => f());
       await Sync.saveCfg();
-      return { wrote, removed };
+      return { wrote: puts.length, removed: dels.length };
     },
   };
   window.RepoAddons = RepoAddons;

@@ -10,7 +10,7 @@ def check(n,c,x=''):
     if not c: fails.append(n)
 with sync_playwright() as p:
     b=p.chromium.launch(args=['--no-sandbox']); ctx=b.new_context(viewport={'width':W,'height':860 if W>600 else 800},service_workers='block'); page=ctx.new_page()
-    page.goto('http://localhost:8765/index.html'); page.wait_for_selector('.app-card'); page.wait_for_timeout(500)
+    page.goto('http://localhost:8765/index.html'); page.wait_for_selector('.start-card'); page.wait_for_timeout(500)
     page.evaluate("""p=>{const a=Addons.validatePackage(p);Addons.put({name:p.id,files:a.files||p.files},'local');Addons.install(p.id)}""",pkg)
     page.locator('.app-card',has_text=folder.split()[0]).first.click(); page.wait_for_timeout(1500)
     fr=page.frame_locator('iframe').first; frame=[f for f in page.frames if f!=page.main_frame][0]

@@ -31,6 +31,7 @@ function fieldHTML(f, v) {
   const id = 'f_' + f.n, req = f.req ? ' required' : '', ph = f.ph ? ` placeholder="${E(f.ph)}"` : '';
   let ctl;
   if (f.t === 'textarea') ctl = `<textarea id="${id}" name="${f.n}" rows="${f.rows || 3}"${ph}${req}>${E(val)}</textarea>`;
+  else if (f.t === 'tree') ctl = `<input type="hidden" id="${id}" name="${f.n}" value="${E(val)}"><button type="button" class="tpick" data-tp="${f.n}" aria-expanded="false">${E(val || 'اختر…')} <span aria-hidden="true">▾</span></button><div class="tpanel" hidden></div>`;
   else if (f.t === 'select') ctl = `<select id="${id}" name="${f.n}"${req}>${(f.o || []).map((o) => { const [k, l] = Array.isArray(o) ? o : [o, o]; return `<option value="${E(k)}"${String(k) === String(val) ? ' selected' : ''}>${E(l)}</option>`; }).join('')}</select>`;
   else if (f.t === 'number') ctl = `<input id="${id}" name="${f.n}" type="text" inputmode="decimal" value="${E(val)}"${ph}${req} autocomplete="off">`;
   else ctl = `<input id="${id}" name="${f.n}" type="${f.t || 'text'}" value="${E(val)}"${ph}${req} autocomplete="off"${f.t === 'tel' ? ' dir="ltr" inputmode="tel"' : ''}>`;
@@ -58,7 +59,7 @@ function closeSheet() {
 }
 function form(title, fields, values, onSave, opt = {}) {
   const el = sheet(title, `<form class="frm" novalidate>${fields.map((f) => fieldHTML(f, values && values[f.n])).join('')}${opt.live ? '<p class="live" aria-live="polite"></p>' : ''}<div class="actions">${opt.del ? `<button type="button" class="btn danger" data-del>${E(opt.delLabel || 'حذف')}</button>` : ''}<span class="grow"></span><button type="button" class="btn quiet" data-close>إلغاء</button><button type="submit" class="btn pri">${E(opt.ok || 'حفظ')}</button></div></form>`);
-  const f = $('form', el);
+  const f = $('form', el); kField(el);
   f.addEventListener('submit', (e) => {
     e.preventDefault();
     const out = {}; let bad = null;

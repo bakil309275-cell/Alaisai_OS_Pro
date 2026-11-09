@@ -1,6 +1,8 @@
 # رفع ملفات ومجلدات (نصية وثنائية) من الجهاز في المستكشف: python3 tests/e2e3.py (يتطلب خادماً على 8765)
 import sys, os, struct, zlib, hashlib, random
 from playwright.sync_api import sync_playwright
+import sys,os; sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+from seed import seeded
 BASE='http://localhost:8765/index.html'; PW='Test#Pass2026xyz'
 fails=[]
 def check(n,c,x=''):
@@ -26,12 +28,14 @@ def open_admin(page):
     page.wait_for_selector('.tabs',timeout=8000)
 def names(page): return page.evaluate("Addons.get('رفع').files.map(f=>f.name).sort()")
 def choose(page, kind, paths):
-    page.click('[data-ex=upload]'); page.select_option('.dialog select',kind)
-    with page.expect_file_chooser() as fc: page.click('.dialog button[type=submit]')
-    fc.value.set_files(paths)
+    page.click('[data-ex=upload]')
+    page.set_input_files('#up-d' if kind=='dir' else '#up-f', paths)
+    page.wait_for_timeout(150)
+    if kind=='dir': page.uncheck('#up-strip')
+    page.click('[data-u=go]')
 SHA="""async()=>{const a=Addons.get('رفع');const o={};for(const f of a.files.filter(f=>f.name.startsWith('mylib/'))){const h=await crypto.subtle.digest('SHA-256',Addons.toBytes(f));o[f.name]=[!!f.bin,[...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')]}return o}"""
 with sync_playwright() as p:
-    b=p.chromium.launch(args=['--no-sandbox']); ctx=b.new_context(viewport={'width':1100,'height':800},service_workers='block')
+    b=seeded(p.chromium.launch(args=['--no-sandbox'])); ctx=b.new_context(viewport={'width':1100,'height':800},service_workers='block')
     page=ctx.new_page(); errs=[]; page.on('pageerror',lambda e:errs.append(str(e)))
     page.goto(BASE); page.wait_for_selector('.app-card'); page.wait_for_timeout(500)
     open_admin(page); page.click('[data-act=tab][data-tab=storage]')

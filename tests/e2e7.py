@@ -1,6 +1,8 @@
 # الواجهة الخلفية والتفاعل: python3 tests/e2e7.py (يتطلب خادماً على 8765 و node 22 للخلفية)
 import sys,json,time,subprocess,os
 from playwright.sync_api import sync_playwright
+import sys,os; sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+from seed import seeded
 BASE='http://localhost:8765/index.html'; API='http://localhost:8788'; fails=[]; KEY='dev-owner-key-0123456789'
 def check(n,c,x=''):
     print(('✓ ' if c else '✗ ')+n,'' if c else x)
@@ -11,7 +13,7 @@ chan={'format':'alaisai-channel','version':1,'seq':1,'updated':now,'api':API,'co
 def route(r): r.fulfill(status=200,content_type='application/json',body=json.dumps(chan))
 try:
   with sync_playwright() as p:
-    b=p.chromium.launch(args=['--no-sandbox'])
+    b=seeded(p.chromium.launch(args=['--no-sandbox']))
     def newpage():
         ctx=b.new_context(viewport={'width':390,'height':800},service_workers='block'); ctx.route('**/control/channel.json*',route); pg=ctx.new_page(); pg.on('pageerror',lambda e:errs.append(str(e))); pg.goto(BASE); pg.wait_for_selector('.app-card'); pg.wait_for_timeout(1500); return pg
     errs=[]; A=newpage(); B=newpage()

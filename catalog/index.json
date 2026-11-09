@@ -3,26 +3,15 @@
   "version": 1,
   "addons": [
     {
-      "id": "quick-browser",
-      "name": "المتصفح السريع",
-      "icon": "🌐",
+      "id": "الخدمات الزراعية",
+      "name": "الخدمات الزراعية",
+      "icon": "🌱",
       "version": "1.0.0",
-      "description": "المتصفح السريع: روابط مواقعك المفضلة",
-      "author": "المالك",
-      "file": "addons/quick-browser.alaisai-addon.json",
-      "size": 12168,
-      "sha256": "ea29697b433ef372126014e62d16270d5c9f85faf09eeb62df443576603492d1"
-    },
-    {
-      "id": "quick-browser-dev",
-      "name": "المتصفح السريع - بوابة المحترفين",
-      "icon": "🌐",
-      "version": "1.0.0",
-      "description": "متصفح سريع بأقسام مخصصة وبوابة للمحترفين، يحفظ تعديلاتك",
-      "author": "المالك",
-      "file": "addons/quick-browser-dev.alaisai-addon.json",
-      "size": 45208,
-      "sha256": "a430721935cbbfa1d971947f83458f93a7c396ea38a37579adf51e4918965728"
+      "description": "إدارة متجر أو مورّد زراعي: أسمدة ومبيدات بتنبيه النفاد والصلاحية، إرشادات زراعية، طلبات المزارعين وسداداتهم.",
+      "author": "العيسائي برو",
+      "file": "addons/p-61bbe56b9f76.alaisai-addon.json",
+      "size": 188522,
+      "sha256": "1b0885b63b2543a9f833a4ef593a97f0502d346b2076c5b98dfff608f1ebc54b"
     },
     {
       "id": "الخزنة الرقمية",
@@ -34,17 +23,6 @@
       "file": "addons/p-0caae71db970.alaisai-addon.json",
       "size": 110311,
       "sha256": "2ab091f874c482d3a2241dc28382fa73e2813034daa76e0a8faeb49db473d939"
-    },
-    {
-      "id": "الزراعة",
-      "name": "الزراعة",
-      "icon": "🌱",
-      "version": "1.0.0",
-      "description": "إدارة متجر أو مورّد زراعي: أسمدة ومبيدات بتنبيه النفاد والصلاحية، إرشادات زراعية، طلبات المزارعين وسداداتهم.",
-      "author": "العيسائي برو",
-      "file": "addons/p-aa64b6aa99aa.alaisai-addon.json",
-      "size": 188437,
-      "sha256": "e8314426a5a5a6371c509f2b8569cb56c48fe9e28c25d94ee01ae1ee4f1d7f6e"
     },
     {
       "id": "السفر والرحلات",
@@ -80,6 +58,17 @@
       "sha256": "991a3f1088e929b9dbc18296a71f38f1b0f7dc93aeb11e05d7b5b5d90ead9e15"
     },
     {
+      "id": "المتصفح السريع بوابة المحترفين",
+      "name": "المتصفح السريع - بوابة المحترفين",
+      "icon": "🌐",
+      "version": "1.0.0",
+      "description": "متصفح سريع بأقسام مخصصة وبوابة للمحترفين، يحفظ تعديلاتك",
+      "author": "المالك",
+      "file": "addons/p-6fcc9d3d785c.alaisai-addon.json",
+      "size": 45254,
+      "sha256": "6f5ea86121b6e73d59b6d369a3374d0e7126a12c3083b26f46297663dcd9024d"
+    },
+    {
       "id": "المنقولات والسلع الثمينة",
       "name": "المنقولات والسلع الثمينة",
       "icon": "💎",
@@ -98,8 +87,8 @@
       "description": "إدارة القضايا والجلسات والموكلين والأتعاب والملفات والمستندات، مع مكتبة من المالك، دون اتصال وبياناتك على جهازك.",
       "author": "العيسائي برو",
       "file": "addons/p-0d6d068bdb63.alaisai-addon.json",
-      "size": 183787,
-      "sha256": "da97ce0da52c118028991fd8f252a8051014ddf8e703a7a51101cf04ee55404d"
+      "size": 195485,
+      "sha256": "6fc277c13f0445f7b5ca1b95a9399ff3cd21827170cd0104d12a49a28f2cb60f"
     }
   ]
 }
