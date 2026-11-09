@@ -1,0 +1,490 @@
+// ==========================================
+// 1. البيانات الافتراضية
+// ==========================================
+const defaultData = [
+  {
+    id: "ai",
+    category: "الذكاء الاصطناعي",
+    sites: [
+      { nameEn: "ChatGPT", nameAr: "شات جي بي تي", url: "https://chatgpt.com/", color: "#10a37f", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M22.281 11.51c0-1.108-.34-2.15-.92-3.01.23-1.02.06-2.12-.49-3.02-.95-1.56-2.62-2.48-4.42-2.48-.3 0-.59.03-.88.08C14.84 2.16 13.47 1.5 12 1.5c-2.17 0-4.08 1.32-4.9 3.18-.16-.02-.32-.03-.48-.03-2.32 0-4.28 1.65-4.76 3.86C1.15 9.61.5 11.24.5 12.94c0 2.17 1.32 4.08 3.18 4.9-.02.16-.03.32-.03.48 0 2.32 1.65 4.28 3.86 4.76 1.1 1.71 2.73 2.36 4.43 2.36 1.108 0 2.15-.34 3.01-.92 1.02.23 2.12.06 3.02-.49 1.56-.95 2.48-2.62 2.48-4.42 0-.3-.03-.59-.08-.88 1.61-1.15 2.61-2.97 2.61-4.92zm-10.17 7.08c-1.36 0-2.49-.63-3.25-1.62l.78-2.14c.18.02.35.03.53.03 1.96 0 3.55-1.59 3.55-3.55 0-1.05-.46-2.02-1.21-2.67l1.5-1.5c1.36 1.2 2.21 2.95 2.21 4.9 0 3.59-2.91 6.5-6.5 6.5-.53 0-1.05-.06-1.55-.18l.93-2.54c.51.17 1.05.26 1.61.26zm-2.3-9.77c0-1.36.63-2.49 1.62-3.25l2.14.78c-.02.18-.03.35-.03.53 0 1.96 1.59 3.55 3.55 3.55 1.05 0 2.02-.46 2.67-1.21l1.5 1.5c-1.2 1.36-2.95 2.21-4.9 2.21-3.59 0-6.5-2.91-6.5-6.5 0-.53.06-1.05.18-1.55l2.54.93c-.17.51-.26 1.05-.26 1.61z"/></svg>` },
+      { nameEn: "Gemini", nameAr: "جيميني", url: "https://gemini.google.com/", color: "#1a73e8", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>` },
+      { nameEn: "DeepSeek", nameAr: "ديب سيك", url: "https://www.deepseek.com/", color: "#2D5BFF", icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20.7 6.7C18.9 4 15.8 2 12 2 6.5 2 2 6.5 2 12c0 5.5 4.5 10 10 10 5.5 0 10-4.5 10-10 0-2-0.6-3.9-1.6-5.5-0.3 0.6-0.9 1.2-1.5 1.6-2.2 1.5-4.7 2.4-7.4 2.4-0.5 0-0.9-0.1-1.4-0.2-0.5 1.3-1.2 2.4-2.2 3.2-0.1-0.6-0.2-1.3-0.2-2 0-1.1 0.3-2.2 0.7-3.2-0.3-0.3-0.5-0.7-0.7-1.1-0.3 1.6-1.4 3-2.9 3.5-0.1-1.5 0.3-3.1 1.3-4.3 0.5-0.6 1.1-1 1.8-1.3-1-1.2-2.2-2.1-3.5-2.6C6.1 6 5 8.8 5 12c0 3.9 3.1 7 7 7 3.9 0 7-3.1 7-7 0-2.2-1-4.1-2.6-5.4-0.2 0.6-0.5 1.2-0.9 1.7-1.1 1.4-2.7 2.3-4.5 2.3z" fill="#fff"/><circle cx="8" cy="11" r="1.5" fill="#2D5BFF"/><path d="M13 13c1.5 1 3.5 1 5 0" stroke="#2D5BFF" stroke-width="1.5" stroke-linecap="round"/></svg>` },
+      { nameEn: "Claude", nameAr: "كلود", url: "https://claude.ai/", color: "#d97757", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"/></svg>` }
+    ]
+  },
+  {
+    id: "search",
+    category: "البحث والتخزين",
+    sites: [
+      { nameEn: "Google", nameAr: "جوجل", url: "https://www.google.com/", color: "#4285F4", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>` },
+      { nameEn: "Drive", nameAr: "درايف", url: "https://drive.google.com/", color: "#34A853", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M19.34 3H4.66L12 16.43 19.34 3zM4.32 4.46 11 16.43 4.32 19.54l.18-15.08zM12.68 16.43 19.68 4.46 19.5 19.54l-6.82-3.11z"/></svg>` },
+      { nameEn: "Earth", nameAr: "إيرث", url: "https://earth.google.com/", color: "#4285F4", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>` }
+    ]
+  },
+  {
+    id: "webdev",
+    category: "تطوير الويب",
+    sites: [
+      { nameEn: "VS Code", nameAr: "في إس كود", url: "https://code.visualstudio.com/", color: "#007ACC", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.46 1.06l-5.4 5.4L7.4 4.2 1.06 8.3l5.4 5.4-5.4 5.4 6.34 4.1 4.66-2.26 5.4 5.4 5.24-5.24V6.3l-5.24-5.24zm-1.06 16.6l-3.9-3.9 3.9-3.9v7.8zm-8.2-7.8l3.9 3.9-3.9 3.9V9.86z"/></svg>` },
+      { nameEn: "Stack", nameAr: "ستاك", url: "https://stackoverflow.com/", color: "#F58025", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M18.986 21.865v-6.404h2.134V24H1.844v-8.539h2.13v6.404h15.012zM6.111 19.731H16.85v-2.137H6.111v2.137zm.259-4.852l10.48 2.189.451-2.07-10.478-2.187-.453 2.068zm1.359-5.056l9.705 4.53.903-1.95-9.706-4.53-.902 1.95zm2.715-4.785l8.217 6.855 1.359-1.62-8.216-6.853-1.36 1.618zM15.751 0l-1.746 1.294c2.653 3.585 4.943 8.563 4.943 8.563l1.746-1.294S18.404 3.585 15.751 0z"/></svg>` },
+      { nameEn: "MDN", nameAr: "إم دي إن", url: "https://developer.mozilla.org/", color: "#ffffff", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"/></svg>` },
+      { nameEn: "W3S", nameAr: "دبليو 3", url: "https://www.w3schools.com/", color: "#04AA6D", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"/></svg>` },
+      { nameEn: "GitHub", nameAr: "جيت هاب", url: "https://github.com/", color: "#181717", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>` }
+    ]
+  },
+  {
+    id: "design",
+    category: "التصميم",
+    sites: [
+      { nameEn: "Figma", nameAr: "فيجما", url: "https://www.figma.com/", color: "#F24E1E", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 24c2.208 0 4-1.792 4-4v-4H8c-2.208 0-4 1.792-4 4s1.792 4 4 4zm0-12h4V8H8c-2.208 0-4 1.792-4 4s1.792 4 4 4zm0-8h4V0H8C5.792 0 4 1.792 4 4s1.792 4 4 4zm8 4c2.208 0 4-1.792 4-4s-1.792-4-4-4-4 1.792-4 4 1.792 4 4 4zm0 2c-2.208 0-4 1.792-4 4s1.792 4 4 4 4-1.792 4-4-1.792-4-4-4z"/></svg>` }
+    ]
+  },
+  {
+    id: "gamedev",
+    category: "تطوير الألعاب",
+    sites: [
+      { nameEn: "Unity", nameAr: "يونيتي", url: "https://unity.com/", color: "#ffffff", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>` },
+      { nameEn: "Unreal", nameAr: "أنريل", url: "https://www.unrealengine.com/", color: "#ffffff", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"/></svg>` },
+      { nameEn: "Godot", nameAr: "جودو", url: "https://godotengine.org/", color: "#478CBF", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"/></svg>` },
+      { nameEn: "Blender", nameAr: "بلندر", url: "https://www.blender.org/", color: "#F5792A", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"/></svg>` }
+    ]
+  },
+  {
+    id: "hosting",
+    category: "الاستضافة",
+    sites: [
+      { nameEn: "Netlify", nameAr: "نتليفاي", url: "https://www.netlify.com/", color: "#00C7B7", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"/></svg>` },
+      { nameEn: "Vercel", nameAr: "فيرسل", url: "https://vercel.com/", color: "#ffffff", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M24 22.525H0L12 1.475l12 21.05z"/></svg>` }
+    ]
+  },
+  {
+    id: "social",
+    category: "التواصل",
+    sites: [
+      { nameEn: "YouTube", nameAr: "يوتيوب", url: "https://www.youtube.com/", color: "#FF0000", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>` },
+      { nameEn: "Facebook", nameAr: "فيسبوك", url: "https://www.facebook.com/", color: "#1877F2", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>` },
+      { nameEn: "WhatsApp", nameAr: "واتساب", url: "https://web.whatsapp.com/", color: "#25D366", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>` },
+      { nameEn: "Instagram", nameAr: "إنستغرام", url: "https://www.instagram.com/", color: "#E4405F", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>` },
+      { nameEn: "TikTok", nameAr: "تيك توك", url: "https://www.tiktok.com/", color: "#ffffff", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>` },
+      { nameEn: "X (Twitter)", nameAr: "إكس", url: "https://x.com/", color: "#000000", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>` }
+    ]
+  },
+  {
+    id: "news",
+    category: "الأخبار",
+    sites: [
+      { nameEn: "BBC", nameAr: "بي بي سي", url: "https://www.bbc.com/", color: "#BB1919", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"/></svg>` },
+      { nameEn: "Al Jazeera", nameAr: "الجزيرة", url: "https://www.aljazeera.net/", color: "#FAB915", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"/></svg>` }
+    ]
+  },
+  {
+    id: "local",
+    category: "مشاريعي المحلية",
+    sites: [
+      { nameEn: "Dashboard", nameAr: "لوحة التحكم", url: "http://127.0.0.1:8080", color: "#4cc9f0", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></svg>` },
+      { nameEn: "Server", nameAr: "الخادم", url: "http://localhost:3000", color: "#f72585", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>` },
+      { nameEn: "Vite", nameAr: "تطبيق Vite", url: "http://localhost:5173", color: "#7209b7", icon: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6H7v6H5V7h2v4h2V7h2v10zm6 0h-2V9h-2V7h6v2h-2v8z"/></svg>` }
+    ]
+  }
+];
+
+// ==========================================
+// 2. إدارة البيانات
+// ==========================================
+const STORAGE_KEY = 'quickBrowserData_v7';
+let appData = JSON.parse(JSON.stringify(defaultData));
+
+// الحفظ عبر واجهة Alaisai (الإطار معزول فلا يتوفر التخزين المحلي للمتصفح)
+Alaisai.get(STORAGE_KEY).then((saved) => {
+  if (Array.isArray(saved) && saved.length) { appData = saved; renderApp(); }
+}).catch(() => {});
+
+function saveData() {
+  Alaisai.set(STORAGE_KEY, appData).catch(() => {});
+}
+
+// ==========================================
+// 3. عناصر DOM والمتغيرات
+// ==========================================
+const container = document.getElementById('sitesContainer');
+const searchInput = document.getElementById('searchInput');
+const siteCountEl = document.getElementById('siteCount');
+const catCountEl = document.getElementById('catCount');
+
+let currentCategoryId = null;
+let editingIndex = null; 
+let uploadedIconBase64 = null;
+
+// ==========================================
+// 4. بناء الواجهة
+// ==========================================
+function renderApp() {
+  if (!container) return;
+  container.innerHTML = '';
+  let visibleSites = 0;
+  
+  const searchTerm = searchInput.value.toLowerCase().trim();
+
+  appData.forEach(cat => {
+    const filteredSites = cat.sites.filter(site => {
+      const en = site.nameEn || '';
+      const ar = site.nameAr || '';
+      return en.toLowerCase().includes(searchTerm) || 
+             ar.includes(searchTerm) ||
+             cat.category.includes(searchTerm);
+    });
+
+    // إخفاء القسم إذا كان البحث لا يطابق أي شيء (إلا إذا كان البحث فارغاً)
+    if (filteredSites.length === 0 && searchTerm !== '') return;
+
+    // رأس القسم
+    const header = document.createElement('div');
+    header.className = 'section-header';
+    header.innerHTML = `
+      <div class="section-title">${cat.category}</div>
+      <button class="menu-btn" onclick="openManageModal('${cat.id}')">⋮</button>
+    `;
+    container.appendChild(header);
+
+    // الشبكة
+    const grid = document.createElement('div');
+    grid.className = 'site-grid';
+
+    filteredSites.forEach(site => {
+      const a = document.createElement('a');
+      a.href = site.url || '#';
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.className = 'site-btn';
+      
+      const lightColors = ['#ffffff', '#FFFC00', '#FAB915', '#4cc9f0'];
+      const textColor = lightColors.includes(site.color) ? '#000000' : '#ffffff';
+      
+      a.style.backgroundColor = site.color || '#333';
+      a.style.color = textColor;
+      
+      let iconHtml = '';
+      if (site.icon && site.icon.startsWith('data:image')) {
+        iconHtml = `<img src="${site.icon}" alt="icon">`;
+      } else if (site.icon && site.icon.startsWith('<svg')) {
+        iconHtml = site.icon;
+      } else if (site.url) {
+        iconHtml = `<img src="https://www.google.com/s2/favicons?domain=${site.url}&sz=64" alt="icon" onerror="this.style.display='none'">`;
+      }
+      
+      a.innerHTML = `
+        ${iconHtml}
+        <div class="site-names">
+          <span class="site-name-en">${site.nameEn || 'App'}</span>
+          <span class="site-name-ar">${site.nameAr || 'تطبيق'}</span>
+        </div>
+      `;
+      grid.appendChild(a);
+      visibleSites++;
+    });
+
+    container.appendChild(grid);
+
+    if (cat.id === 'local' && filteredSites.length > 0) {
+      const warn = document.createElement('div');
+      warn.className = 'warning-box';
+      warn.innerHTML = '⚠️ تعمل فقط إذا كان الخادم المحلي قيد التشغيل.';
+      container.appendChild(warn);
+    }
+  });
+
+  if (siteCountEl) siteCountEl.textContent = visibleSites;
+  if (catCountEl) catCountEl.textContent = appData.length;
+
+  if (visibleSites === 0 && searchTerm !== '') {
+    container.innerHTML = '<div style="text-align:center; color:#aaa; padding:20px;">لا توجد نتائج مطابقة</div>';
+  }
+}
+
+// ==========================================
+// 5. إدارة الأقسام (إضافة، ترتيب، حذف)
+// ==========================================
+function openCategoryManageModal() {
+  renderCategoryManageList();
+  document.getElementById('categoryManageModal').classList.add('active');
+}
+
+function renderCategoryManageList() {
+  const list = document.getElementById('categoryManageList');
+  list.innerHTML = '';
+
+  appData.forEach((cat, index) => {
+    const item = document.createElement('div');
+    item.className = 'manage-item';
+    item.innerHTML = `
+      <div class="manage-item-info">
+        <div class="manage-item-name">${cat.category}</div>
+      </div>
+      <div class="manage-actions">
+        <button class="btn-icon" onclick="moveCategory(${index}, -1)" ${index === 0 ? 'disabled' : ''}>⬆️</button>
+        <button class="btn-icon" onclick="moveCategory(${index}, 1)" ${index === appData.length - 1 ? 'disabled' : ''}>⬇️</button>
+        <button class="btn-icon edit" onclick="editCategoryName(${index})">✏️</button>
+        <button class="btn-icon danger" onclick="deleteCategory(${index})">🗑️</button>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function addNewCategory() {
+  const name = prompt('أدخل اسم القسم الجديد (مثال: ألعابي المفضلة):');
+  if (name && name.trim() !== '') {
+    const newCat = {
+      id: 'cat_' + Date.now(),
+      category: name.trim(),
+      sites: []
+    };
+    appData.push(newCat);
+    saveData();
+    renderCategoryManageList();
+    renderApp();
+  }
+}
+
+function moveCategory(index, direction) {
+  const newIndex = index + direction;
+  if (newIndex >= 0 && newIndex < appData.length) {
+    const temp = appData[index];
+    appData[index] = appData[newIndex];
+    appData[newIndex] = temp;
+    saveData();
+    renderCategoryManageList();
+    renderApp();
+  }
+}
+
+function editCategoryName(index) {
+  const newName = prompt('أدخل الاسم الجديد للقسم:', appData[index].category);
+  if (newName && newName.trim() !== '') {
+    appData[index].category = newName.trim();
+    saveData();
+    renderCategoryManageList();
+    renderApp();
+  }
+}
+
+function deleteCategory(index) {
+  if (confirm(`هل أنت متأكد من حذف قسم "${appData[index].category}" بالكامل مع كل اختصاراته؟`)) {
+    appData.splice(index, 1);
+    saveData();
+    renderCategoryManageList();
+    renderApp();
+  }
+}
+
+// ==========================================
+// 6. إدارة الاختصارات داخل الأقسام
+// ==========================================
+function openManageModal(catId) {
+  currentCategoryId = catId;
+  const cat = appData.find(c => c.id === catId);
+  if (!cat) return;
+  
+  document.getElementById('manageModalTitle').textContent = `إدارة: ${cat.category}`;
+  renderManageList();
+  document.getElementById('manageModal').classList.add('active');
+}
+
+function renderManageList() {
+  const cat = appData.find(c => c.id === currentCategoryId);
+  const list = document.getElementById('manageList');
+  if (!list) return;
+  list.innerHTML = '';
+
+  cat.sites.forEach((site, index) => {
+    const item = document.createElement('div');
+    item.className = 'manage-item';
+    item.innerHTML = `
+      <div class="manage-item-info">
+        <div class="manage-item-name">${site.nameEn} <span>(${site.nameAr})</span></div>
+      </div>
+      <div class="manage-actions">
+        <button class="btn-icon" onclick="moveSite(${index}, -1)" ${index === 0 ? 'disabled' : ''}>⬆️</button>
+        <button class="btn-icon" onclick="moveSite(${index}, 1)" ${index === cat.sites.length - 1 ? 'disabled' : ''}>⬇️</button>
+        <button class="btn-icon edit" onclick="editSite(${index})">✏️</button>
+        <button class="btn-icon danger" onclick="deleteSite(${index})">🗑️</button>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function moveSite(index, direction) {
+  const cat = appData.find(c => c.id === currentCategoryId);
+  const newIndex = index + direction;
+  if (newIndex >= 0 && newIndex < cat.sites.length) {
+    const temp = cat.sites[index];
+    cat.sites[index] = cat.sites[newIndex];
+    cat.sites[newIndex] = temp;
+    saveData();
+    renderManageList();
+    renderApp();
+  }
+}
+
+function deleteSite(index) {
+  if (confirm('هل أنت متأكد من حذف هذا الاختصار؟')) {
+    const cat = appData.find(c => c.id === currentCategoryId);
+    cat.sites.splice(index, 1);
+    saveData();
+    renderManageList();
+    renderApp();
+  }
+}
+
+function openAddModal() {
+  editingIndex = null;
+  uploadedIconBase64 = null;
+  document.getElementById('addModalTitle').textContent = 'إضافة اختصار';
+  document.getElementById('newUrl').value = '';
+  document.getElementById('newNameEn').value = '';
+  document.getElementById('newNameAr').value = '';
+  document.getElementById('newColor').value = '#4cc9f0';
+  document.getElementById('newIconFile').value = '';
+  document.getElementById('addModal').classList.add('active');
+}
+
+function editSite(index) {
+  const cat = appData.find(c => c.id === currentCategoryId);
+  const site = cat.sites[index];
+  
+  editingIndex = index;
+  uploadedIconBase64 = null;
+  
+  document.getElementById('addModalTitle').textContent = 'تعديل اختصار';
+  document.getElementById('newUrl').value = site.url;
+  document.getElementById('newNameEn').value = site.nameEn;
+  document.getElementById('newNameAr').value = site.nameAr;
+  document.getElementById('newColor').value = site.color;
+  document.getElementById('newIconFile').value = '';
+  
+  document.getElementById('addModal').classList.add('active');
+}
+
+document.getElementById('newIconFile').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      uploadedIconBase64 = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+document.getElementById('btnSaveShortcut').addEventListener('click', () => {
+  const urlInput = document.getElementById('newUrl').value.trim();
+  let nameEnInput = document.getElementById('newNameEn').value.trim();
+  let nameArInput = document.getElementById('newNameAr').value.trim();
+  const color = document.getElementById('newColor').value;
+
+  if (!urlInput) {
+    alert('الرجاء إدخال الرابط (URL) على الأقل.');
+    return;
+  }
+
+  if (!nameEnInput) {
+    try {
+      const urlObj = new URL(urlInput);
+      nameEnInput = urlObj.hostname.replace('www.', '').split('.')[0];
+      nameEnInput = nameEnInput.charAt(0).toUpperCase() + nameEnInput.slice(1);
+    } catch (e) {
+      nameEnInput = 'موقع جديد';
+    }
+  }
+  if (!nameArInput) {
+    nameArInput = nameEnInput;
+  }
+
+  const cat = appData.find(c => c.id === currentCategoryId);
+
+  if (editingIndex !== null) {
+    const oldSite = cat.sites[editingIndex];
+    oldSite.nameEn = nameEnInput;
+    oldSite.nameAr = nameArInput;
+    oldSite.url = urlInput;
+    oldSite.color = color;
+    
+    if (uploadedIconBase64) {
+      oldSite.icon = uploadedIconBase64;
+    } else {
+      oldSite.icon = '';
+    }
+  } else {
+    const finalIcon = uploadedIconBase64 || '';
+    cat.sites.push({ nameEn: nameEnInput, nameAr: nameArInput, url: urlInput, color: color, icon: finalIcon });
+  }
+  
+  saveData();
+  closeModal('addModal');
+  renderManageList();
+  renderApp();
+});
+
+// ==========================================
+// 7. أدوات مساعدة وتصدير الكود
+// ==========================================
+function closeModal(modalId) {
+  document.getElementById(modalId).classList.remove('active');
+}
+
+searchInput.addEventListener('input', renderApp);
+
+async function exportCode() {
+  let htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  htmlContent = htmlContent.replace(/class="modal-overlay active"/g, 'class="modal-overlay"');
+  htmlContent = htmlContent.replace(/value="[^"]*"/g, 'value=""'); 
+  
+  const newDataString = JSON.stringify(appData, null, 2);
+  const regex = /const defaultData = \[[\s\S]*?\];\s*\/\/ ==========================================\s*\/\/ 2\. إدارة البيانات/;
+  
+  if (regex.test(htmlContent)) {
+    htmlContent = htmlContent.replace(regex, `const defaultData = ${newDataString};\n\n// ==========================================\n// 2. إدارة البيانات`);
+  } else {
+    htmlContent = htmlContent.replace(/const defaultData = \[[\s\S]*?\];/, `const defaultData = ${newDataString};`);
+  }
+  
+  const oldKeyRegex = /const STORAGE_KEY = '[^']*';/;
+  const newKey = 'quickBrowserData_' + Date.now();
+  if (oldKeyRegex.test(htmlContent)) {
+    htmlContent = htmlContent.replace(oldKeyRegex, `const STORAGE_KEY = '${newKey}';`);
+  }
+
+  const blob = new Blob([htmlContent], {type: 'text/html;charset=utf-8'});
+  const fileName = 'index.html';
+  const file = new File([blob], fileName, { type: 'text/html' });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: 'المتصفح السريع - النسخة المحدثة',
+        text: 'إليك ملف التطبيق مع كافة التعديلات المدمجة.'
+      });
+      closeModal('manageModal');
+      return;
+    } catch (error) {
+      console.log('Share failed or cancelled', error);
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  closeModal('manageModal');
+  alert('✅ تم تحميل الملف المحدث بنجاح!\nيمكنك الآن فتحه، أو رفعه إلى GitHub، أو إرساله عبر البلوتوث.');
+}
+
+// التشغيل
+renderApp();
