@@ -241,7 +241,7 @@
     appDataSize(ns) { const d = this.db.appData[ns] || {}; return Object.keys(d).reduce((n, k) => n + k.length + d[k].length, 0); },
 
     async wipeAll() { // إعادة ضبط المصنع: يمسح كل شيء بما فيه أسرار المزامنة
-      for (const k of ['db', 'backups', 'errlog', 'sync', 'secrets', 'devkey', 'hidden_addons', 'channel', 'ctrl', 'chdraft', 'ownerkey', 'ctrlsec', 'ctrlapi', 'cloud', 'cloudsec', 'gfcfg', 'poolidx', 'cloudfs']) { try { await this.del(k); } catch (_) {} }
+      for (const k of ['db', 'backups', 'errlog', 'sync', 'secrets', 'devkey', 'hidden_addons', 'channel', 'ctrl', 'chdraft', 'ownerkey', 'ctrlsec', 'ctrlapi', 'cloud', 'cloudsec', 'gfcfg', 'comm', 'poolidx', 'cloudfs']) { try { await this.del(k); } catch (_) {} }
     },
 
     MAX_APPDATA, TYPES, validName, validPath,

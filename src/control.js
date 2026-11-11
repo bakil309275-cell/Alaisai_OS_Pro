@@ -10,8 +10,9 @@
   const unb64u = (s) => Sec.unb64(String(s).replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((String(s).length + 3) % 4));
   const b64uText = (s) => new TextDecoder().decode(unb64u(s)), enc = new TextEncoder(), ECDSA = { name: 'ECDSA', namedCurve: 'P-256' }, SIGN = { name: 'ECDSA', hash: 'SHA-256' };
   const LV = { info: ['ℹ️', 'إعلان'], warn: ['⚠️', 'تنبيه'], urgent: ['🚨', 'عاجل'] };
+  const PLANS = [{ id: 'week', label: 'أسبوع', days: 7 }, { id: 'month', label: 'شهر', days: 30 }, { id: 'quarter', label: '3 أشهر', days: 90 }, { id: 'year', label: 'سنة', days: 365 }, { id: 'life', label: 'مدى الحياة', days: 0 }];
   const KIND = { ann: 'إعلان', post: 'منشور' };
-  const emptyCh = () => ({ format: 'alaisai-channel', version: 1, seq: 0, updated: 0, contact: { whatsapp: '', telegram: '', email: '', facebook: '', note: '' }, pub: null, revoked: [], retain: { archiveDays: 60, deleteDays: 240 }, addons: {}, items: [] });
+  const emptyCh = () => ({ format: 'alaisai-channel', version: 1, seq: 0, updated: 0, contact: { whatsapp: '', telegram: '', email: '', facebook: '', note: '' }, pub: null, revoked: [], retain: { archiveDays: 60, deleteDays: 240 }, addons: {}, items: [], plans: PLANS.map((x) => Object.assign({}, x)), pay: [], channels: [] });
   const clone = (x) => JSON.parse(JSON.stringify(x));
   const fmt = (t) => (t ? new Date(t).toLocaleDateString('ar', { dateStyle: 'medium' }) : '—');
   const rid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3);
@@ -32,6 +33,7 @@
       try { this.ch = await Store.get(K_CH); } catch (_) { this.ch = null; }
       try { this.st = Object.assign({ seen: {}, acct: null, subs: {}, rx: {}, counts: {}, q: [] }, await Store.get(K_CTRL)); } catch (_) { /* لا شيء */ }
       if (!this.st.did) { this.st.did = 'd' + Array.from(crypto.getRandomValues(new Uint8Array(16))).map((x) => x.toString(16).padStart(2, '0')).join(''); await this.saveSt(); }
+      if (!this.st.aid) { this.st.aid = 'a' + Array.from(crypto.getRandomValues(new Uint8Array(9))).map((x) => x.toString(16).padStart(2, '0')).join(''); await this.saveSt(); }
       this.badge();
       this.fetch(true);
       setInterval(() => { if (!document.hidden) { this.fetch(); this.hello(); } }, 300000);
@@ -124,7 +126,7 @@
     async hello() {
       if (!this.api() || this._hl && Date.now() - this._hl < 240000) return; this._hl = Date.now();
       const r = await this.call('/v1/hello', { method: 'POST', body: { did: this.st.did, ver: window.APP_VERSION || '' } });
-      if (r) { this.st.users = r.users; this.st.online = r.online; this.saveSt(); this.flushQ(); }
+      if (r) { this.st.users = r.users; this.st.online = r.online; this.saveSt(); this.flushQ(); this.syncCodes(); }
     },
     async loadCounts(ids) {
       const r = ids.length ? await this.call('/v1/stats?ids=' + ids.slice(0, 50).map(encodeURIComponent).join(',')) : null;
@@ -161,7 +163,8 @@
         if (!(await crypto.subtle.verify(SIGN, key, unb64u(s), enc.encode(p)))) return { ok: false, why: 'الرمز غير صحيح' };
         const d = JSON.parse(b64uText(p));
         if (d.a !== '*' && d.a !== addon) return { ok: false, why: 'هذا الرمز لإضافة أخرى' };
-        if (d.e && d.e < Date.now()) return { ok: false, why: 'انتهت صلاحية الرمز' };
+        if (d.n && d.n !== this.st.aid) return { ok: false, why: 'هذا الرمز مربوط بحساب آخر ولا يعمل على هذا الجهاز' };
+        if (d.e && d.e < Date.now()) return { ok: false, why: 'انتهى اشتراكك. جدّد بطلب اشتراك جديد', expired: true };
         if ((this.ch.revoked || []).includes(d.i)) return { ok: false, why: 'أوقفه المالك' };
         return { ok: true, d };
       } catch (_) { return { ok: false, why: 'الرمز غير صحيح' }; }
@@ -177,11 +180,12 @@
         if (!v) return false; this.st.acct = { name: v.name.trim(), phone: v.phone.trim(), t: Date.now() }; await this.saveSt();
       }
       if (pol.sub) {
+        await this.syncCodes();
         const cur = this.st.subs[id] || this.st.subs['*'];
-        if (cur && (await this.verifyCode(cur, id)).ok) return true;
+        if (cur) { const r0 = await this.verifyCode(cur, id); if (r0.ok) return true; if (r0.expired) UI.toast(r0.why, 'warn', 5000); }
         for (;;) {
-          const v = await UI.dialog({ title: '🔑 اشتراك مطلوب', message: 'أدخل رمز الاشتراك الذي أرسله لك المالك. وإن لم يكن لديك رمز فاضغط «طلب اشتراك».', okText: 'تفعيل', cancelText: 'طلب اشتراك', fields: [{ id: 'code', label: 'رمز الاشتراك', mono: true, required: true }] });
-          if (!v) { this.contact({ kind: 'sub', addon: id, subject: 'طلب اشتراك' }); return false; }
+          const v = await UI.dialog({ title: '🔑 اشتراك مطلوب', message: 'هذه الإضافة تحتاج اشتراكاً. إن كان لديك رمز من المالك فأدخله، وإلا فاضغط «طلب اشتراك». رمزك مربوط بحسابك فلا يعمل عند غيرك.', okText: 'تفعيل', cancelText: 'طلب اشتراك', fields: [{ id: 'code', label: 'رمز الاشتراك', type: 'textarea', rows: 3, mono: true, required: true }] });
+          if (!v) { this.subRequest({ addon: id }); return false; }
           const r = await this.verifyCode(v.code, id);
           if (r.ok) { this.st.subs[r.d.a === '*' ? '*' : id] = v.code.trim(); await this.saveSt(); UI.toast('✅ تم التفعيل', 'success'); this.badge(); return true; }
           UI.toast(r.why, 'error');
@@ -190,8 +194,56 @@
       return true;
     },
 
+    plans() { const p = (this.ch && this.ch.plans) || []; return p.length ? p : PLANS; },
+    /** يجلب رموز الطلبات المقبولة من الخادم ويفعّلها تلقائياً (الرمز مربوط بحساب الجهاز أصلاً) */
+    async syncCodes() {
+      if (!this.api() || !(this.st.rq || []).length) return;
+      for (const q of this.st.rq.slice()) {
+        const r = await this.call('/v1/sub/mine?id=' + q.id + '&rk=' + encodeURIComponent(q.rk)); if (!r || !r.status || r.status === 'new') continue;
+        if (r.status === 'approved' && r.code && (await this.verifyCode(r.code, q.addon)).ok) { this.st.subs[q.addon] = r.code; UI.toast('✅ فُعّل اشتراكك: ' + q.addon, 'success', 5000); }
+        else if (r.status === 'rejected') UI.toast('رُفض طلب اشتراك ' + q.addon + (r.note ? ': ' + r.note : ''), 'warn', 6000);
+        this.st.rq = this.st.rq.filter((x) => x.id !== q.id);
+      }
+      await this.saveSt(); this.badge();
+    },
+    /** نافذة طلب الاشتراك: الاسم والهاتف والبريد والخطة وإثبات الدفع (نص/صورة) مع طرق الدفع التي حدّدها المالك */
+    subRequest(o = {}) {
+      const c = (this.ch && this.ch.contact) || {}, a = this.st.acct || {}, pay = (this.ch && this.ch.pay) || [], aid = this.st.aid;
+      const root = document.getElementById('dialog-root'), ov = document.createElement('div'); ov.className = 'dialog-overlay';
+      ov.innerHTML = `<form class="dialog ctl-contact" role="dialog" aria-modal="true" aria-label="طلب اشتراك"><h3>🔑 طلب اشتراك${o.addon ? ' — ' + E(o.addon) : ''}</h3>
+        ${pay.length ? '<div class="ctl-card"><strong>طرق الدفع</strong>' + pay.map((x) => `<p><b>${E(x.name)}:</b> <span dir="ltr">${E(x.details)}</span></p>`).join('') + '</div>' : '<p class="muted sm">لم يحدّد المالك طرق الدفع بعد؛ راسله للاستفسار.</p>'}
+        <label class="lbl">الاسم</label><input class="field" name="name" maxlength="60" value="${E(a.name || '')}">
+        <label class="lbl">رقم الهاتف</label><input class="field" name="phone" maxlength="25" dir="ltr" value="${E(a.phone || '')}">
+        <label class="lbl">البريد (اختياري)</label><input class="field" name="email" maxlength="80" dir="ltr">
+        <label class="lbl">الخطة</label><select class="field" name="plan">${this.plans().map((p) => `<option value="${E(p.id)}">${E(p.label)}</option>`).join('')}</select>
+        <label class="lbl">إثبات الدفع (رقم الحوالة أو ملاحظة)</label><textarea class="field" name="proof" rows="3" maxlength="1000"></textarea>
+        <label class="lbl">صورة الإيصال (اختياري)</label><input class="field" type="file" name="img" accept="image/*">
+        <p class="muted sm">معرّف حسابك: <code dir="ltr">${E(aid)}</code> (يُرسل مع الطلب ويُربط به الرمز)</p>
+        <div class="ctl-send">${this.api() ? '<button type="button" class="btn btn-primary" data-s="direct">📨 إرسال الطلب للمالك</button>' : ''}${c.whatsapp ? '<button type="button" class="btn" data-s="wa">واتساب</button><button type="button" class="btn" data-s="sms">رسالة SMS</button>' : ''}${c.email ? '<button type="button" class="btn" data-s="mail">بريد</button>' : ''}<button type="button" class="btn" data-s="copy">نسخ</button></div>
+        <div class="dialog-actions"><button type="button" class="btn" data-s="x">إغلاق</button></div></form>`;
+      root.appendChild(ov); const form = ov.querySelector('form'), f = form.elements, digits = (x) => String(x).replace(/[^\d]/g, '');
+      const text = () => `🔑 طلب اشتراك — ${o.addon || 'كل الإضافات'}\nالاسم: ${f.name.value}\nالهاتف: ${f.phone.value}\nالبريد: ${f.email.value}\nالخطة: ${(this.plans().find((p) => p.id === f.plan.value) || {}).label}\nمعرّف الحساب: ${aid}\nالإثبات: ${f.proof.value}`;
+      form.addEventListener('click', async (e) => {
+        const b = e.target.closest('[data-s]'); if (!b) return; const s = b.dataset.s; if (s === 'x') return ov.remove();
+        if (!f.name.value.trim() || !f.phone.value.trim()) return UI.toast('اكتب اسمك ورقم هاتفك', 'warn');
+        this.st.acct = Object.assign({}, this.st.acct, { name: f.name.value.trim(), phone: f.phone.value.trim(), t: Date.now() }); await this.saveSt();
+        if (s === 'direct') {
+          let img = ''; if (f.img.files[0]) { try { img = await window.Community.compress(f.img.files[0]); } catch (_) { return UI.toast('تعذّرت معالجة الصورة', 'error'); } }
+          const r = await this.call('/v1/sub/request', { method: 'POST', body: { did: this.st.did, aid, addon: o.addon || '*', plan: f.plan.value, name: f.name.value, phone: f.phone.value, email: f.email.value, proof: f.proof.value, proofimg: img } });
+          if (!r || !r.ok) return UI.toast('تعذّر الإرسال (لا اتصال أو تجاوزت الحد). جرّب واتساب أو بريد', 'error');
+          this.st.rq = (this.st.rq || []).concat({ id: r.id, rk: r.rk, addon: o.addon || '*' }).slice(-10); await this.saveSt();
+          UI.toast('✅ وصل طلبك. سيُفعَّل تلقائياً عند موافقة المالك', 'success', 5000); return ov.remove();
+        }
+        if (s === 'wa') return window.open('https://wa.me/' + digits(c.whatsapp) + '?text=' + encodeURIComponent(text()), '_blank', 'noopener');
+        if (s === 'sms') return window.open('sms:+' + digits(c.whatsapp) + '?body=' + encodeURIComponent(text()), '_self');
+        if (s === 'mail') return window.open('mailto:' + encodeURIComponent(c.email) + '?subject=' + encodeURIComponent('طلب اشتراك') + '&body=' + encodeURIComponent(text()), '_self');
+        try { await navigator.clipboard.writeText(text()); UI.toast('تم النسخ', 'success'); } catch (_) { UI.toast('تعذّر النسخ', 'error'); }
+      });
+      ov.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); ov.remove(); } });
+    },
     // ---------- نافذة التواصل (طلب/استفسار/إرسال ملفات إلى المالك) ----------
     contact(o = {}) {
+      if (o.kind === 'sub') return this.subRequest(o);
       const c = (this.ch && this.ch.contact) || {}, a = this.st.acct || {}, KINDS = [['inq', 'استفسار'], ['req', 'طلب'], ['sub', 'طلب اشتراك'], ['post', 'طلب نشر منشور'], ['bug', 'مشكلة'], ['oth', 'أخرى']];
       const root = document.getElementById('dialog-root'), ov = document.createElement('div'); ov.className = 'dialog-overlay';
       ov.innerHTML = `<form class="dialog ctl-contact" role="dialog" aria-modal="true" aria-label="التواصل"><h3>💬 تواصل مع المالك</h3>
@@ -272,8 +324,8 @@
         const have = !!d.pub;
         h.innerHTML = `<p class="muted">الاشتراك برمز موقَّع يتحقق منه التطبيق دون خادم. أصدر رمزاً لكل مشترك، وإن أوقفته يصل الإيقاف للجميع عند النشر التالي.</p>` +
           (have ? '<div class="ctl-bar"><button class="btn btn-primary" data-c="issue">＋ إصدار رمز اشتراك</button><button class="btn" data-c="keyexp">⬇️ نسخة احتياطية من المفتاح</button><button class="btn" data-c="keyimp">⬆️ استيراد مفتاح</button></div>' : '<div class="ctl-bar"><button class="btn btn-primary" data-c="keygen">🔑 إنشاء مفتاح الاشتراكات</button><button class="btn" data-c="keyimp">⬆️ استيراد مفتاح</button></div>') +
-          '<h4>الرموز الصادرة</h4><div id="ctl-issued"></div>';
-        this.issued();
+          '<h4>خطط الاشتراك</h4><p class="muted sm">' + this.plans().map((p) => E(p.label) + (p.days ? ' (' + p.days + ' يوم)' : ' (دائم)')).join('، ') + '</p><div class="ctl-bar"><button class="btn" data-c="editplans">✏️ الخطط والمدد</button><button class="btn" data-c="editpay">🏦 طرق الدفع</button><button class="btn" data-c="editchan">🔗 قنوات النشر الأخرى</button></div><p class="muted sm">طرق الدفع: ' + ((d.pay || []).length ? (d.pay || []).map((x) => E(x.name)).join('، ') : 'لا شيء') + '</p><h4>طلبات الاشتراك الواردة</h4><div class="ctl-bar"><button class="btn" data-c="loadreq">🔄 تحديث الطلبات</button></div><div id="ctl-req"></div><h4>الرموز الصادرة</h4><div id="ctl-issued"></div>';
+        this.issued(); this.loadReq();
       } else if (this.sub === 'contact') {
         const c = d.contact; h.innerHTML = `<p class="muted">وسائل التواصل التي تظهر للمستخدمين في «تواصل مع المالك».</p><div class="admin-row"><span class="grow">واتساب: ${E(c.whatsapp || '—')}</span></div><div class="admin-row"><span class="grow">تيليجرام: ${E(c.telegram || '—')}</span></div><div class="admin-row"><span class="grow">البريد: ${E(c.email || '—')}</span></div><div class="admin-row"><span class="grow">فيسبوك: ${E(c.facebook || '—')}</span></div><div class="admin-row"><span class="grow">ملاحظة: ${E(c.note || '—')}</span></div><div class="ctl-bar"><button class="btn" data-c="editcontact">✏️ تعديل</button><button class="btn" data-c="testcontact">معاينة نافذة التواصل</button></div>`;
       } else if (this.sub === 'inbox') {
@@ -339,7 +391,11 @@
       }
       if (a === 'delitem') { if (!(await UI.confirm('حذف هذا العنصر؟ يختفي من الموقع عند النشر التالي.', { okText: 'حذف' }))) return; d.items = d.items.filter((x) => x.id !== ds.id); await this.saveDraft(); return this.body(); }
       if (a === 'editpol' || a === 'addpol') {
-        let id = ds.id; if (a === 'addpol') { id = await UI.prompt('معرّف الإضافة', { label: 'اسم الإضافة كما في المتجر (id)', placeholder: 'مثال: الطب والأدوية' }); if (!id) return; id = id.trim(); }
+        let id = ds.id; if (a === 'addpol') {
+          let names = []; try { names = (window.Catalog ? (Catalog.index || await Catalog.fetchIndex()) : []).map((x) => x.id); } catch (_) { /* لا شيء */ }
+          const pick = await UI.dialog({ title: 'إضافة سياسة لإضافة', message: 'اختر من متجر الإضافات، أو اكتب اسماً يدوياً (لإضافات مستقبلية). الاسم يطابق معرّف الإضافة تماماً.', okText: 'التالي', fields: [{ id: 'sel', label: 'من المتجر', type: 'select', options: [['', '— اكتب يدوياً —']].concat(names.map((n) => [n, n])) }, { id: 'man', label: 'أو اسم يدوي', maxlength: 80 }] }); if (!pick) return;
+          id = (pick.man.trim() || pick.sel); if (!id) return UI.toast('اختر أو اكتب اسماً', 'warn');
+        }
         const p = d.addons[id] || { state: 'on', msg: '', account: false, sub: false };
         const v = await UI.dialog({ title: 'سياسة: ' + (id === '*' ? 'كل الإضافات' : id), okText: 'حفظ', fields: [
           { id: 'state', label: 'الحالة', type: 'select', options: [['on', 'متاحة'], ['warn', 'متاحة مع تنبيه'], ['off', 'موقوفة']], value: p.state },
@@ -372,6 +428,22 @@
       if (a === 'keyexp') return this.keyExport();
       if (a === 'keyimp') return this.keyImport();
       if (a === 'issue') return this.issue();
+      if (a === 'loadreq') return this.loadReq();
+      if (a === 'approve') return this.decide(ds.id, true);
+      if (a === 'reject') return this.decide(ds.id, false);
+      if (a === 'editplans') {
+        const v = await UI.dialog({ title: 'خطط الاشتراك', message: 'سطر لكل خطة بالشكل: المعرّف|الاسم|الأيام (0 = دائم)', okText: 'حفظ', fields: [{ id: 't', type: 'textarea', rows: 8, mono: true, value: this.plans().map((p) => p.id + '|' + p.label + '|' + p.days).join('\n') }] }); if (!v) return;
+        const pl = v.t.split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => /^[\w-]{1,30}$/.test(x[0]) && x[1] && /^\d{1,5}$/.test(x[2] || '')).slice(0, 12).map((x) => ({ id: x[0], label: x[1].slice(0, 30), days: +x[2] }));
+        if (!pl.length) return UI.toast('صيغة غير صحيحة', 'error'); d.plans = pl; await this.saveDraft(); return this.body();
+      }
+      if (a === 'editpay') {
+        const v = await UI.dialog({ title: 'طرق الدفع', message: 'سطر لكل طريقة بالشكل: الاسم|رقم الحساب أو التفاصيل (مثال: بنك الكريمي|رقم الحساب 123456 باسم فلان)', okText: 'حفظ', fields: [{ id: 't', type: 'textarea', rows: 8, value: (d.pay || []).map((p) => p.name + '|' + p.details).join('\n') }] }); if (!v) return;
+        d.pay = v.t.split('\n').map((l) => { const i = l.indexOf('|'); return i > 0 ? { name: l.slice(0, i).trim().slice(0, 40), details: l.slice(i + 1).trim().slice(0, 200) } : null; }).filter((x) => x && x.name && x.details).slice(0, 10); await this.saveDraft(); return this.body();
+      }
+      if (a === 'editchan') {
+        const v = await UI.dialog({ title: 'قنوات النشر الأخرى', message: 'صفحاتك في واتساب وفيسبوك وغيرها يراها المستخدم خياراً عند النشر. سطر لكل قناة: الاسم|رابط https', okText: 'حفظ', fields: [{ id: 't', type: 'textarea', rows: 6, mono: true, value: (d.channels || []).map((p) => p.name + '|' + p.url).join('\n') }] }); if (!v) return;
+        d.channels = v.t.split('\n').map((l) => { const i = l.indexOf('|'); return i > 0 ? { name: l.slice(0, i).trim().slice(0, 40), url: l.slice(i + 1).trim() } : null; }).filter((x) => x && x.name && /^https:\/\/[^\s"'<>]{4,300}$/.test(x.url)).slice(0, 6); await this.saveDraft(); return this.body();
+      }
       if (a === 'showcode') { const x = (d.issued || []).find((q) => q.i === ds.id); return x && this.showCode(x); }
       if (a === 'revoke') { d.revoked = (d.revoked || []).concat(ds.id); await this.saveDraft(); return this.issued(); }
       if (a === 'unrevoke') { d.revoked = (d.revoked || []).filter((i) => i !== ds.id); await this.saveDraft(); return this.issued(); }
@@ -398,14 +470,36 @@
       const f = await this.pick('.json,application/json'); if (!f) return;
       try { const j = JSON.parse(await f.text()); if (j.format !== 'alaisai-subkey' || !j.private || !j.pub) throw 0; await this.storeOwnerKey(j.private); this.draft.pub = j.pub; await this.saveDraft(); UI.toast('تم استيراد المفتاح', 'success'); this.body(); } catch (_) { UI.toast('ملف مفتاح غير صالح', 'error'); }
     },
-    async issue() {
+    /** إصدار رمز موقَّع؛ o = {u, a, days, n} يعبّئ الحقول (من طلب اشتراك). n = معرّف حساب المشترك الذي يُربط به الرمز */
+    async issue(o = {}) {
       const k = await this.ownerKey(); if (!k) return UI.toast('مفتاح الاشتراكات غير موجود على هذا الجهاز', 'warn');
-      const addons = [['*', 'كل الإضافات']].concat(this.installedAddons().map((a) => [a.id, a.name]));
-      const v = await UI.dialog({ title: 'إصدار رمز اشتراك', okText: 'إصدار', fields: [{ id: 'u', label: 'اسم المشترك', required: true, maxlength: 60 }, { id: 'a', label: 'الإضافة', type: 'select', options: addons }, { id: 'days', label: 'المدة بالأيام (0 = مفتوح)', value: '30', required: true, maxlength: 5 }] });
-      if (!v) return;
-      const days = Math.max(0, parseInt(v.days, 10) || 0), pl = { i: rid(), a: v.a, u: v.u.trim(), e: days ? Date.now() + days * DAY : 0, t: Date.now() };
+      const addons = [['*', 'كل الإضافات']].concat(this.installedAddons().map((a) => [a.id, a.name])); if (o.a && !addons.some((x) => x[0] === o.a)) addons.push([o.a, o.a]);
+      const v = await UI.dialog({ title: 'إصدار رمز اشتراك', okText: 'إصدار', fields: [{ id: 'u', label: 'اسم المشترك', required: true, maxlength: 60, value: o.u || '' }, { id: 'n', label: 'معرّف حساب المشترك (يظهر في طلبه؛ يربط الرمز به)', maxlength: 40, mono: true, value: o.n || '' }, { id: 'a', label: 'الإضافة', type: 'select', options: addons, value: o.a || '*' }, { id: 'days', label: 'المدة بالأيام (0 = مفتوح). أسبوع 7، شهر 30، سنة 365', value: String(o.days == null ? 30 : o.days), required: true, maxlength: 5 }], validate: (x) => (x.n && !/^[\w-]{6,40}$/.test(x.n.trim()) ? 'معرّف الحساب غير صحيح' : '') });
+      if (!v) return null;
+      const days = Math.max(0, parseInt(v.days, 10) || 0), pl = { i: rid(), a: v.a, u: v.u.trim(), e: days ? Date.now() + days * DAY : 0, t: Date.now() }; if (v.n.trim()) pl.n = v.n.trim();
       const p = b64u(enc.encode(JSON.stringify(pl))), key = await crypto.subtle.importKey('jwk', k, ECDSA, false, ['sign']), s = b64u(new Uint8Array(await crypto.subtle.sign(SIGN, key, enc.encode(p))));
-      pl.code = p + '.' + s; (this.draft.issued = this.draft.issued || []).push(pl); await this.saveDraft(); this.body(); this.showCode(pl);
+      pl.code = p + '.' + s; (this.draft.issued = this.draft.issued || []).push(pl); await this.saveDraft(); this.body(); if (!o.quiet) this.showCode(pl); return pl;
+    },
+    /** المالك: رموز وطلبات الاشتراك الواردة من الخادم، مع قبول (يصدر رمزاً مربوطاً بالحساب ويُرسل للطالب) أو رفض */
+    async ownerKeyApi() { try { const k = await Sync.deviceKey(false), sv = await Store.get(K_APIK); if (k && sv) return await Sec.open(k, sv); } catch (_) { /* لا شيء */ } return null; },
+    async loadReq() {
+      const box = document.getElementById('ctl-req'); if (!box) return; const key = await this.ownerKeyApi(), base = this.draft.api;
+      if (!base || !key) { box.innerHTML = '<p class="muted">اضبط رابط الواجهة ومفتاح المالك من تبويب «الرسائل والإحصاءات» لاستقبال الطلبات مباشرة.</p>'; return; }
+      const r = await this.call('/v1/admin/subreq', { base, key }); if (!r) { box.innerHTML = '<p class="muted">تعذّر الاتصال.</p>'; return; }
+      this._req = r.items;
+      box.innerHTML = r.items.length ? r.items.map((x) => `<div class="ctl-card"><header><strong>${E(x.name)}</strong> <span class="badge">${E(x.addon === '*' ? 'كل الإضافات' : x.addon)}</span> <span class="badge">${E((this.plans().find((p) => p.id === x.plan) || {}).label || x.plan || '')}</span> <span class="badge">${x.status === 'new' ? 'جديد' : x.status === 'approved' ? 'مقبول' : 'مرفوض'}</span><small>${fmt(x.ts)}</small></header><p dir="auto">📞 ${E(x.phone)} ${x.email ? '✉️ ' + E(x.email) : ''}\nمعرّف الحساب: ${E(x.aid)}\n${E(x.proof || '')}</p>${/^data:image\/(jpeg|png|webp);base64,/.test(x.proofimg || '') ? `<img class="comm-img" alt="إيصال" src="${E(x.proofimg)}">` : ''}${x.status === 'new' ? `<footer><button class="btn btn-sm btn-primary" data-c="approve" data-id="${x.id}">✅ قبول وإصدار رمز</button><button class="btn btn-sm" data-c="reject" data-id="${x.id}">رفض</button></footer>` : ''}</div>`).join('') : '<p class="muted">لا طلبات.</p>';
+    },
+    async decide(id, ok) {
+      const x = (this._req || []).find((q) => String(q.id) === String(id)); if (!x) return; const key = await this.ownerKeyApi(), base = this.draft.api; if (!base || !key) return;
+      let code = '', note = '';
+      if (ok) {
+        const pl = this.plans().find((p) => p.id === x.plan), a = await this.issue({ u: x.name, n: x.aid, a: x.addon, days: pl ? pl.days : 30, quiet: true }); if (!a) return; code = a.code;
+      } else { const v = await UI.prompt('سبب الرفض (يصل للمشترك)', { label: 'السبب' }); if (v === null) return; note = v; }
+      const r = await this.call('/v1/admin/subreq/' + x.id, { method: 'POST', base, key, body: { status: ok ? 'approved' : 'rejected', code, note } });
+      if (!r || !r.ok) return UI.toast('تعذّر الحفظ على الخادم', 'error');
+      UI.toast(ok ? '✅ قُبل؛ سيُفعَّل عند المشترك تلقائياً. وانشر القناة ليصل الإيقاف/التجديد' : 'رُفض', 'success');
+      if (ok) UI.dialog({ title: 'أرسله أيضاً بطريقتك', message: 'وصل الرمز للمشترك عبر التطبيق تلقائياً. يمكنك إرساله بوسيلة أخرى:', okText: 'مشاركة', cancelText: 'إغلاق', fields: [{ id: 'c', type: 'textarea', rows: 4, mono: true, value: code }] }).then((v) => { if (v) { const t = 'رمز اشتراكك في العيسائي برو:\n' + code, ph = String(x.phone).replace(/[^\d]/g, ''); window.open('https://wa.me/' + ph + '?text=' + encodeURIComponent(t), '_blank', 'noopener'); } });
+      this.loadReq();
     },
     showCode(x) {
       UI.dialog({ title: 'رمز ' + x.u, message: 'معرّف الرمز: ' + x.i + '\nأرسل الرمز للمشترك ليلصقه عند فتح الإضافة.', okText: 'نسخ ومشاركة', cancelText: 'إغلاق', fields: [{ id: 'c', type: 'textarea', rows: 5, mono: true, value: x.code }] }).then((r) => { if (r) this.share('رمز اشتراكك في العيسائي برو:\n' + x.code); });

@@ -2,6 +2,7 @@
 // تقدّم: إعجابات/تفاعلات عامة، عدّاد المستخدمين والمتصلين، صندوق رسائل المالك.
 // لا تخزّن إلا معرّفاً عشوائياً للجهاز بلا أي بيانات شخصية (ما لم يكتب المستخدم اسمه ورقمه في رسالة).
 // التطبيق يعمل كاملاً بدونها؛ هي طبقة اختيارية. الأسرار: OWNER_KEY فقط (Secret في Cloudflare).
+import { platform, TABLES } from './platform.js';
 const KINDS = ['like', 'love', 'clap', 'wow', 'pray'];
 const MSG_KINDS = ['inq', 'req', 'sub', 'post', 'bug', 'oth'];
 const DID = /^[A-Za-z0-9_-]{16,64}$/, ITEM = /^[\w-]{1,40}$/;
@@ -19,7 +20,7 @@ async function ensure(env) {
       'CREATE TABLE IF NOT EXISTS reactions (item TEXT, kind TEXT, did TEXT, ts INTEGER, PRIMARY KEY (item, kind, did))',
       'CREATE INDEX IF NOT EXISTS reactions_did ON reactions (did, ts)',
       'CREATE TABLE IF NOT EXISTS inbox (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER, did TEXT, kind TEXT, name TEXT, phone TEXT, subject TEXT, text TEXT, addon TEXT)',
-    ]) await q(env, s).run();
+    ].concat(TABLES)) await q(env, s).run();
   })();
   return ready;
 }
@@ -31,7 +32,7 @@ async function counts(env, ids) {
   const r = await rows(env, `SELECT item, kind, COUNT(*) n FROM reactions WHERE item IN (${ids.map(() => '?').join(',')}) GROUP BY item, kind`, ...ids);
   ids.forEach((i) => { out[i] = {}; }); r.forEach((x) => { out[x.item][x.kind] = x.n; }); return out;
 }
-async function body(req) { try { const t = await req.text(); if (t.length > 20000) return null; const j = JSON.parse(t); return j && typeof j === 'object' ? j : null; } catch (_) { return null; } }
+async function body(req, max = 20000) { try { const t = await req.text(); if (t.length > max) return null; const j = JSON.parse(t); return j && typeof j === 'object' ? j : null; } catch (_) { return null; } }
 
 export default {
   async fetch(req, env) {
@@ -42,6 +43,8 @@ export default {
       if (!env.DB) return J({ error: 'قاعدة البيانات DB غير مربوطة' }, 500);
       await ensure(env);
 
+      const pr = await platform(req, env, p, u, { J, q, rows, one, str, body, owner: (r) => owner(r, env), same, now });
+      if (pr) return pr;
       if (p === '/v1/hello' && req.method === 'POST') {
         const b = await body(req); if (!b || !DID.test(String(b.did))) return J({ error: 'bad' }, 400);
         await q(env, 'INSERT INTO devices (did, first, last, ver) VALUES (?,?,?,?) ON CONFLICT(did) DO UPDATE SET last = excluded.last, ver = excluded.ver', b.did, now, now, str(b.ver, 12)).run();

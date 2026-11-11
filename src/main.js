@@ -30,6 +30,9 @@
       this.initSyncBadge();
       Sync.init().catch((e) => this.logError(e.message));
       Control.init().catch((e) => this.logError(e.message));
+      Community.init().catch((e) => this.logError(e.message));
+      // اطلب تخزيناً دائماً كي لا يمسح المتصفح بيانات التطبيق (الإضافات والخزنة) عند ضيق المساحة
+      try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (_) { /* لا شيء */ }
       Cloud.init().catch((e) => this.logError(e.message));
       this.handleDeepLink();
       if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', (e) => { if (e.data && e.data.alaisai === 'news') Control.open(); });
@@ -53,6 +56,7 @@
       });
       document.getElementById('store-btn').addEventListener('click', () => Catalog.open());
       document.getElementById('news-btn').addEventListener('click', () => Control.open());
+      document.getElementById('comm-btn').addEventListener('click', () => Community.open());
       document.getElementById('hub-btn').addEventListener('click', () => Cloud.open());
       document.getElementById('share-btn').addEventListener('click', () => Share.open());
       document.getElementById('sync-badge').addEventListener('click', () => Sync.open());
