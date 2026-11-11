@@ -34,4 +34,5 @@ jobs:
           python tests/e2e9.py
           python tests/e2e10.py
           python tests/e2e11.py
+          python tests/e2e12.py
           python tests/audit.py
