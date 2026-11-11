@@ -1,9 +1,0 @@
-# للنشر بسطر الأوامر (اختياري؛ يمكن النشر من لوحة Cloudflare كما في README.md)
-name = "alaisai-api"
-main = "worker.js"
-compatibility_date = "2025-01-01"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "alaisai"
-database_id = "ضع-معرّف-قاعدة-البيانات-هنا"
