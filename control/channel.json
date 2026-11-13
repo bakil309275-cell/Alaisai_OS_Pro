@@ -1,8 +1,8 @@
 {
  "format": "alaisai-channel",
  "version": 1,
- "seq": 10,
- "updated": 1794578366817,
+ "seq": 11,
+ "updated": 1794578694533,
  "contact": {
   "whatsapp": "",
   "telegram": "",
@@ -53,6 +53,18 @@
    "created": 1794578363056,
    "expires": 1797170363056,
    "pin": true
+  },
+  {
+   "id": "8ja9x7dbs",
+   "kind": "post",
+   "title": "لستخدام المنصة",
+   "body": "تسجيل الاشتراك",
+   "link": "",
+   "aud": "all",
+   "level": "info",
+   "created": 1794578687415,
+   "expires": 1797170687415,
+   "pin": false
   }
  ],
  "pay": [],
