@@ -1,8 +1,8 @@
 {
  "format": "alaisai-channel",
  "version": 1,
- "seq": 27,
- "updated": 1794592297721,
+ "seq": 0,
+ "updated": 0,
  "contact": {
   "whatsapp": "",
   "telegram": "",
@@ -10,63 +10,12 @@
   "facebook": "",
   "note": ""
  },
- "pub": {
-  "crv": "P-256",
-  "kty": "EC",
-  "x": "xeciXRryqSC419gQPV-Ys3tAw7ZCtNlfcWOadr6hEsY",
-  "y": "P7Lvnsrs5Yqa8yeFSeXhno6pChBXdpO2cX80P-5uMAQ"
- },
+ "pub": null,
  "revoked": [],
  "retain": {
   "archiveDays": 60,
   "deleteDays": 240
  },
- "addons": {
-  "مكتب المحامي": {
-   "state": "warn",
-   "msg": "مجانا لفتره محدودة",
-   "account": true,
-   "sub": true
-  },
-  "الخدمات الزراعية": {
-   "state": "off",
-   "msg": "",
-   "account": true,
-   "sub": false
-  },
-  "الخزنة الرقمية": {
-   "state": "warn",
-   "msg": "",
-   "account": true,
-   "sub": true
-  }
- },
- "items": [
-  {
-   "id": "3brrsdf1s",
-   "kind": "ann",
-   "title": "مستخدمي مكتب المحامي",
-   "body": "",
-   "link": "https://bakil309275-cell.github.io/Alaisai_OS_Pro/",
-   "aud": "addon:مكتب المحامي",
-   "level": "warn",
-   "created": 1794578363056,
-   "expires": 1797170363056,
-   "pin": true
-  },
-  {
-   "id": "8ja9x7dbs",
-   "kind": "post",
-   "title": "لستخدام المنصة",
-   "body": "تسجيل الاشتراك",
-   "link": "",
-   "aud": "all",
-   "level": "info",
-   "created": 1794578687415,
-   "expires": 1797170687415,
-   "pin": false
-  }
- ],
- "pay": [],
- "api": "https://alaisai-pro-api.bakil309275.workers.dev"
+ "addons": {},
+ "items": []
 }
