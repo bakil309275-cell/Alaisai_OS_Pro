@@ -1,8 +1,8 @@
 {
  "format": "alaisai-channel",
  "version": 1,
- "seq": 5,
- "updated": 1794577845050,
+ "seq": 6,
+ "updated": 1794578020251,
  "contact": {
   "whatsapp": "",
   "telegram": "",
@@ -42,5 +42,6 @@
   }
  },
  "items": [],
- "pay": []
+ "pay": [],
+ "api": "https://bakil309275-cell.github.io/Alaisai_OS_Pro"
 }
