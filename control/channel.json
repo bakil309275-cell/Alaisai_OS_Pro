@@ -1,8 +1,8 @@
 {
  "format": "alaisai-channel",
  "version": 1,
- "seq": 2,
- "updated": 1794577197186,
+ "seq": 3,
+ "updated": 1794577657076,
  "contact": {
   "whatsapp": "",
   "telegram": "",
@@ -25,6 +25,18 @@
   "مكتب المحامي": {
    "state": "warn",
    "msg": "مجانا لفتره محدودة",
+   "account": true,
+   "sub": true
+  },
+  "الخدمات الزراعية": {
+   "state": "off",
+   "msg": "",
+   "account": true,
+   "sub": false
+  },
+  "الخزنة الرقمية": {
+   "state": "warn",
+   "msg": "",
    "account": true,
    "sub": true
   }
