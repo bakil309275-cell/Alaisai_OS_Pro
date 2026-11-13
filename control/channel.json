@@ -1,8 +1,8 @@
 {
  "format": "alaisai-channel",
  "version": 1,
- "seq": 9,
- "updated": 1794578175040,
+ "seq": 10,
+ "updated": 1794578366817,
  "contact": {
   "whatsapp": "",
   "telegram": "",
@@ -41,7 +41,20 @@
    "sub": true
   }
  },
- "items": [],
+ "items": [
+  {
+   "id": "3brrsdf1s",
+   "kind": "ann",
+   "title": "مستخدمي مكتب المحامي",
+   "body": "",
+   "link": "https://bakil309275-cell.github.io/Alaisai_OS_Pro/",
+   "aud": "addon:مكتب المحامي",
+   "level": "warn",
+   "created": 1794578363056,
+   "expires": 1797170363056,
+   "pin": true
+  }
+ ],
  "pay": [],
  "api": "https://bakil309275-cell.github.io/Alaisai_OS_Pro"
 }
