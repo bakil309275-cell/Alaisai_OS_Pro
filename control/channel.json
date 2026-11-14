@@ -1,31 +1,21 @@
 {
-  "format": "alaisai-channel",
-  "version": 1,
-  "seq": 1,
-  "updated": 1762968000000,
-  "api": "https://alaisai-pro-api.bakil309275.workers.dev",
-  "contact": {
-    "whatsapp": "",
-    "telegram": "",
-    "email": "",
-    "facebook": "",
-    "note": ""
-  },
-  "retain": {
-    "archiveDays": 60,
-    "deleteDays": 240
-  },
-  "plans": [
-    { "id": "week", "label": "أسبوع", "days": 7 },
-    { "id": "month", "label": "شهر", "days": 30 },
-    { "id": "quarter", "label": "3 أشهر", "days": 90 },
-    { "id": "year", "label": "سنة", "days": 365 },
-    { "id": "life", "label": "مدى الحياة", "days": 0 }
-  ],
-  "pay": [],
-  "channels": [],
-  "addons": {},
-  "items": [],
-  "revoked": [],
-  "pub": null
+ "format": "alaisai-channel",
+ "version": 1,
+ "seq": 0,
+ "updated": 0,
+ "contact": {
+  "whatsapp": "",
+  "telegram": "",
+  "email": "",
+  "facebook": "",
+  "note": ""
+ },
+ "pub": null,
+ "revoked": [],
+ "retain": {
+  "archiveDays": 60,
+  "deleteDays": 240
+ },
+ "addons": {},
+ "items": []
 }
