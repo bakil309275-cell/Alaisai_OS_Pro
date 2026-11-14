@@ -1,8 +1,8 @@
 {
  "format": "alaisai-channel",
  "version": 1,
- "seq": 0,
- "updated": 0,
+ "seq": 72,
+ "updated": 1794616333503,
  "contact": {
   "whatsapp": "",
   "telegram": "",
@@ -10,12 +10,38 @@
   "facebook": "",
   "note": ""
  },
- "pub": null,
+ "pub": {
+  "crv": "P-256",
+  "kty": "EC",
+  "x": "xeciXRryqSC419gQPV-Ys3tAw7ZCtNlfcWOadr6hEsY",
+  "y": "P7Lvnsrs5Yqa8yeFSeXhno6pChBXdpO2cX80P-5uMAQ"
+ },
  "revoked": [],
  "retain": {
   "archiveDays": 60,
   "deleteDays": 240
  },
- "addons": {},
- "items": []
+ "addons": {
+  "مكتب المحامي": {
+   "state": "warn",
+   "msg": "مجانا لفتره محدودة",
+   "account": true,
+   "sub": true
+  },
+  "الخدمات الزراعية": {
+   "state": "on",
+   "msg": "",
+   "account": false,
+   "sub": false
+  },
+  "الخزنة الرقمية": {
+   "state": "warn",
+   "msg": "",
+   "account": true,
+   "sub": true
+  }
+ },
+ "items": [],
+ "pay": [],
+ "api": "https://alaisai-pro-api.bakil309275.workers.dev"
 }
