@@ -1,8 +1,8 @@
 {
  "format": "alaisai-channel",
  "version": 1,
- "seq": 65,
- "updated": 1794614205285,
+ "seq": 68,
+ "updated": 1794614694454,
  "contact": {
   "whatsapp": "",
   "telegram": "",
@@ -29,9 +29,9 @@
    "sub": true
   },
   "الخدمات الزراعية": {
-   "state": "off",
+   "state": "on",
    "msg": "",
-   "account": true,
+   "account": false,
    "sub": false
   },
   "الخزنة الرقمية": {
