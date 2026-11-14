@@ -1,0 +1,21 @@
+{
+ "format": "alaisai-channel",
+ "version": 1,
+ "seq": 0,
+ "updated": 0,
+ "contact": {
+  "whatsapp": "",
+  "telegram": "",
+  "email": "",
+  "facebook": "",
+  "note": ""
+ },
+ "pub": null,
+ "revoked": [],
+ "retain": {
+  "archiveDays": 60,
+  "deleteDays": 240
+ },
+ "addons": {},
+ "items": []
+}
