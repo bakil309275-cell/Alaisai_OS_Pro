@@ -127,7 +127,7 @@ with sync_playwright() as p:
     check('حلّ التعارض برفع نسخة الجهاز', page.evaluate("Sync.state")=='idle', page.evaluate("Sync.state"))
     # سحب: تغيير بيانات محلياً ثم السحب من السحابة يعيد الحالة
     page.evaluate("Store.db.notes=[]; Store.save()"); page.wait_for_timeout(600)
-    with page.expect_navigation(timeout=20000):
+    with page.expect_event('load', timeout=20000):
         page.click('[data-sy=pull]'); page.wait_for_timeout(400)
         if page.locator('.dialog input[type=password]').count(): dialog_pw(page)
         page.wait_for_selector('.dialog h3:has-text("سحب")',timeout=8000); page.click('.dialog button[type=submit]')

@@ -42,8 +42,8 @@
       this.view = 'feed'; this.nav(); this.render(); this.load();
     },
     setH(v) { this.h = Math.max(20, Math.min(95, v)); if (this.sheet) { this.sheet.style.setProperty('--h', this.h + 'vh'); this.sheet.querySelector('.comm-grab').setAttribute('aria-valuenow', Math.round(this.h)); } },
-    close() { if (this.sheet) this.sheet.remove(); this.sheet = null; },
-    go(v) { this.view = v; this.nav(); this.render(); const b = document.getElementById('comm-body'); if (b) b.scrollTop = 0; },
+    close() { if (this.sheet) this.sheet.remove(); this.sheet = null; if (window.Nav) Nav.sync('comm-view', false); },
+    go(v) { this.view = v; if (window.Nav) Nav.sync('comm-view', v !== 'feed', () => this.go('feed')); this.nav(); this.render(); const b = document.getElementById('comm-body'); if (b) b.scrollTop = 0; },
     nav() {
       const n = document.getElementById('comm-nav'); if (!n) return; const main = { compose: 'feed', comments: 'feed' }[this.view] || this.view;
       const tabs = TABS.concat(this.owner ? [['owner', '🛡', 'المالك']] : []);

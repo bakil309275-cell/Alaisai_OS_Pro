@@ -95,7 +95,7 @@ with sync_playwright() as p:
     with page.expect_file_chooser() as fc: page.click('[data-act=import]')
     fc.value.set_files(path); page.wait_for_selector('input[type=password]'); page.fill('.dialog input[type=password]','backup-pass-1'); page.keyboard.press('Enter')
     page.wait_for_selector('.dialog h3:has-text("استيراد")')
-    with page.expect_navigation(timeout=15000): page.click('.dialog button[type=submit]')
+    with page.expect_event('load', timeout=15000): page.click('.dialog button[type=submit]')
     page.wait_for_selector('.app-card'); page.wait_for_timeout(800)
     check('الاستيراد المشفّر أعاد 4 تطبيقات', page.locator('.app-card').count()==4, str(page.locator('.app-card').count())+' '+page.inner_text('#toast-wrap'))
     # ملف تالف

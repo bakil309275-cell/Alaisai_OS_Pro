@@ -7,11 +7,11 @@
   Viewer.unmount = () => { Viewer.cleanups.splice(0).forEach((f) => { try { f(); } catch (_) {} }); };
 
   // يُحقن داخل الإطار المعزول: window.Alaisai = { toast, get, set, remove, keys, env }
-  Viewer.preamble = (env) => '(function(){var p={},n=0;addEventListener("message",function(e){var d=e.data;if(e.source!==parent||!d||!d.alaisai||!p[d.id])return;var x=p[d.id];delete p[d.id];d.ok?x[0](d.result):x[1](new Error(d.error))});' +
+  Viewer.preamble = (env) => '(function(){var p={},n=0;var bf=null;addEventListener("message",function(e){var d=e.data;if(e.source!==parent||!d||!d.alaisai)return;if(d.back){var r;try{r=bf&&bf()}catch(x){r=false}Promise.resolve(r).then(function(h){c("backack",[!!h])},function(){c("backack",[false])});return}if(!p[d.id])return;var x=p[d.id];delete p[d.id];d.ok?x[0](d.result):x[1](new Error(d.error))});' +
     'function c(o,a){return new Promise(function(r,j){var i=++n;p[i]=[r,j];parent.postMessage({alaisai:1,id:i,op:o,args:a},"*")})}' +
     'window.Alaisai={version:1,env:' + JSON.stringify(env).replace(/</g, '\\u003c') + ',toast:function(m){return c("toast",[String(m)])},' +
     'get:function(k){return c("get",[k]).then(function(v){return v==null?null:JSON.parse(v)})},set:function(k,v){return c("set",[k,JSON.stringify(v)])},' +
-    'remove:function(k){return c("remove",[k])},keys:function(){return c("keys",[])},contact:function(o){return c("contact",[o||{}])},' +
+    'onBack:function(f){bf=typeof f==="function"?f:null;return c("backhook",[!!bf])},remove:function(k){return c("remove",[k])},keys:function(){return c("keys",[])},contact:function(o){return c("contact",[o||{}])},' +
     'pool:{put:function(k,b,n,s){return b.arrayBuffer().then(function(a){return c("pput",[k,n||b.name||k,b.type,a,s||""])})},get:function(k){return c("pget",[k]).then(function(r){return r&&{name:r.name,type:r.type,size:r.size,blob:new Blob([r.data],{type:r.type})}})},remove:function(k){return c("pdel",[k])},list:function(){return c("plist",[])},sources:function(){return c("psrc",[])}},' +
     'vault:{put:function(k,b,n){return b.arrayBuffer().then(function(a){return c("vput",[k,n||b.name||k,b.type,a])})},get:function(k){return c("vget",[k]).then(function(r){return r&&{name:r.name,type:r.type,size:r.size,blob:new Blob([r.data],{type:r.type})}})},remove:function(k){return c("vdel",[k])},list:function(){return c("vlist",[])},usage:function(){return c("vusage",[])}}};' +
     'addEventListener("keydown",function(e){if(e.key==="Escape")setTimeout(function(){if(!e.defaultPrevented)c("escape",[])},0)})})();';
@@ -32,6 +32,14 @@
           const now = Date.now(); if (now - last > 1000) { last = now; burst = 0; }
           if (++burst > 3) return fail(m.id, 'كثرة الإشعارات');
           UI.toast(String(a[0] || '').slice(0, 200), 'info'); return ok(m.id, true);
+        }
+        // رجوع الهاتف داخل الإضافة: الإضافة تسجّل Alaisai.onBack(fn)؛ fn تعيد true إن عالجت الرجوع داخلياً (فنبقى فيها)، وإلا نغلقها
+        if (m.op === 'backhook' || m.op === 'backack') {
+          const close = () => { clearTimeout(handler._bt); handler._bt = setTimeout(() => { if (window.OS) OS.closeStage(); }, 600); if (frame.contentWindow) frame.contentWindow.postMessage({ alaisai: 1, back: 1 }, '*'); };
+          if (m.op === 'backhook') { if (window.Nav) Nav.sync('addon-back:' + ns, a[0] === true, close); return ok(m.id, true); }
+          clearTimeout(handler._bt);
+          if (a[0] === true) { if (window.Nav) Nav.sync('addon-back:' + ns, true, close); } else if (window.OS) OS.closeStage();
+          return ok(m.id, true);
         }
         if (m.op === 'contact') {
           const now = Date.now(); if (now - (handler._c || 0) < 2000) return fail(m.id, 'حاول بعد قليل'); handler._c = now;
@@ -74,6 +82,7 @@
       } catch (err) { fail(m.id, 'خطأ داخلي'); }
     };
     window.addEventListener('message', handler);
+    Viewer.cleanups.push(() => { clearTimeout(handler._bt); if (window.Nav) Nav.sync('addon-back:' + ns, false); });
     Viewer.cleanups.push(() => window.removeEventListener('message', handler));
   };
 

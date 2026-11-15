@@ -12,6 +12,7 @@
     },
 
     async init() {
+      if (window.Nav) Nav.init(); // زر الرجوع التدريجي + سؤال الخروج عند سطح المكتب
       window.addEventListener('error', (e) => this.logError(e.message));
       window.addEventListener('unhandledrejection', (e) => this.logError(e.reason && e.reason.message || e.reason));
       try { this.errors = (await Store.get('errlog')) || []; } catch (_) {}

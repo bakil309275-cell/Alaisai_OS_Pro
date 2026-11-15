@@ -102,3 +102,5 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) flush
   await load(); let lk = null; try { lk = await Alaisai.get('lock'); } catch (e) { /* لا شيء */ }
   localStorageLock = !!lk; render(); if (lk) await showLock(lk); showSplash(false);
 })();
+// رجوع الهاتف: أغلق الورقة المفتوحة، ثم ارجع للرئيسية، وإلا يغلق النظام الإضافة
+if (Alaisai.onBack) Alaisai.onBack(() => { if (sheetEl) { closeSheet(); return true; } if (S.tab !== 'home') { goto('home'); return true; } return false; });

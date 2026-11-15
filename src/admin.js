@@ -83,6 +83,7 @@
     setTab(t) {
       if (!this.owner && (t === 'control' || t === 'gitflash')) t = 'owner';
       this.tab = t;
+      if (window.Nav) Nav.sync('admin-tab', t !== 'apps', () => this.setTab('apps')); // الرجوع من أي تبويب إلى التطبيقات ثم إغلاق اللوحة
       this.drawTabs();
       this.render();
     },

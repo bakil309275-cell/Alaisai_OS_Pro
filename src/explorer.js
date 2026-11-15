@@ -22,8 +22,17 @@
       this.render();
     },
 
+    /** خطوة رجوع واحدة داخل المستكشف: ملف → مجلده → المجلد الأب → القائمة الرئيسية */
+    stepUp() {
+      const n = this.nav;
+      if (n.view === 'file') this.nav = { view: 'folder', folder: n.folder, dir: n.file && n.file.includes('/') ? n.file.slice(0, n.file.lastIndexOf('/')) : '' };
+      else if (n.view === 'folder' && n.dir) this.nav = { view: 'folder', folder: n.folder, dir: n.dir.includes('/') ? n.dir.slice(0, n.dir.lastIndexOf('/')) : '' };
+      else this.nav = { view: 'root' };
+      this.render();
+    },
     render() {
       Viewer.unmount();
+      if (window.Nav) Nav.sync('explorer', this.nav.view !== 'root', () => this.stepUp());
       const n = this.nav, d = this.data();
       let h = '';
       if (n.view === 'root') {
