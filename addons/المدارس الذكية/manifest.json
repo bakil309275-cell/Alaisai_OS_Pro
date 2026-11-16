@@ -1,9 +1,0 @@
-{
-  "name": "بوابة المدارس الذكية",
-  "icon": "🏫",
-  "version": "1.0.0",
-  "description": "نظام متكامل لإدارة المدارس، المعلمين، الطلاب، والرسوم.",
-  "author": "العيسائي برو",
-  "scripts": ["js/cfg.js", "js/lib.js", "js/ui.js", "js/engine.js", "js/main.js"],
-  "styles": ["style.css"]
-}
