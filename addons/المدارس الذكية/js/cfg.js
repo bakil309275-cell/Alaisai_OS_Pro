@@ -1,0 +1,1 @@
+const CFG={appName:'بوابة المدارس الذكية',icon:'🏫',tabs:[{id:'home',name:'الرئيسية',icon:'🏠'},{id:'students',name:'الطلاب',icon:'🎓'},{id:'staff',name:'المعلمين',icon:'👨‍🏫'},{id:'works',name:'الواجبات',icon:'📝'},{id:'grades',name:'النتائج',icon:'📊'},{id:'pay',name:'الرسوم',icon:'💳'}]};
