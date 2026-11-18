@@ -1,7 +1,0 @@
-node_modules/
-.DS_Store
-*.log
-__pycache__/
-*.pyc
-tools/sectors/out/
-tools/sectors/shots/*.png
