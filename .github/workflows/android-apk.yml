@@ -1,0 +1,29 @@
+# يبني تطبيق أندرويد (APK) من ملفات الموقع نفسها دون حاسوب: Actions ← "Android APK" ← Run workflow.
+# النتيجة: ملف APK في قسم Artifacts أسفل صفحة التشغيل (للتجربة والتثبيت المباشر).
+# التطبيق يعمل من ملفاته داخل الجهاز (ليس من المتصفح) ويتصل بالخادم مباشرة عند وجود الإنترنت.
+name: Android APK
+on: workflow_dispatch
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - name: تجهيز ملفات الويب داخل الغلاف
+        run: |
+          mkdir -p native/www
+          cp -r index.html 404.html privacy.html terms.html manifest.json sw.js favicon.ico assets src catalog control native/www/
+      - name: بناء المشروع
+        working-directory: native
+        run: |
+          npm install --no-audit --no-fund
+          npx cap add android
+          npx cap sync android
+          cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alaisai-apk
+          path: native/android/app/build/outputs/apk/debug/*.apk
