@@ -1,0 +1,17 @@
+{
+  "name": "السفر والرحلات",
+  "icon": "✈️",
+  "version": "1.0.0",
+  "description": "إدارة مكتب سفر أو حملة حج وعمرة: باقات وأسعار، حجوزات، دفعات وسندات، عروض وكتالوج للمشاركة.",
+  "author": "العيسائي برو",
+  "scripts": [
+    "js/cfg.js",
+    "js/lib.js",
+    "js/ui.js",
+    "js/engine.js",
+    "js/main.js"
+  ],
+  "styles": [
+    "style.css"
+  ]
+}
