@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitFlash — مركز المزامنة السحابية</title>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#1c2128;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#238636;--accent2:#2ea043;--blue:#1f6feb;--danger:#da3633;--purple:#8957e5;}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+.header{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px}
+.logo{font-size:22px;font-weight:700;color:var(--accent2)}
+.subtitle{color:var(--muted);font-size:13px}
+.container{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px}
+.panel h3{margin:0 0 10px;font-size:15px}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+input[type=text],input[type=password],input[type=number]{width:100%;padding:8px 10px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:6px;font-family:inherit}
+input:focus{outline:none;border-color:var(--blue)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button{background:var(--accent);color:#fff;border:none;padding:9px 16px;border-radius:6px;font-family:inherit;font-size:14px;cursor:pointer;font-weight:600;transition:background .15s}
+button:hover{background:var(--accent2)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.secondary{background:var(--panel2);border:1px solid var(--border);color:var(--text)}
+button.secondary:hover{background:var(--border)}
+button.blue{background:var(--blue)}
+button.blue:hover{background:#388bfd}
+button.purple{background:var(--purple)}
+button.purple:hover{background:#a371f7}
+button.danger{background:var(--danger)}
+button.small{padding:4px 8px;font-size:12px}
+.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.drop-zone{border:2px dashed var(--border);border-radius:8px;padding:26px;text-align:center;color:var(--muted);cursor:pointer;transition:all .2s;margin-top:10px}
+.drop-zone.over{border-color:var(--accent2);background:rgba(46,160,67,.08);color:var(--text)}
+.drop-zone small{font-size:11px;opacity:.8}
+.file-tree{max-height:350px;overflow-y:auto;margin-top:10px;background:var(--panel2);border-radius:6px;padding:10px;font-size:13px}
+.tree-node{margin:2px 0;user-select:none;}
+.tree-row{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:4px;cursor:pointer;}
+.tree-row:hover{background:var(--panel)}
+.tree-left{display:flex;align-items:center;gap:6px;overflow:hidden;flex:1;direction:ltr;text-align:left;}
+.tree-arrow{width:16px;text-align:center;color:var(--muted);font-size:10px;transition:transform 0.2s;}
+.tree-arrow.open{transform:rotate(90deg);}
+.tree-icon{font-size:16px;min-width:20px;text-align:center;}
+.tree-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tree-children{display:none;margin-right:16px;border-right:1px solid var(--border);padding-right:6px;}
+.tree-children.open{display:block;}
+.tree-btns{display:flex;gap:4px;opacity:0.6;}
+.tree-row:hover .tree-btns{opacity:1;}
+.progress{height:6px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-top:10px}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--blue),var(--accent2));width:0%;transition:width .2s}
+.log{height:150px;overflow-y:auto;background:#010409;border-radius:6px;padding:10px;font-family:ui-monospace,monospace;font-size:12px;margin-top:10px;color:var(--muted);direction:ltr;text-align:left}
+.log .ok{color:var(--accent2)}
+.log .err{color:#f85149}
+.log .info{color:#79c0ff}
+.log .warn{color:#e3b341}
+.status{font-size:12px;color:var(--muted);margin-top:8px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal.open{display:flex}
+.modal-content{background:var(--panel);border:1px solid var(--border);border-radius:10px;max-width:92vw;max-height:92vh;overflow:auto;padding:20px;min-width:420px}
+.modal-content h3{margin:0 0 10px;direction:ltr;text-align:left;font-size:14px}
+.modal-content textarea{width:100%;min-height:400px;background:#010409;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:12px;font-family:ui-monospace,monospace;font-size:12px;direction:ltr;text-align:left}
+.modal-content img{max-width:100%;max-height:60vh;display:block;margin:auto}
+.hidden{display:none!important}
+.checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text) !important; font-size: 13px; margin-top: 12px !important; }
+.breadcrumb { font-size: 12px; color: var(--blue); margin-bottom: 8px; direction: ltr; text-align: left; display:flex; gap:4px; flex-wrap:wrap;}
+.breadcrumb span { cursor: pointer; }
+.breadcrumb span:hover { text-decoration: underline; }
+details.advanced-creds { margin-top: 10px; background: var(--panel2); padding: 8px; border-radius: 6px; border: 1px solid var(--border); }
+details.advanced-creds summary { cursor: pointer; font-size: 12px; color: var(--purple); font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">⚡ GitFlash Sync</div>
+  <div class="subtitle">مزامنة فورية بين GitHub وأي سحابة تخزينية</div>
+</div>
+
+<div class="container">
+  <!-- GitHub Panel -->
+  <div class="panel">
+    <h3>🐙 اتصال GitHub</h3>
+    <label>المضيف</label>
+    <input type="text" id="host" value="github.com">
+    <div class="row">
+      <div><label>المستخدم / المالك</label><input type="text" id="owner" placeholder="username"></div>
+      <div><label>اسم المستودع</label><input type="text" id="repo" placeholder="repo-name"></div>
+    </div>
+    <div class="row">
+      <div><label>الفرع</label><input type="text" id="branch" value="main"></div>
+      <div><label>الرمز (Token)</label><input type="password" id="token" placeholder="ghp_..."></div>
+    </div>
+    <div class="actions">
+      <button onclick="connect()">🔗 اتصال</button>
+      <button class="secondary" onclick="createRepo()">➕ إنشاء مستودع</button>
+    </div>
+    <div class="status" id="conn-status">غير متصل</div>
+  </div>
+
+  <!-- Cloud Panel -->
+  <div class="panel">
+    <h3>☁️ اتصال Google Drive</h3>
+    
+    <details class="advanced-creds">
+      <summary>⚙️ الاتصال الدائم (OAuth 2.0 Refresh Token)</summary>
+      <label>Client ID</label>
+      <input type="text" id="cloud-client-id" placeholder="xxxx.apps.googleusercontent.com">
+      <label>Client Secret</label>
+      <input type="password" id="cloud-client-secret" placeholder="GOCSPX-...">
+      <label>Refresh Token (يبدأ بـ 1//)</label>
+      <input type="password" id="cloud-refresh-token" placeholder="1//04...">
+      <small style="color:var(--muted); display:block; margin-top:6px;">* إذا وضعت هذه الحقول، سيجدد التطبيق التوكن تلقائياً للأبد.</small>
+    </details>
+
+    <label style="margin-top:10px;">أو التوكن المؤقت (Access Token)</label>
+    <div style="display:flex; gap:8px;">
+      <input type="password" id="cloud-token" placeholder="ya29.a0...">
+      <button class="purple" onclick="connectCloud()">🔗 اتصال</button>
+    </div>
+    
+    <div class="status" id="cloud-status">غير متصل بالسحابة</div>
+    
+    <div id="cloud-explorer" class="hidden" style="margin-top:10px;">
+      <div class="breadcrumb" id="cloud-breadcrumb">My Drive</div>
+      <div class="actions" style="margin-top:0;">
+        <button class="secondary small" onclick="loadCloud('root')">🔄 تحديث</button>
+        <button class="blue small" onclick="createCloudItem()">➕ إنشاء</button>
+        <button class="blue small" onclick="uploadLocalToCloud()">⬆ رفع ملف</button>
+      </div>
+      <div class="file-tree" id="cloud-tree"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Upload Panel -->
+  <div class="panel">
+    <h3>⬆ رفع إلى GitHub</h3>
+    <div class="row">
+      <div>
+        <label>مسار الجذر (اختياري)</label>
+        <input type="text" id="rootpath" placeholder="مثال: src/components">
+      </div>
+      <div>
+        <label>عدد الملفات المتزامنة</label>
+        <input type="number" id="concurrency" value="15" min="1" max="30">
+      </div>
+    </div>
+    
+    <label class="checkbox-label">
+      <input type="checkbox" id="strip-root" checked>
+      تجاهل اسم المجلد الرئيسي عند الرفع
+    </label>
+
+    <div class="drop-zone" id="dropzone">
+      📁 اسحب مجلدًا أو ملفات هنا<br><small>أو اضغط للاختيار</small>
+    </div>
+    <input type="file" id="filepicker" multiple class="hidden">
+    <input type="file" id="folderpicker" webkitdirectory directory class="hidden">
+    <div class="actions">
+      <button class="blue" onclick="document.getElementById('filepicker').click()">📄 ملفات</button>
+      <button class="blue" onclick="document.getElementById('folderpicker').click()">📁 مجلد</button>
+    </div>
+    <label>رسالة الـ commit</label>
+    <input type="text" id="commitmsg" value="رفع عبر GitFlash">
+    <div class="progress"><div class="progress-bar" id="progressbar"></div></div>
+    <div class="log" id="log"></div>
+  </div>
+
+  <!-- GitHub Tree Panel -->
+  <div class="panel">
+    <h3>📂 هيكل مستودع GitHub</h3>
+    <div class="actions">
+      <button class="secondary small" onclick="loadTree()">🔄 تحديث</button>
+      <button class="secondary small" onclick="toggleAllFolders()">📂 فتح/إغلاق الكل</button>
+      <button class="secondary small" onclick="downloadZip()">⬇ تحميل ZIP</button>
+    </div>
+    <div class="file-tree" id="tree" style="max-height:400px;"><em style="color:var(--muted)">اتصل بالمستودع أولاً</em></div>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <div id="modal-body"></div>
+    <div class="actions" style="margin-top:16px">
+      <button class="secondary" onclick="closeModal()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const state = { 
+  connected:false, apiBase:'', owner:'', repo:'', branch:'main', token:'', treeData:[], allExpanded:false,
+  cloudConnected:false, cloudToken:'', currentCloudPath:[{id:'root', name:'My Drive'}], cloudData:[],
+  cloudClientId:'', cloudClientSecret:'', cloudRefreshToken:''
+};
+
+const safeStorage = {
+  data: {},
+  getItem(key) { try { return localStorage.getItem(key); } catch(e) { return this.data[key] || null; } },
+  setItem(key, value) { try { localStorage.setItem(key, value); } catch(e) { this.data[key] = value; } }
+};
+
+function apiBaseFor(host){
+  host = host.replace(/^https?:\/\//,'').replace(/\/+$/,'');
+  if (host==='github.com'||host==='www.github.com') return 'https://api.github.com';
+  if (host==='codeberg.org') return 'https://codeberg.org/api/v1';
+  return `https://${host}/api/v1`;
+}
+
+// ===== نظام إدارة الاتصال الذكي (GitHub) =====
+let isOffline = false;
+async function gh(path, opts={}){
+  const url = state.apiBase + path;
+  const headers = { 'Authorization':`token ${state.token}`, 'Accept':'application/vnd.github+json', ...(opts.headers||{}) };
+  let body = opts.body;
+  if (body && typeof body !== 'string'){ body = JSON.stringify(body); headers['Content-Type']='application/json'; }
+  
+  while (true) {
+    try {
+      const res = await fetch(url, { method: opts.method||'GET', headers, body });
+      if (isOffline) {
+        isOffline = false;
+        log('ok', `✅ عاد الاتصال بالإنترنت، جاري استئناف الرفع...`);
+      }
+      if (!res.ok){ 
+        const t = await res.text(); 
+        if ([500, 502, 503, 504].includes(res.status)) throw new Error('Server Error');
+        throw new Error(`${res.status}: ${t.slice(0,300)}`); 
+      }
+      if (res.status === 204) return null;
+      const ct = res.headers.get('content-type')||'';
+      return ct.includes('json') ? res.json() : res.text();
+    } catch (err) {
+      const isNetworkError = err.name === 'TypeError' || err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('Server Error');
+      if (!isNetworkError) throw err; 
+      if (!isOffline) {
+         isOffline = true;
+         log('warn', `⚠️ انقطع الاتصال. في انتظار عودة الشبكة...`);
+      }
+      await new Promise(r => setTimeout(r, 3000));
+    }
+  }
+}
+
+function log(type, msg){
+  const el = document.getElementById('log');
+  const line = document.createElement('div');
+  line.className = type;
+  line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function encodePath(p){ return p.split('/').map(encodeURIComponent).join('/'); }
+function formatSize(b){ if(b<1024)return b+' B'; if(b<1048576)return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
+function fileToBase64(file){
+  return new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = ()=>{ const s=r.result; res(s.substring(s.indexOf(',')+1)); };
+    r.onerror = ()=>rej(r.error);
+    r.readAsDataURL(file);
+  });
+}
+function utf8ToB64(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin=''; for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+async function parallelMap(items, limit, fn){
+  const results = new Array(items.length);
+  let i = 0;
+  async function worker(){ while(i<items.length){ const idx=i++; results[idx]=await fn(items[idx],idx); } }
+  await Promise.all(Array.from({length:Math.min(limit, items.length||1)}, worker));
+  return results;
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+
+// ===== استرجاع / حفظ البيانات =====
+['host','owner','repo','branch','token','cloud-token','cloud-client-id','cloud-client-secret','cloud-refresh-token'].forEach(id=>{
+  const v = safeStorage.getItem('gitflash_'+id);
+  if (v) document.getElementById(id).value = v;
+});
+function saveCreds(){
+  ['host','owner','repo','branch','token','cloud-token','cloud-client-id','cloud-client-secret','cloud-refresh-token'].forEach(id=>{
+    safeStorage.setItem('gitflash_'+id, document.getElementById(id).value);
+  });
+}
+
+// ===== GitHub Functions =====
+async function connect(){
+  try{
+    state.apiBase = apiBaseFor(document.getElementById('host').value.trim());
+    state.owner = document.getElementById('owner').value.trim();
+    state.repo = document.getElementById('repo').value.trim();
+    state.branch = document.getElementById('branch').value.trim() || 'main';
+    state.token = document.getElementById('token').value.trim();
+    if(!state.owner || !state.repo || !state.token) throw new Error('املأ جميع الحقول');
+    log('info', `🔗 الاتصال بـ GitHub...`);
+    await gh(`/repos/${state.owner}/${state.repo}`);
+    log('ok', `✅ متصل بـ ${state.owner}/${state.repo}`);
+    state.connected = true;
+    document.getElementById('conn-status').textContent = `متصل: ${state.owner}/${state.repo}`;
+    document.getElementById('conn-status').style.color = 'var(--accent2)';
+    saveCreds();
+    await loadTree();
+  }catch(e){
+    log('err', '❌ ' + e.message);
+  }
+}
+
+async function loadTree(){
+  if(!state.connected) return;
+  const treeEl = document.getElementById('tree');
+  treeEl.innerHTML = '<em>جاري التحميل...</em>';
+  try{
+    const repoPath = `/repos/${state.owner}/${state.repo}`;
+    let treeSha;
+    try{
+      const ref = await gh(`${repoPath}/git/ref/heads/${state.branch}`);
+      const commit = await gh(`${repoPath}/git/commits/${ref.object.sha}`);
+      treeSha = commit.tree.sha;
+    }catch{
+      treeEl.innerHTML = '<em>المستودع فارغ</em>';
+      return;
+    }
+    const tree = await gh(`${repoPath}/git/trees/${treeSha}?recursive=1`);
+    state.treeData = tree.tree;
+    renderTree();
+  }catch(e){ treeEl.innerHTML = `<em style="color:var(--danger)">${escapeHtml(e.message)}</em>`; }
+}
+
+function renderTree() {
+  const container = document.getElementById('tree');
+  container.innerHTML = '';
+  if(!state.treeData || state.treeData.length === 0) return;
+
+  const tree = buildNestedTree(state.treeData);
+  renderNodes(tree, container, false);
+}
+
+// ===== Cloud (Google Drive) Functions =====
+
+// دالة تجديد التوكن تلقائياً إذا وضع المستخدم بيانات OAuth
+async function refreshCloudToken() {
+  if (!state.cloudRefreshToken || !state.cloudClientId || !state.cloudClientSecret) {
+    throw new Error('معلومات تجديد التوكن غير مكتملة.');
+  }
+  log('info', '🔄 جاري تجديد توكن Google Drive...');
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: state.cloudClientId,
+      client_secret: state.cloudClientSecret,
+      refresh_token: state.cloudRefreshToken,
+      grant_type: 'refresh_token'
+    })
+  });
+  if (!res.ok) throw new Error('فشل تجديد التوكن: ' + await res.text());
+  const data = await res.json();
+  state.cloudToken = data.access_token;
+  document.getElementById('cloud-token').value = state.cloudToken;
+  safeStorage.setItem('gitflash_cloud-token', state.cloudToken);
+  log('ok', '✅ تم تجديد التوكن تلقائياً.');
+}
+
+async function connectCloud() {
+  // قراءة الحقول المتقدمة
+  state.cloudClientId = document.getElementById('cloud-client-id').value.trim();
+  state.cloudClientSecret = document.getElementById('cloud-client-secret').value.trim();
+  state.cloudRefreshToken = document.getElementById('cloud-refresh-token').value.trim();
+  state.cloudToken = document.getElementById('cloud-token').value.trim();
+
+  // إذا كان هناك معلومات تجديد، نجدد التوكن فوراً
+  if (state.cloudRefreshToken && state.cloudClientId && state.cloudClientSecret) {
+    try {
+      await refreshCloudToken();
+    } catch(e) {
+      document.getElementById('cloud-status').textContent = '❌ فشل التجديد: ' + e.message;
+      document.getElementById('cloud-status').style.color = 'var(--danger)';
+      return;
+    }
+  }
+
+  if(!state.cloudToken) return alert('أدخل التوكن أو بيانات OAuth أولاً');
+  
+  document.getElementById('cloud-status').textContent = 'جاري الاتصال...';
+  
+  try {
+    await loadCloud('root');
+    state.cloudConnected = true;
+    document.getElementById('cloud-status').textContent = '✅ متصل بـ Google Drive';
+    document.getElementById('cloud-status').style.color = 'var(--accent2)';
+    document.getElementById('cloud-explorer').classList.remove('hidden');
+    saveCreds();
+  } catch (e) {
+    document.getElementById('cloud-status').textContent = '❌ فشل الاتصال: ' + e.message;
+    document.getElementById('cloud-status').style.color = 'var(--danger)';
+  }
+}
+
+async function cloudApi(path, opts = {}) {
+  const headers = {
+    'Authorization': `Bearer ${state.cloudToken}`,
+    ...(opts.headers || {})
+  };
+  
+  let res = await fetch('https://www.googleapis.com' + path, { ...opts, headers });
+  
+  // إذا انتهت صلاحية التوكن (401) وكان لدينا Refresh Token، نقوم بتجديده وإعادة المحاولة
+  if (res.status === 401 && state.cloudRefreshToken) {
+    log('warn', '⚠️ انتهت صلاحية توكن السحابة. جاري التجديد التلقائي...');
+    await refreshCloudToken();
+    headers['Authorization'] = `Bearer ${state.cloudToken}`;
+    res = await fetch('https://www.googleapis.com' + path, { ...opts, headers });
+  }
+
+  if (!res.ok) throw new Error(await res.text());
+  return res;
+}
+
+async function loadCloud(folderId) {
+  const treeEl = document.getElementById('cloud-tree');
+  treeEl.innerHTML = '<em>جاري التحميل...</em>';
+  
+  try {
+    const res = await cloudApi(`/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&fields=files(id,name,mimeType,size)&pageSize=100`);
+    const data = await res.json();
+    
+    if(folderId === 'root') {
+      state.currentCloudPath = [{id:'root', name:'My Drive'}];
+    }
+    renderBreadcrumb();
+    
+    state.cloudData = data.files || [];
+    renderCloudTree();
+  } catch (e) {
+    treeEl.innerHTML = `<em style="color:var(--danger)">${escapeHtml(e.message)}</em>`;
+    throw e;
+  }
+}
+
+function renderBreadcrumb() {
+  const bc = document.getElementById('cloud-breadcrumb');
+  bc.innerHTML = '';
+  state.currentCloudPath.forEach((p, i) => {
+    const span = document.createElement('span');
+    span.textContent = p.name;
+    span.onclick = () => {
+      if (i < state.currentCloudPath.length - 1) {
+        state.currentCloudPath = state.currentCloudPath.slice(0, i + 1);
+        loadCloud(p.id);
+      }
+    };
+    bc.appendChild(span);
+    if (i < state.currentCloudPath.length - 1) bc.appendChild(document.createTextNode(' / '));
+  });
+}
+
+function renderCloudTree() {
+  const container = document.getElementById('cloud-tree');
+  container.innerHTML = '';
+  if (state.cloudData.length === 0) {
+    container.innerHTML = '<em style="color:var(--muted)">المجلد فارغ</em>';
+    return;
+  }
+
+  const sorted = [...state.cloudData].sort((a, b) => {
+    const aFolder = a.mimeType === 'application/vnd.google-apps.folder';
+    const bFolder = b.mimeType === 'application/vnd.google-apps.folder';
+    if (aFolder !== bFolder) return aFolder ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  sorted.forEach(item => {
+    const isFolder = item.mimeType === 'application/vnd.google-apps.folder';
+    const row = document.createElement('div');
+    row.className = 'tree-row';
+    
+    const left = document.createElement('div');
+    left.className = 'tree-left';
+    
+    const icon = document.createElement('span');
+    icon.className = 'tree-icon';
+    icon.textContent = isFolder ? '📁' : '📄';
+    const name = document.createElement('span');
+    name.className = 'tree-name';
+    name.textContent = item.name;
+    
+    left.append(icon, name);
+    
+    const btns = document.createElement('div');
+    btns.className = 'tree-btns';
+    
+    if (isFolder) {
+      row.onclick = () => {
+        state.currentCloudPath.push({id: item.id, name: item.name});
+        loadCloud(item.id);
+      };
+      
+      const addBtn = document.createElement('button');
+      addBtn.className = 'small secondary'; addBtn.textContent = '➕';
+      addBtn.onclick = (e) => { e.stopPropagation(); createCloudItem(item.id); };
+
+      const renBtn = document.createElement('button');
+      renBtn.className = 'small secondary'; renBtn.textContent = '✏️';
+      renBtn.onclick = (e) => { e.stopPropagation(); renameCloudItem(item.id, item.name); };
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'small danger'; delBtn.textContent = '🗑';
+      delBtn.onclick = (e) => { e.stopPropagation(); deleteCloudItem(item.id, item.name); };
+
+      btns.append(addBtn, renBtn, delBtn);
+    } else {
+      const viewBtn = document.createElement('button');
+      viewBtn.className = 'small secondary'; viewBtn.textContent = '👁';
+      viewBtn.onclick = (e) => { e.stopPropagation(); viewCloudFile(item.id, item.name, item.mimeType); };
+
+      const renBtn = document.createElement('button');
+      renBtn.className = 'small secondary'; renBtn.textContent = '✏️';
+      renBtn.onclick = (e) => { e.stopPropagation(); renameCloudItem(item.id, item.name); };
+
+      const syncBtn = document.createElement('button');
+      syncBtn.className = 'small blue'; syncBtn.textContent = '⬆ GitHub';
+      syncBtn.onclick = (e) => { e.stopPropagation(); cloudToGitHub(item.id, item.name); };
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'small danger'; delBtn.textContent = '🗑';
+      delBtn.onclick = (e) => { e.stopPropagation(); deleteCloudItem(item.id, item.name); };
+
+      btns.append(viewBtn, renBtn, syncBtn, delBtn);
+    }
+    
+    row.append(left, btns);
+    container.appendChild(row);
+  });
+}
+
+async function createCloudItem(parentId = null) {
+  const folderId = parentId || state.currentCloudPath[state.currentCloudPath.length-1].id;
+  const name = prompt('أدخل اسم الملف الجديد (أو اسم مجلد مع علامة / في النهاية):');
+  if(!name) return;
+
+  const isFolder = name.endsWith('/');
+  const finalName = isFolder ? name.slice(0, -1) : name;
+
+  try {
+    log('info', `➕ جاري إنشاء ${finalName}...`);
+    const metadata = {
+      name: finalName,
+      mimeType: isFolder ? 'application/vnd.google-apps.folder' : 'text/plain',
+      parents: [folderId]
+    };
+    
+    if (isFolder) {
+      await cloudApi('/drive/v3/files', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(metadata)
+      });
+    } else {
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+      form.append('file', new Blob([''], { type: 'text/plain' }));
+      await cloudApi('/upload/drive/v3/files?uploadType=multipart', { method: 'POST', body: form });
+    }
+    log('ok', `✅ تم الإنشاء.`);
+    loadCloud(folderId);
+  } catch(e) { log('err', '❌ ' + e.message); }
+}
+
+async function renameCloudItem(id, oldName) {
+  const newName = prompt('الاسم الجديد:', oldName);
+  if(!newName || newName === oldName) return;
+  try {
+    log('info', `✏️ جاري التعديل...`);
+    await cloudApi(`/drive/v3/files/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName })
+    });
+    log('ok', `✅ تم التعديل.`);
+    loadCloud(state.currentCloudPath[state.currentCloudPath.length-1].id);
+  } catch(e) { log('err', '❌ ' + e.message); }
+}
+
+async function deleteCloudItem(id, name) {
+  if(!confirm(`حذف [${name}] من Google Drive؟`)) return;
+  try {
+    log('info', `🗑 جاري الحذف...`);
+    await cloudApi(`/drive/v3/files/${id}`, { method: 'DELETE' });
+    log('ok', `✅ تم الحذف.`);
+    loadCloud(state.currentCloudPath[state.currentCloudPath.length-1].id);
+  } catch(e) { log('err', '❌ ' + e.message); }
+}
+
+async function viewCloudFile(id, name, mimeType) {
+  try {
+    log('info', `👁️ جاري فتح ${name}...`);
+    const res = await cloudApi(`/drive/v3/files/${id}?alt=media`);
+    const blob = await res.blob();
+    const isImg = mimeType.startsWith('image/');
+    const body = document.getElementById('modal-body');
+    
+    if (isImg) {
+      const url = URL.createObjectURL(blob);
+      body.innerHTML = `<h3>${escapeHtml(name)}</h3><img src="${url}" alt="">`;
+      setTimeout(()=>URL.revokeObjectURL(url), 10000);
+    } else {
+      const text = await blob.text();
+      body.innerHTML = `<h3>${escapeHtml(name)}</h3>
+        <textarea id="editor" spellcheck="false">${escapeHtml(text)}</textarea>
+        <div class="actions"><button onclick="saveCloudFile('${id}')">💾 حفظ التعديل</button></div>`;
+    }
+    document.getElementById('modal').classList.add('open');
+  } catch(e) { log('err', '❌ ' + e.message); }
+}
+
+async function saveCloudFile(id) {
+  try {
+    const content = document.getElementById('editor').value;
+    log('info', `💾 جاري الحفظ...`);
+    const form = new FormData();
+    form.append('file', new Blob([content], { type: 'text/plain' }));
+    await cloudApi(`/upload/drive/v3/files/${id}?uploadType=media`, {
+      method: 'PATCH',
+      body: form
+    });
+    log('ok', `✅ تم الحفظ.`);
+    closeModal();
+  } catch(e) { log('err', '❌ ' + e.message); }
+}
+
+// ===== Sync Functions =====
+async function cloudToGitHub(fileId, fileName) {
+  if(!state.connected) return alert('اتصل بـ GitHub أولاً');
+  try {
+    log('info', `⬇️ سحب ${fileName} من السحابة...`);
+    const res = await cloudApi(`/drive/v3/files/${fileId}?alt=media`);
+    const blob = await res.blob();
+    const file = new File([blob], fileName, {type: blob.type});
+    log('ok', `✅ تم التحميل. جاري الرفع لـ GitHub...`);
+    startUpload([{ path: fileName, file: file }]);
+  } catch (e) {
+    log('err', '❌ ' + e.message);
+  }
+}
+
+async function uploadLocalToCloud() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = true;
+  input.onchange = async (e) => {
+    const files = Array.from(e.target.files);
+    const currentFolderId = state.currentCloudPath[state.currentCloudPath.length-1].id;
+    for (let f of files) {
+      try {
+        log('info', `⬆️ رفع ${f.name} للسحابة...`);
+        const metadata = { name: f.name, parents: [currentFolderId] };
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', f);
+        await cloudApi('/upload/drive/v3/files?uploadType=multipart', { method: 'POST', body: form });
+        log('ok', `✅ تم رفع ${f.name}`);
+      } catch (err) {
+        log('err', '❌ ' + err.message);
+      }
+    }
+    loadCloud(currentFolderId);
+  };
+  input.click();
+}
+
+// ===== Common Rendering =====
+function buildNestedTree(flatData) {
+  const root = { children: {} };
+  flatData.forEach(item => {
+    if (item.type !== 'blob') return; 
+    const parts = item.path.split('/');
+    let current = root;
+    parts.forEach((part, index) => {
+      const isLast = index === parts.length - 1;
+      if (!current.children[part]) {
+        current.children[part] = {
+          name: part,
+          path: parts.slice(0, index + 1).join('/'),
+          type: isLast ? 'file' : 'folder',
+          children: {}
+        };
+      }
+      if (!isLast) current = current.children[part];
+    });
+  });
+  return root.children;
+}
+
+function renderNodes(nodes, parentEl) {
+  const sortedKeys = Object.keys(nodes).sort((a, b) => {
+    const aType = nodes[a].type;
+    const bType = nodes[b].type;
+    if (aType !== bType) return aType === 'folder' ? -1 : 1;
+    return a.localeCompare(b);
+  });
+
+  sortedKeys.forEach(key => {
+    const node = nodes[key];
+    const nodeEl = document.createElement('div');
+    nodeEl.className = 'tree-node';
+
+    const row = document.createElement('div');
+    row.className = 'tree-row';
+
+    const left = document.createElement('div');
+    left.className = 'tree-left';
+
+    if (node.type === 'folder') {
+      const arrow = document.createElement('span');
+      arrow.className = 'tree-arrow';
+      arrow.textContent = '▶';
+      const icon = document.createElement('span');
+      icon.className = 'tree-icon';
+      icon.textContent = '📁';
+      const name = document.createElement('span');
+      name.className = 'tree-name';
+      name.textContent = node.name;
+
+      left.append(arrow, icon, name);
+      
+      const btns = document.createElement('div');
+      btns.className = 'tree-btns';
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'small secondary'; addBtn.textContent = '➕';
+      addBtn.onclick = (e) => { e.stopPropagation(); createGitHubItem(node.path); };
+
+      const renBtn = document.createElement('button');
+      renBtn.className = 'small secondary'; renBtn.textContent = '✏️';
+      renBtn.onclick = (e) => { e.stopPropagation(); renameGitHubItem(node.path, true); };
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'small danger'; delBtn.textContent = '🗑';
+      delBtn.onclick = (e) => { e.stopPropagation(); deleteGitHubFolder(node.path); };
+
+      btns.append(addBtn, renBtn, delBtn);
+      row.append(left, btns);
+
+      const childrenEl = document.createElement('div');
+      childrenEl.className = 'tree-children';
+
+      row.onclick = (e) => {
+        if (e.target.closest('button')) return;
+        arrow.classList.toggle('open');
+        childrenEl.classList.toggle('open');
+      };
+
+      renderNodes(node.children, childrenEl);
+      nodeEl.append(row, childrenEl);
+    } else {
+      const icon = document.createElement('span');
+      icon.className = 'tree-icon';
+      icon.textContent = '📄';
+      const name = document.createElement('span');
+      name.className = 'tree-name';
+      name.textContent = node.name;
+
+      left.append(icon, name);
+
+      const btns = document.createElement('div');
+      btns.className = 'tree-btns';
+
+      const v = document.createElement('button');
+      v.className = 'small secondary'; v.textContent = '👁';
+      v.onclick = (e) => { e.stopPropagation(); viewGitHubFile(node.path); };
+
+      const renBtn = document.createElement('button');
+      renBtn.className = 'small secondary'; renBtn.textContent = '✏️';
+      renBtn.onclick = (e) => { e.stopPropagation(); renameGitHubItem(node.path, false); };
+
+      const d = document.createElement('button');
+      d.className = 'small danger'; d.textContent = '🗑';
+      d.onclick = (e) => { e.stopPropagation(); deleteGitHubFile(node.path); };
+
+      btns.append(v, renBtn, d);
+      row.append(left, btns);
+      nodeEl.appendChild(row);
+    }
+
+    parentEl.appendChild(nodeEl);
+  });
+}
+
+// ===== GitHub CRUD =====
+async function createGitHubItem(basePath = '') {
+  let name = prompt(`إنشاء داخل [${basePath || 'الجذر'}]\nأدخل اسم ملف أو مجلد (ينتهي بـ /):`);
+  if(!name) return;
+  if (basePath && !basePath.endsWith('/')) basePath += '/';
+  const fullPath = basePath + name;
+  try {
+    log('info', `➕ جاري الإنشاء...`);
+    await gh(`/repos/${state.owner}/${state.repo}/contents/${encodePath(fullPath + (name.endsWith('/') ? '.gitkeep' : ''))}`, {
+      method: 'PUT',
+      body: { message: `إنشاء ${fullPath}`, content: utf8ToB64('') }
+    });
+    log('ok', `✅ تم الإنشاء.`);
+    await loadTree();
+  } catch (e) { log('err', '❌ ' + e.message); }
+}
+
+async function renameGitHubItem(oldPath, isFolder) {
+  const newPath = prompt(`تعديل المسار:\nمن: ${oldPath}\nإلى:`, oldPath);
+  if(!newPath || newPath === oldPath) return;
+  try {
+    let filesToMove = isFolder ? state.treeData.filter(x => x.type === 'blob' && x.path.startsWith(oldPath + '/')) : state.treeData.filter(x => x.path === oldPath && x.type === 'blob');
+    if (filesToMove.length === 0) return;
+    log('info', `✏️ جاري النقل...`);
+    for (let file of filesToMove) {
+      const contentData = await gh(`/repos/${state.owner}/${state.repo}/contents/${encodePath(file.path)}?ref=${state.branch}`);
+      const newFilePath = isFolder ? file.path.replace(oldPath, newPath) : newPath;
+      await gh(`/repos/${state.owner}/${state.repo}/contents/${encodePath(newFilePath)}`, {
+        method: 'PUT', body: { message: `نقل إلى ${newFilePath}`, content: contentData.content, branch: state.branch }
+      });
+      const ref = await gh(`/repos/${state.owner}/${state.repo}/git/ref/heads/${state.branch}`);
+      const commit = await gh(`/repos/${state.owner}/${state.repo}/git/commits/${ref.object.sha}`);
+      const delTree = await gh(`/repos/${state.owner}/${state.repo}/git/trees`, {
+        method:'POST', body:{ base_tree: commit.tree.sha, tree: [{ path: file.path, mode:'100644', type:'blob', sha:null }] }
+      });
+      const delCommit = await gh(`/repos/${state.owner}/${state.repo}/git/commits`, {
+        method:'POST', body:{ message:`حذف ${file.path}`, tree: delTree.sha, parents:[ref.object.sha] }
+      });
+      await gh(`/repos/${state.owner}/${state.repo}/git/refs/heads/${state.branch}`, { method:'PATCH', body:{ sha: delCommit.sha, force:true } });
+    }
+    log('ok', `✅ تم النقل.`);
+    await loadTree();
+  } catch (e) { log('err', '❌ ' + e.message); }
+}
+
+async function deleteGitHubFolder(folderPath) {
+  if(!confirm(`حذف المجلد [${folderPath}] بالكامل؟`)) return;
+  try {
+    const files = state.treeData.filter(x => x.type === 'blob' && x.path.startsWith(folderPath + '/'));
+    if(files.length === 0) return;
+    log('info', `🗑 جاري الحذف...`);
+    const ref = await gh(`/repos/${state.owner}/${state.repo}/git/ref/heads/${state.branch}`);
+    const baseSha = ref.object.sha;
+    const baseCommit = await gh(`/repos/${state.owner}/${state.repo}/git/commits/${baseSha}`);
+    const treePayload = files.map(f => ({ path: f.path, mode: '100644', type: 'blob', sha: null }));
+    const tree = await gh(`/repos/${state.owner}/${state.repo}/git/trees`, { method:'POST', body:{ base_tree: baseCommit.tree.sha, tree: treePayload } });
+    const commit = await gh(`/repos/${state.owner}/${state.repo}/git/commits`, { method:'POST', body:{ message:`حذف ${folderPath}`, tree: tree.sha, parents:[baseSha] } });
+    await gh(`/repos/${state.owner}/${state.repo}/git/refs/heads/${state.branch}`, { method:'PATCH', body:{ sha: commit.sha, force:true } });
+    log('ok', `✅ تم الحذف.`);
+    await loadTree();
+  } catch (e) { log('err', '❌ ' + e.message); }
+}
+
+async function viewGitHubFile(path){
+  try{
+    const data = await gh(`/repos/${state.owner}/${state.repo}/contents/${encodePath(path)}?ref=${state.branch}`);
+    const ext = path.split('.').pop().toLowerCase();
+    const isImg = ['png','jpg','jpeg','gif','webp','bmp','ico','svg'].includes(ext);
+    const body = document.getElementById('modal-body');
+    if(isImg){
+      body.innerHTML = `<h3>${escapeHtml(path)}</h3><img src="data:image/${ext==='svg'?'svg+xml':ext};base64,${data.content.replace(/\s/g,'')}" alt="">`;
+    }else{
+      const text = new TextDecoder('utf-8').decode(Uint8Array.from(atob(data.content.replace(/\s/g,'')), c=>c.charCodeAt(0)));
+      body.innerHTML = `<h3>${escapeHtml(path)}</h3>
+        <textarea id="editor" spellcheck="false">${escapeHtml(text)}</textarea>
+        <div class="actions"><button onclick="saveGitHubFile('${escapeHtml(path).replace(/'/g,'&#39;')}')">💾 حفظ التعديل</button></div>`;
+    }
+    document.getElementById('modal').classList.add('open');
+  }catch(e){ log('err','❌ فتح: '+e.message); }
+}
+
+async function saveGitHubFile(path){
+  try{
+    const content = document.getElementById('editor').value;
+    const current = await gh(`/repos/${state.owner}/${state.repo}/contents/${encodePath(path)}?ref=${state.branch}`);
+    await gh(`/repos/${state.owner}/${state.repo}/contents/${encodePath(path)}`, {
+      method:'PUT', body:{ message:`تعديل ${path}`, content: utf8ToB64(content), sha: current.sha, branch: state.branch }
+    });
+    log('ok', `✅ تم حفظ ${path}`);
+    closeModal();
+    await loadTree();
+  }catch(e){ log('err','❌ حفظ: '+e.message); }
+}
+
+async function deleteGitHubFile(path){
+  if(!confirm(`حذف ${path} من GitHub؟`)) return;
+  try{
+    const ref = await gh(`/repos/${state.owner}/${state.repo}/git/ref/heads/${state.branch}`);
+    const baseSha = ref.object.sha;
+    const baseCommit = await gh(`/repos/${state.owner}/${state.repo}/git/commits/${baseSha}`);
+    const tree = await gh(`/repos/${state.owner}/${state.repo}/git/trees`, { method:'POST', body:{ base_tree: baseCommit.tree.sha, tree: [{ path, mode:'100644', type:'blob', sha:null }] } });
+    const commit = await gh(`/repos/${state.owner}/${state.repo}/git/commits`, { method:'POST', body:{ message:`حذف ${path}`, tree: tree.sha, parents:[baseSha] } });
+    await gh(`/repos/${state.owner}/${state.repo}/git/refs/heads/${state.branch}`, { method:'PATCH', body:{ sha: commit.sha, force:true } });
+    log('ok', `✅ تم حذف ${path}`);
+    await loadTree();
+  }catch(e){ log('err','❌ حذف: '+e.message); }
+}
+
+// ===== Upload Logic =====
+async function startUpload(files){
+  if(!state.connected){ log('err','❌ اتصل بـ GitHub أولاً'); return; }
+  try{
+    const msg = document.getElementById('commitmsg').value.trim() || 'رفع عبر GitFlash';
+    await uploadFiles(files, msg);
+  }catch(e){ log('err','❌ '+e.message); }
+}
+
+async function uploadFiles(files, message){
+  if(!state.connected) throw new Error('اتصل بـ GitHub أولاً');
+  if(files.length===0) throw new Error('لا ملفات');
+
+  const repoPath = `/repos/${state.owner}/${state.repo}`;
+  const rootPath = document.getElementById('rootpath').value.trim().replace(/^\/+|\/+$/g,'');
+  
+  let concurrencyVal = parseInt(document.getElementById('concurrency').value);
+  if (isNaN(concurrencyVal) || concurrencyVal < 1) concurrencyVal = 15;
+  if (concurrencyVal > 30) concurrencyVal = 30;
+
+  const totalSize = files.reduce((s,f)=>s+f.file.size,0);
+  log('info', `📦 ${files.length} ملف (${formatSize(totalSize)}) - رفع ${concurrencyVal} في المرة`);
+
+  async function getBranchBase() {
+    let baseSha = null, baseTreeSha = null;
+    try{
+      const ref = await gh(`${repoPath}/git/ref/heads/${state.branch}`);
+      baseSha = ref.object.sha;
+    }catch{
+      try{
+        const info = await gh(repoPath);
+        if(info.default_branch && info.default_branch !== state.branch){
+          const ref = await gh(`${repoPath}/git/ref/heads/${info.default_branch}`);
+          baseSha = ref.object.sha;
+          log('info', `ℹ️ الفرع ${state.branch} غير موجود، تفريع من ${info.default_branch}`);
+        }
+      }catch{}
+    }
+    if(baseSha){
+      const commit = await gh(`${repoPath}/git/commits/${baseSha}`);
+      baseTreeSha = commit.tree.sha;
+    }
+    return { baseSha, baseTreeSha };
+  }
+
+  let { baseSha, baseTreeSha } = await getBranchBase();
+
+  log('info', '📤 رفع الملفات (blobs) بالتوازي ...');
+  const bar = document.getElementById('progressbar');
+  bar.style.background = 'linear-gradient(90deg,var(--blue),var(--accent2))';
+  let done = 0;
+  
+  const blobEntries = await parallelMap(files, concurrencyVal, async (f)=>{
+    const b64 = await fileToBase64(f.file);
+    const blob = await gh(`${repoPath}/git/blobs`, { method:'POST', body:{ content:b64, encoding:'base64' } });
+    done++;
+    bar.style.width = Math.round(done/files.length*60) + '%';
+    if(done % 5 === 0 || done === files.length)
+      log('info', `  ${done}/${files.length} ...`);
+    return { path: rootPath ? `${rootPath}/${f.path}` : f.path, mode:'100644', type:'blob', sha: blob.sha };
+  });
+  log('ok', `✅ تم إنشاء ${files.length} blob`);
+
+  log('info', '🌳 إنشاء tree ...');
+  bar.style.width = '70%';
+  const treeBody = { tree: blobEntries };
+  if(baseTreeSha) treeBody.base_tree = baseTreeSha;
+  
+  let tree;
+  try {
+    tree = await gh(`${repoPath}/git/trees`, { method:'POST', body: treeBody });
+  } catch (e) {
+    if (e.message.includes('404')) {
+       log('warn', '⚠️ خطأ 404: جيت هاب رفض إنشاء الشجرة. السبب الأكثر شيوعاً هو وجود ملفات داخل .github/workflows وتوكنك لا يملك صلاحية workflow.');
+       log('warn', '⏳ جاري محاولة الرفع مرة أخرى بعد تجاهل مجلد .github لحل المشكلة تلقائياً...');
+       
+       const filteredBlobEntries = blobEntries.filter(f => !f.path.includes('.github/'));
+       
+       if (filteredBlobEntries.length === 0) {
+           throw new Error('جميع الملفات كانت داخل .github ولا يمكن رفعها بدون صلاحية workflow.');
+       }
+       
+       const newTreeBody = { tree: filteredBlobEntries };
+       if(baseTreeSha) newTreeBody.base_tree = baseTreeSha;
+       tree = await gh(`${repoPath}/git/trees`, { method:'POST', body: newTreeBody });
+       log('ok', '✅ تم إنشاء الشجرة بنجاح بعد تجاهل ملفات الـ workflow.');
+    } else {
+       throw e;
+    }
+  }
+
+  if (baseTreeSha && tree.sha === baseTreeSha) {
+    log('ok', `ℹ️ الملفات مطابقة تماماً للموجود على GitHub. لا حاجة لإنشاء commit جديد.`);
+    bar.style.width = '100%';
+    bar.style.background = 'var(--accent2)';
+    setTimeout(()=>{ bar.style.width='0%'; bar.style.background = 'linear-gradient(90deg,var(--blue),var(--accent2))'; }, 3000);
+    return;
+  }
+
+  log('info', '📝 إنشاء commit ...');
+  bar.style.width = '85%';
+  const commit = await gh(`${repoPath}/git/commits`, {
+    method:'POST',
+    body:{ message, tree: tree.sha, parents: baseSha ? [baseSha] : [] }
+  });
+
+  let updateSuccess = false;
+  let retryCount = 0;
+  const maxRetries = 3;
+
+  while (!updateSuccess && retryCount < maxRetries) {
+    try {
+      if(baseSha){
+        await gh(`${repoPath}/git/refs/heads/${state.branch}`, { method:'PATCH', body:{ sha: commit.sha, force: true } });
+      }else{
+        await gh(`${repoPath}/git/refs`, { method:'POST', body:{ ref:`refs/heads/${state.branch}`, sha: commit.sha } });
+      }
+      updateSuccess = true;
+    } catch (err) {
+      if (err.message.includes('422') || err.message.includes('fast forward')) {
+        retryCount++;
+        log('warn', `⚠️ خطأ 422 (ليس fast-forward). إعادة المحاولة ${retryCount}/${maxRetries}...`);
+        const latest = await getBranchBase();
+        baseSha = latest.baseSha;
+        baseTreeSha = latest.baseTreeSha;
+        const newCommit = await gh(`${repoPath}/git/commits`, { method:'POST', body:{ message, tree: tree.sha, parents: baseSha ? [baseSha] : [] } });
+        commit.sha = newCommit.sha;
+        await new Promise(r => setTimeout(r, 2000));
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  if (!updateSuccess) throw new Error('فشل تحديث الفرع بعد عدة محاولات. يرجى المحاولة مرة أخرى.');
+
+  bar.style.width = '100%';
+  bar.style.background = 'var(--accent2)';
+  log('ok', `🎉🎉 اكتمل الرفع بنجاح! تم رفع ${files.length} ملف.`);
+  
+  setTimeout(()=>{
+    bar.style.width='0%';
+    bar.style.background = 'linear-gradient(90deg,var(--blue),var(--accent2))';
+  }, 5000);
+  
+  await loadTree();
+}
+
+// ===== Drag and Drop & Download ZIP =====
+const dz = document.getElementById('dropzone');
+dz.addEventListener('click', ()=>document.getElementById('folderpicker').click());
+dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', ()=>dz.classList.remove('over'));
+dz.addEventListener('drop', async e=>{
+  e.preventDefault(); dz.classList.remove('over');
+  const items = e.dataTransfer.items;
+  if(!items) return;
+  const files = await readDroppedItems(items);
+  if(files.length) startUpload(files);
+});
+
+async function readDroppedItems(items){
+  const stripRoot = document.getElementById('strip-root').checked;
+  const entries = [];
+  for(const item of items){
+    const entry = item.webkitGetAsEntry?.();
+    if(entry) entries.push(entry);
+  }
+  const files = [];
+  async function walk(entry, path){
+    if(entry.isFile){
+      const file = await new Promise((res,rej)=>entry.file(res,rej));
+      let fullPath = path + entry.name;
+      if (stripRoot && entries.length === 1 && entries[0].isDirectory) {
+        const parts = fullPath.split('/');
+        if (parts.length > 1) { parts.shift(); fullPath = parts.join('/'); }
+      }
+      files.push({ path: fullPath, file });
+    }else if(entry.isDirectory){
+      const reader = entry.createReader();
+      const all = [];
+      while(true){
+        const batch = await new Promise((res,rej)=>reader.readEntries(res,rej));
+        if(batch.length===0) break;
+        all.push(...batch);
+      }
+      for(const e of all) await walk(e, path + entry.name + '/');
+    }
+  }
+  for(const e of entries) await walk(e, '');
+  return files;
+}
+
+document.getElementById('filepicker').addEventListener('change', e=>{
+  const files = Array.from(e.target.files).map(f=>({ path: f.name, file: f }));
+  if(files.length) startUpload(files);
+  e.target.value = '';
+});
+
+document.getElementById('folderpicker').addEventListener('change', e=>{
+  const stripRoot = document.getElementById('strip-root').checked;
+  const files = Array.from(e.target.files).map(f=>{
+    let path = f.webkitRelativePath || f.name;
+    if (stripRoot && path.includes('/')) path = path.substring(path.indexOf('/') + 1);
+    return { path, file: f };
+  });
+  if(files.length) startUpload(files);
+  e.target.value = '';
+});
+
+function downloadZip(){
+  if(!state.connected) return alert('اتصل بـ GitHub أولاً');
+  const host = document.getElementById('host').value.replace(/^https?:\/\//,'').replace(/\/+$/,'');
+  const url = `https://${host}/${state.owner}/${state.repo}/archive/refs/heads/${state.branch}.zip`;
+  window.open(url, '_blank');
+}
+</script>
+</body>
+</html>
