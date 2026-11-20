@@ -1,0 +1,8 @@
+{
+  "appId": "io.github.bakil309275.alaisai",
+  "appName": "العيسائي برو",
+  "webDir": "www",
+  "server": { "androidScheme": "https" },
+  "android": { "allowMixedContent": false, "webContentsDebuggingEnabled": false },
+  "backgroundColor": "#0b1124"
+}
