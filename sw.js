@@ -1,6 +1,6 @@
 /* Alaisai OS - Service Worker
  * غيّر VERSION عند كل إصدار ليصل التحديث للمستخدمين. */
-const VERSION = '2.13.0';
+const VERSION = '2.14.0';
 const BUILD = 'dev'; // يستبدله سير العمل برمز الإيداع عند النشر ليصل التحديث للجميع
 const CACHE = `alaisai-${VERSION}-${BUILD}`;
 const CORE = [
@@ -34,6 +34,7 @@ const CORE = [
   './src/gitflash.js',
   './src/explorer.js',
   './src/admin.js',
+  './src/native-update.js',
   './src/main.js',
   './assets/images/icon-192.png',
   './assets/images/icon-512.png',
@@ -54,7 +55,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+    await Promise.all(keys.filter((k) => k !== CACHE && k !== 'alaisai-ota').map((k) => caches.delete(k)));
     await self.clients.claim();
   })());
 });
@@ -73,6 +74,21 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
+  // تطبيق أندرويد المغلَّف (Capacitor على https://localhost): التحديثات المنزَّلة أولاً، وقناة المنصة من الموقع مباشرة
+  const NATIVE = location.hostname === 'localhost' && location.protocol === 'https:';
+  if (NATIVE && url.origin === location.origin) {
+    const REMOTE = 'https://bakil309275-cell.github.io/Alaisai_OS_Pro/';
+    event.respondWith((async () => {
+      if (/\/(control\/channel\.json|catalog\/index\.json)$/.test(url.pathname)) {
+        try { const r = await fetch(REMOTE + url.pathname.replace(/^\//, ''), { cache: 'no-store' }); if (r.ok) { (await caches.open(CACHE)).put(req, r.clone()); return r; } } catch (_) { /* نسقط للمضمَّن */ }
+        return (await caches.match(req)) || fetch(req);
+      }
+      const o = await caches.open('alaisai-ota'), p = req.mode === 'navigate' ? new Request(new URL('./', location.origin + '/')) : req;
+      const hit = await o.match(p, { ignoreSearch: true }); if (hit) return hit;
+      return req.mode === 'navigate' ? fetch(req) : staleWhileRevalidate(req, CACHE);
+    })());
+    return;
+  }
   if (url.origin !== location.origin) return; // باقي الطلبات الخارجية (المتصفح المدمج...) لا نتدخل فيها
 
   // التنقل: الشبكة أولاً ثم الكاش (لتصل التحديثات)، ومنه صفحة index دون اتصال
