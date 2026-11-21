@@ -184,8 +184,9 @@ await t('رفع ملف كبير على D1 قطعاً ثم نشره وتنزيل�
   const done = await call('/v1/files/' + init.j.id + '/done', { method: 'POST', auth: U.t }); assert.equal(done.s, 200);
   const att = { t: 'file', id: init.j.id }; const other = await reg('up2@x.com', 'آخر');
   assert.equal((await call('/v1/posts', { method: 'POST', auth: other.t, body: { media: [att], scopes: ['platform'] } })).s, 400, 'مرفق غيري يُتجاهل فيصبح المنشور فارغاً');
-  const pr = await call('/v1/posts', { method: 'POST', auth: U.t, body: { text: 'فيديو', media: [att], scopes: ['platform'] } }); assert.equal(pr.s, 200);
-  const feed = (await call('/v1/posts?author=' + U.id)).j.posts[0]; assert.equal(feed.media[0].t, 'file'); assert.equal(feed.media[0].name, 'عرض المنتجات.mp4'); assert.equal(feed.media[0].size, 600000);
+  const pst = 'data:image/jpeg;base64,' + 'A'.repeat(400);
+  const pr = await call('/v1/posts', { method: 'POST', auth: U.t, body: { text: 'فيديو', media: [Object.assign({ poster: pst, ar: 0.563 }, att)], scopes: ['platform'] } }); assert.equal(pr.s, 200);
+  const feed = (await call('/v1/posts?author=' + U.id)).j.posts[0]; assert.equal(feed.media[0].t, 'file'); assert.equal(feed.media[0].name, 'عرض المنتجات.mp4'); assert.equal(feed.media[0].size, 600000); assert.equal(feed.media[0].poster, pst); assert.equal(feed.media[0].ar, 0.563);
   const meta = await call('/v1/files/' + init.j.id + '?meta=1'); assert.equal(meta.j.chunks, 3);
   const parts = []; for (let n = 0; n < 3; n++) parts.push(Buffer.from(await (await raw('/v1/files/' + init.j.id + '/' + n)).arrayBuffer()));
   assert.ok(Buffer.concat(parts).equals(Buffer.from(data)), 'المحتوى مطابق');
@@ -197,6 +198,12 @@ await t('رفع ملف كبير على D1 قطعاً ثم نشره وتنزيل�
 await t('رفع R2: ملف حتى 100MB، بث Range، تنزيل آمن للأنواع غير المعروفة، الحصة', async () => {
   const E2 = Object.assign({}, env, { FILES: mkR2() }); const call2 = async (path, o = {}) => { const r = await W.fetch(new Request('https://w.test' + path, { method: o.method || 'GET', body: o.body, headers: Object.assign(o.auth ? { authorization: 'Bearer ' + o.auth } : {}, o.headers || {}) }), E2); return r; };
   const U = await reg('r2a@x.com', 'مصور'); const json = (o) => JSON.stringify(o);
+  let r0 = await call2('/v1/files', { method: 'POST', auth: U.t, body: json({ name: 'a.zip', size: 100 }) }); const j0 = await r0.json(); assert.equal(j0.mode, 'd1', 'R2 مربوط لكن غير مفعّل = D1');
+  await call2('/v1/files/' + j0.id, { method: 'DELETE', auth: U.t });
+  assert.equal((await call2('/v1/admin/storage', { method: 'POST', auth: U.t, body: json({ on: true }) })).status, 401);
+  const st0 = await (await call2('/v1/admin/storage', { auth: env.OWNER_KEY })).json(); assert.equal(st0.bound, true); assert.equal(st0.on, false);
+  assert.equal((await (await call2('/v1/admin/storage', { method: 'POST', auth: env.OWNER_KEY, body: json({ on: true }) })).json()).on, true);
+  assert.equal((await call(' /v1/admin/storage'.trim(), { method: 'POST', auth: env.OWNER_KEY, body: { on: true } })).s, 400, 'بلا ربط R2 لا يُفعَّل');
   let r = await call2('/v1/files', { method: 'POST', auth: U.t, body: json({ name: 'huge.zip', size: 101 * 1048576 }) }); assert.equal(r.status, 413);
   const buf = Buffer.alloc(3000, 7); r = await call2('/v1/files', { method: 'POST', auth: U.t, body: json({ name: 'تقرير.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', size: buf.length }) }); const init = await r.json(); assert.equal(init.mode, 'r2');
   r = await call2('/v1/files/' + init.id + '/up', { method: 'POST', auth: U.t, body: buf, headers: { 'content-length': '5' } }); assert.equal(r.status, 400, 'الحجم لا يطابق');

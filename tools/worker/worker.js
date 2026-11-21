@@ -26,6 +26,7 @@ const MIGRATE = [
   "ALTER TABLE posts ADD COLUMN scopes TEXT DEFAULT ',platform,'",
 ];
 const TABLES = [
+  'CREATE TABLE IF NOT EXISTS cfg (k TEXT PRIMARY KEY, v TEXT)',
   'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, ident TEXT UNIQUE, name TEXT, salt TEXT, hash TEXT, ts INTEGER, banned INTEGER DEFAULT 0, did TEXT)',
   'CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, uid INTEGER, ts INTEGER, text TEXT, link TEXT, media TEXT, hidden INTEGER DEFAULT 0, pin INTEGER DEFAULT 0, official INTEGER DEFAULT 0)',
   'CREATE INDEX IF NOT EXISTS posts_ts ON posts (hidden, pin, ts)',
@@ -69,10 +70,12 @@ function media(list) {
   } return out;
 }
 /** يضيف مرفقات الملفات المرفوعة (بعد التحقق أنها لصاحب المنشور ومكتملة وغير مرتبطة بمنشور) */
+/** تفعيل R2 بزر المالك: يلزم ربط الحاوية FILES في Cloudflare ثم تفعيلها من «أدوات المالك»؛ الملفات القديمة تبقى حيث رُفعت */
+const r2on = async (env) => !!env.FILES && ((await one(env, "SELECT v FROM cfg WHERE k = 'r2'")) || {}).v === '1';
 async function withFiles(env, list, uid, out) {
   for (const m of Array.isArray(list) ? list : []) {
     if (out.length >= 4) break; if (!m || m.t !== 'file' || !FID.test(m.id || '')) continue;
-    const f = await one(env, 'SELECT id, name, type, size, mode FROM files WHERE id = ? AND uid = ? AND done = 1 AND post = 0', m.id, uid); if (f) out.push({ t: 'file', id: f.id, name: f.name, type: f.type, size: f.size, mode: f.mode });
+    const f = await one(env, 'SELECT id, name, type, size, mode FROM files WHERE id = ? AND uid = ? AND done = 1 AND post = 0', m.id, uid); if (f) { const o = { t: 'file', id: f.id, name: f.name, type: f.type, size: f.size, mode: f.mode }; if (/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]{100,45000}$/.test(m.poster || '')) o.poster = m.poster; if (+m.ar >= 0.2 && +m.ar <= 5) o.ar = Math.round(+m.ar * 1000) / 1000; out.push(o); }
   } return out;
 }
 const dropFiles = async (env, post) => {
@@ -212,7 +215,7 @@ async function platform(req, env, p, u, c) {
   // ----- الملفات: init → (قطع أو رفع واحد R2) → done -----
   if (p === '/v1/files' && m === 'POST') {
     const me = await who(req, env, c); if (!me) return J({ error: 'سجّل الدخول أولاً' }, 401);
-    const b = await body(req, 4000); if (!b) return J({ error: 'bad' }, 400); const mode = env.FILES ? 'r2' : 'd1', size = Math.floor(+b.size);
+    const b = await body(req, 4000); if (!b) return J({ error: 'bad' }, 400); const mode = (await r2on(env)) ? 'r2' : 'd1', size = Math.floor(+b.size);
     const name = str(b.name, 120).replace(/[\\\\/:*?"<>|\x00-\x1f]/g, '_') || 'file', type = /^[\w.+-]{1,60}\/[\w.+-]{1,80}$/.test(b.type || '') ? b.type : 'application/octet-stream';
     if (BAD_EXT.test(name)) return J({ error: 'نوع الملف غير مسموح (ملفات تنفيذية أو صفحات ويب)' }, 400);
     if (!(size > 0) || size > LIM[mode]) return J({ error: 'الحد الأقصى للملف ' + Math.round(LIM[mode] / 1048576) + ' ميغابايت' + (mode === 'd1' ? ' (يزيد بربط R2)' : '') }, 413);
@@ -448,6 +451,10 @@ export default {
         if (p === '/v1/inbox' && req.method === 'GET') return J({ items: await rows(env, 'SELECT id, ts, kind, name, phone, subject, text, addon FROM inbox ORDER BY id DESC LIMIT 200') });
         const m = /^\/v1\/inbox\/(\d{1,12})$/.exec(p);
         if (m && req.method === 'DELETE') { await q(env, 'DELETE FROM inbox WHERE id = ?', +m[1]).run(); return J({ ok: true }); }
+        if (p === '/v1/admin/storage') {
+          if (req.method === 'POST') { const b = await body(req, 500); if (!b || typeof b.on !== 'boolean') return J({ error: 'bad' }, 400); if (b.on && !env.FILES) return J({ error: 'لم تُربط حاوية R2 باسم FILES في Cloudflare بعد' }, 400); await q(env, "INSERT OR REPLACE INTO cfg (k, v) VALUES ('r2', ?)", b.on ? '1' : '0').run(); }
+          return J({ bound: !!env.FILES, on: await r2on(env), limitMB: { d1: LIM.d1 / 1048576, r2: LIM.r2 / 1048576 } });
+        }
         if (p === '/v1/admin/stats') {
           const day = (t) => new Date(t).toISOString().slice(0, 10), byDay = {};
           (await rows(env, 'SELECT first FROM devices WHERE first > ?', now - 14 * 864e5)).forEach((r) => { byDay[day(r.first)] = (byDay[day(r.first)] || 0) + 1; });
