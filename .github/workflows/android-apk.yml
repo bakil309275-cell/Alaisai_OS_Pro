@@ -1,11 +1,19 @@
-# يبني تطبيق أندرويد (APK) من ملفات الموقع نفسها دون حاسوب: Actions ← "Android APK" ← Run workflow.
-# النتيجة: ملف APK في قسم Artifacts أسفل صفحة التشغيل (للتجربة والتثبيت المباشر).
-# التطبيق يعمل من ملفاته داخل الجهاز (ليس من المتصفح) ويتصل بالخادم مباشرة عند وجود الإنترنت.
+# يبني تطبيق أندرويد مستقلاً عن المتصفح (Capacitor) من ملفات الموقع نفسها دون حاسوب:
+# Actions ← "Android APK" ← Run workflow. النتيجة في Artifacts أسفل صفحة التشغيل:
+#  • دون أسرار: APK تجريبي (debug) للتثبيت المباشر.
+#  • مع الأسرار ANDROID_KEYSTORE_B64 و ANDROID_KEYSTORE_PASSWORD و ANDROID_KEY_ALIAS و ANDROID_KEY_PASSWORD:
+#    APK + AAB موقّعان بمفتاحك (AAB لـ Google Play). استعمل نفس مفتاح تطبيقك الحالي ليقبله المتجر كتحديث.
+# التطبيق يحمل ملفاته داخله (لا شريط متصفح ولا كاش متصفح) ويتحدّث وحده من المستودع عبر release-manifest.json.
 name: Android APK
 on: workflow_dispatch
 jobs:
   apk:
     runs-on: ubuntu-latest
+    env:
+      KS_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+      KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -15,15 +23,46 @@ jobs:
       - name: تجهيز ملفات الويب داخل الغلاف
         run: |
           mkdir -p native/www
-          cp -r index.html 404.html privacy.html terms.html manifest.json sw.js favicon.ico assets src catalog control native/www/
-      - name: بناء المشروع
+          cp -r index.html 404.html privacy.html terms.html manifest.json sw.js favicon.ico release-manifest.json assets src catalog control addons promo store native/www/ 2>/dev/null || true
+          test -f native/www/index.html
+      - name: إنشاء مشروع أندرويد
         working-directory: native
         run: |
           npm install --no-audit --no-fund
           npx cap add android
           npx cap sync android
-          cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+      - name: الأيقونة ورقم الإصدار
+        run: |
+          VN=$(grep -o "APP_VERSION = '[^']*'" src/version.js | grep -o "[0-9][0-9.]*")
+          G=native/android/app/build.gradle
+          sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/; s/versionName \"[^\"]*\"/versionName \"$VN\"/" $G
+          R=native/android/app/src/main/res
+          echo '<?xml version="1.0" encoding="utf-8"?><resources><color name="ic_launcher_background">#0b1124</color></resources>' > $R/values/ic_launcher_background.xml
+          for d in mdpi:48:108 hdpi:72:162 xhdpi:96:216 xxhdpi:144:324 xxxhdpi:192:432; do
+            IFS=: read n s f <<< "$d"
+            convert assets/images/icon-512.png -resize ${s}x${s} $R/mipmap-$n/ic_launcher.png
+            convert assets/images/icon-512.png -resize ${s}x${s} $R/mipmap-$n/ic_launcher_round.png
+            convert assets/images/icon-512.png -resize $((f*62/100))x$((f*62/100)) -background none -gravity center -extent ${f}x${f} $R/mipmap-$n/ic_launcher_foreground.png
+          done
+      - name: بناء APK/AAB
+        working-directory: native/android
+        run: |
+          chmod +x gradlew
+          mkdir -p ../out
+          if [ -z "$KS_B64" ]; then
+            ./gradlew assembleDebug --no-daemon
+            cp app/build/outputs/apk/debug/*.apk ../out/alaisai-debug.apk
+          else
+            ./gradlew assembleRelease bundleRelease --no-daemon
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+            "$BT/zipalign" -p -f 4 app/build/outputs/apk/release/app-release-unsigned.apk "$RUNNER_TEMP/aligned.apk"
+            "$BT/apksigner" sign --ks "$RUNNER_TEMP/release.jks" --ks-key-alias "$KEY_ALIAS" --ks-pass env:KS_PASS --key-pass env:KEY_PASS --out ../out/alaisai-release.apk "$RUNNER_TEMP/aligned.apk"
+            jarsigner -keystore "$RUNNER_TEMP/release.jks" -storepass:env KS_PASS -keypass:env KEY_PASS -signedjar ../out/alaisai-release.aab app/build/outputs/bundle/release/app-release.aab "$KEY_ALIAS"
+            "$BT/apksigner" verify --print-certs ../out/alaisai-release.apk | grep -i "SHA-256" || true
+            rm -f "$RUNNER_TEMP/release.jks"
+          fi
       - uses: actions/upload-artifact@v4
         with:
-          name: alaisai-apk
-          path: native/android/app/build/outputs/apk/debug/*.apk
+          name: alaisai-android
+          path: native/out/*
