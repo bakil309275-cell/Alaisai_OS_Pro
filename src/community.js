@@ -81,10 +81,45 @@
       if (!/^[0-9a-f]{32}$/.test(m.id || '')) return '';
       const k = this.fkind(m), ic = { img: '🖼', vid: '🎬', aud: '🎵', pdf: '📄', file: '📎' }[k], u = this.base() + '/v1/files/' + m.id;
       const dir = m.mode === 'r2' && this.base();
-      if (dir && k === 'vid') return `<video class="comm-vid" controls preload="metadata" playsinline src="${E(u)}"></video>`;
+      if (k === 'vid') return `<div class="comm-vp" role="button" tabindex="0" aria-label="تشغيل الفيديو ${E(m.name)}" data-c="fplay" data-id="${E(m.id)}" data-mode="${E(m.mode)}" data-size="${+m.size || 0}" data-type="${E(m.type)}" data-name="${E(m.name)}" style="${m.ar ? 'aspect-ratio:' + (+m.ar) + ';' : 'aspect-ratio:9/16;'}">${/^data:image\/jpeg;base64,/.test(m.poster || '') ? `<img alt="" src="${E(m.poster)}">` : '<span class="comm-vph" aria-hidden="true">🎬</span>'}<span class="comm-play" aria-hidden="true">▶</span><small class="comm-vsz">${this.fsize(m.size)}</small></div>`;
       if (dir && k === 'img') return `<img class="comm-img" loading="lazy" decoding="async" alt="${E(m.name)}" src="${E(u)}">`;
       if (dir && k === 'aud') return `<audio controls preload="none" src="${E(u)}" style="width:100%"></audio>`;
       return `<div class="comm-file" data-fid="${E(m.id)}"><span aria-hidden="true">${ic}</span><span class="grow"><b dir="auto">${E(m.name)}</b><small class="muted"> ${this.fsize(m.size)}</small></span>${k === 'file' || k === 'pdf' ? '' : `<button class="btn btn-sm" data-c="fview" data-id="${E(m.id)}">▶ عرض</button>`}<button class="btn btn-sm btn-primary" data-c="fdl" data-id="${E(m.id)}">⬇ تنزيل</button></div>`;
+    },
+    /** صورة غلاف مصغّرة للفيديو (JPEG صغير) وأبعاده، من الملف المحلي قبل الرفع */
+    posterOf(file) {
+      return new Promise((res) => {
+        const v = document.createElement('video'), url = URL.createObjectURL(file); let done = false;
+        const fin = (o) => { if (done) return; done = true; URL.revokeObjectURL(url); res(o); };
+        v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url; setTimeout(() => fin(null), 8000);
+        v.onerror = () => fin(null);
+        v.onloadeddata = () => { try { v.currentTime = Math.min(0.5, (v.duration || 1) / 4); } catch (_) { fin(null); } };
+        v.onseeked = () => { try { const w = Math.min(360, v.videoWidth), h = Math.round(w * v.videoHeight / v.videoWidth), c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(v, 0, 0, w, h); let q = 0.7, d = c.toDataURL('image/jpeg', q); while (d.length > 40000 && q > 0.2) { q -= 0.15; d = c.toDataURL('image/jpeg', q); } fin(d.length <= 44000 ? { poster: d, ar: Math.round(v.videoWidth / v.videoHeight * 1000) / 1000 } : { ar: Math.round(v.videoWidth / v.videoHeight * 1000) / 1000 }); } catch (_) { fin(null); } };
+      });
+    },
+    vcache: new Map(),
+    /** يشغّل فيديو بطاقة: مباشرة (R2) أو بتجميع القطع (D1)؛ muted للتشغيل التلقائي */
+    async vstart(el, auto) {
+      if (!el || el.dataset.busy || el.dataset.on) return; el.dataset.busy = '1'; const id = el.dataset.id, size = +el.dataset.size;
+      const lab = el.querySelector('.comm-vsz'); if (lab) lab.textContent = '⏳';
+      try {
+        let src = this.vcache.get(id);
+        if (!src) { if (el.dataset.mode === 'r2' && this.base()) src = this.base() + '/v1/files/' + id; else { const bl = await this.fetchFile(id, { mode: 'd1', chunks: Math.ceil(size / 262144), type: el.dataset.type }); src = URL.createObjectURL(bl); } this.vcache.set(id, src); }
+        if (!el.isConnected) return;
+        const v = document.createElement('video'); v.className = 'comm-vid'; v.playsInline = true; v.loop = true; v.muted = !!auto; v.controls = !auto; v.preload = 'auto'; v.src = src; v.dataset.id = id; v.setAttribute('aria-label', el.dataset.name || 'فيديو'); v.style.aspectRatio = el.style.aspectRatio;
+        v.addEventListener('click', () => { if (v.muted) { v.muted = false; v.controls = true; if (v.paused) v.play().catch(() => {}); } });
+        el.replaceWith(v); const pl = v.play(); if (pl) pl.catch(() => { v.controls = true; });
+      } catch (_) { UI.toast('تعذّر تحميل الفيديو', 'error'); if (lab) lab.textContent = this.fsize(size); }
+      delete el.dataset.busy;
+    },
+    /** تشغيل تلقائي صامت أثناء التمرير (يتوقف الباقي)، مثل الحالات وتيك توك */
+    vwatch() {
+      if (!('IntersectionObserver' in window)) return; if (this._vio) this._vio.disconnect();
+      const auto = (el) => el.dataset.mode === 'r2' || +el.dataset.size <= 3 * 1048576;
+      this._vio = new IntersectionObserver((es) => { for (const en of es) { const t = en.target;
+        if (t.tagName === 'VIDEO') { if (en.intersectionRatio < 0.4) { if (!t.paused) t.pause(); } else if (t.paused && t.muted) t.play().catch(() => {}); continue; }
+        if (en.intersectionRatio >= 0.5 && auto(t) && !(navigator.connection && navigator.connection.saveData)) { document.querySelectorAll('video.comm-vid').forEach((x) => { if (x !== t && !x.paused) x.pause(); }); this.vstart(t, true).then(() => { const v = document.querySelector('video.comm-vid[data-id="' + t.dataset.id + '"]'); if (v) this._vio.observe(v); }); } } }, { threshold: [0, 0.4, 0.5] });
+      document.querySelectorAll('.comm-vp, video.comm-vid[data-id]').forEach((x) => this._vio.observe(x));
     },
     /** يجلب ملفاً مرفوعاً كاملاً كـ Blob (قطعاً في وضع D1 أو دفعة واحدة في R2) */
     async fetchFile(id, meta) {
@@ -141,7 +176,7 @@
     render() {
       const b = document.getElementById('comm-body'); if (!b) return;
       const f = { feed: this.feedView, compose: this.composeView, sent: this.sentView, comments: this.commentsView, grp: this.grpView, chan: this.chanView, mine: this.mineView, me: this.meView, edit: this.editView, prof: this.profView, owner: this.ownerView }[this.view];
-      f.call(this, b);
+      f.call(this, b); this.vwatch();
     },
     /** الشريط العلوي: ثابت لا يختفي مع تمرير المنشورات، ويُمرَّر أفقياً (دائرة الحساب، حقل التفكير، بحث، ثم المرشِّحات) */
     bar() {
@@ -191,7 +226,7 @@
       b.innerHTML = `<form class="comm-form" data-f="post"><h3>✏️ منشور جديد</h3><textarea class="field" name="text" rows="5" maxlength="3000" placeholder="اكتب منشورك…" aria-label="نص المنشور">${E(d.text)}</textarea>
         <label class="lbl" for="cm-link">رابط (اختياري)</label><input id="cm-link" class="field" name="link" dir="ltr" maxlength="300" value="${E(d.link)}" placeholder="https://">
         <div class="comm-bar"><label class="btn btn-sm">🖼 إضافة صورة<input type="file" accept="image/*" name="img" hidden></label><label class="btn btn-sm">📎 ملف أو فيديو<input type="file" name="file" hidden></label><button type="button" class="btn btn-sm" data-c="addvid">🎬 رابط فيديو</button></div><p class="muted sm" id="cm-up" role="status" hidden></p>
-        <div class="comm-thumbs">${d.media.map((m, i) => `<span class="comm-th">${m.t === 'img' ? `<img alt="" src="${E(m.d)}">` : m.t === 'file' ? '📎 ' + E(m.name.slice(0, 24)) + ' (' + this.fsize(m.size) + ')' : '🎬 ' + E(m.u.slice(8, 40))}<button type="button" class="btn btn-sm" data-c="rmmedia" data-i="${i}" aria-label="حذف المرفق">✕</button></span>`).join('')}</div>
+        <div class="comm-thumbs">${d.media.map((m, i) => `<span class="comm-th">${m.t === 'img' ? `<img alt="" src="${E(m.d)}">` : m.t === 'file' ? (m.poster ? `<img alt="" src="${E(m.poster)}">` : '') + '📎 ' + E(m.name.slice(0, 24)) + ' (' + this.fsize(m.size) + ')' : '🎬 ' + E(m.u.slice(8, 40))}<button type="button" class="btn btn-sm" data-c="rmmedia" data-i="${i}" aria-label="حذف المرفق">✕</button></span>`).join('')}</div>
         <div class="comm-dd"><button type="button" class="btn comm-ddb" data-ddt="dest" aria-haspopup="listbox" aria-expanded="false">📍 أين يُنشر؟ اختر الجهات ▾</button>
           <div class="comm-ddp" role="listbox" aria-label="جهات النشر" hidden>${all.map((x) => `<label class="comm-ddi"><input type="checkbox" data-dk="${E(x.k)}"${d.dest.includes(x.k) ? ' checked' : ''}> ${E(x.n)}</label>`).join('')}</div></div>
         <div class="comm-dchips" id="cm-chips" aria-live="polite"></div>
@@ -226,7 +261,7 @@
         keep(); const fl = f.elements.file.files[0]; f.elements.file.value = ''; if (!fl) return;
         if (d.media.length >= 4) return UI.toast('الحد 4 مرفقات', 'warn'); if (!this.st.user) return UI.toast('سجّل الدخول لرفع الملفات', 'warn');
         const st = document.getElementById('cm-up'); st.hidden = false; st.textContent = '⏳ جارٍ رفع «' + fl.name + '» 0%'; this.uploading = true;
-        try { d.media.push(await this.upload(fl, (x) => { st.textContent = '⏳ جارٍ رفع «' + fl.name + '» ' + Math.round(x * 100) + '%'; })); UI.toast('✅ تم رفع الملف', 'success'); }
+        try { const pst = /^video\//.test(fl.type) ? await this.posterOf(fl) : null; const att = await this.upload(fl, (x) => { st.textContent = '⏳ جارٍ رفع «' + fl.name + '» ' + Math.round(x * 100) + '%'; }); if (pst) Object.assign(att, pst); d.media.push(att); UI.toast('✅ تم رفع الملف', 'success'); }
         catch (er) { UI.toast(er.message || 'تعذّر الرفع', 'error', 6000); } this.uploading = false; if (this.sheet && this.view === 'compose') this.render();
       };
       f.onsubmit = async (e) => {
@@ -346,10 +381,17 @@
       const [st, us] = await Promise.all([Control.call('/v1/admin/stats', { base, key }), Control.call('/v1/admin/users', { base, key })]);
       if (!this.sheet || this.view !== 'owner') return;
       b.innerHTML = `<div class="ctl-card"><strong>🛡 أدوات المالك</strong><p class="muted sm">ظاهرة لك فقط لأن مفتاح المالك محفوظ مشفّراً على هذا الجهاز.</p>${st ? `<p>👥 ${st.users || 0} مستخدم • 🟢 ${st.online || 0} متصل</p>` : '<p class="muted">تعذّر جلب الإحصاءات.</p>'}</div>`
+        + '<div class="ctl-card" id="own-stor"><strong>💾 تخزين الملفات والفيديو</strong><p class="muted sm">جارٍ الفحص…</p></div>'
         + `<form class="comm-form" data-f="official"><h3>⭐ منشور رسمي</h3><textarea class="field" name="text" rows="3" maxlength="3000" placeholder="يظهر باسم العيسائي برو" aria-label="نص المنشور الرسمي"></textarea><label><input type="checkbox" name="pin"> تثبيت في الأعلى</label><div class="comm-bar"><button class="btn btn-primary" type="submit">نشر رسمي</button><button type="button" class="btn" data-c="subs">📨 طلبات الاشتراك</button></div></form>`
         + '<h4>الحسابات</h4>' + (us && us.users.length ? us.users.slice(0, 40).map((u) => `<div class="admin-row"><span class="grow">${E(u.name)} <small dir="ltr">${E(u.ident)}</small> ${u.banned ? '<span class="badge">محظور</span>' : ''}</span><button class="btn btn-sm" data-c="mod" data-op="${u.banned ? 'unban' : 'ban'}" data-id="${u.id}">${u.banned ? 'رفع الحظر' : '🚫 حظر'}</button><button class="btn btn-sm btn-danger" data-c="mod" data-op="deluser" data-id="${u.id}">🗑 حذف</button></div>`).join('') : '<p class="muted">لا حسابات.</p>')
         + (us && us.reports.length ? '<h4>منشورات عليها بلاغات</h4>' + us.reports.map((r) => `<div class="admin-row"><span class="grow">منشور #${r.post} — ${r.n} بلاغ</span><button class="btn btn-sm" data-c="mod" data-op="hide" data-id="${r.post}">🙈 إخفاء</button><button class="btn btn-sm btn-danger" data-c="mod" data-op="delpost" data-id="${r.post}">🗑 حذف</button></div>`).join('') : '');
-      const f = b.querySelector('form'); f.onsubmit = async (e) => { e.preventDefault(); const t = f.elements.text.value.trim(); if (!t) return; const r = await Control.call('/v1/admin/post', { method: 'POST', base, key, body: { text: t, pin: f.elements.pin.checked } }); if (!r || !r.ok) return UI.toast('تعذّر النشر', 'error'); UI.toast('تم النشر الرسمي', 'success'); this.go('feed'); this.load(); };
+      const paintStor = async (set) => {
+        const box = b.querySelector('#own-stor'); if (!box) return; const s = await Control.call('/v1/admin/storage', Object.assign({ base, key }, set === undefined ? {} : { method: 'POST', body: { on: set } }));
+        if (!s || s.error) { if (set !== undefined) UI.toast(s && s.error ? s.error : 'تعذّر الحفظ', 'error', 6000); if (set === undefined) box.innerHTML = '<strong>💾 تخزين الملفات والفيديو</strong><p class="muted sm">حدّث الخادم (worker.js 2.13) لتظهر الإعدادات.</p>'; return; }
+        box.innerHTML = `<strong>💾 تخزين الملفات والفيديو</strong><p class="sm">الوضع الحالي: <b>${s.on ? 'R2 (حتى ' + s.limitMB.r2 + ' ميغابايت للملف، بث مباشر)' : 'قاعدة البيانات D1 (حتى ' + s.limitMB.d1 + ' ميغابايت للملف)'}</b></p><p class="muted sm">${s.bound ? '✅ حاوية R2 مربوطة بالخادم.' : 'حاوية R2 غير مربوطة بعد (Cloudflare ← Worker ← Bindings ← R2 باسم FILES).'} الملفات المرفوعة سابقاً تبقى تعمل في الوضعين.</p><button class="btn ${s.on ? '' : 'btn-primary'}" ${s.bound ? '' : 'disabled'} data-stor="${s.on ? 0 : 1}">${s.on ? 'العودة إلى D1' : '⚡ تفعيل R2'}</button>`;
+        const bt = box.querySelector('[data-stor]'); if (bt) bt.onclick = () => paintStor(bt.dataset.stor === '1');
+      }; paintStor();
+      const f = b.querySelector('form[data-f="official"]'); f.onsubmit = async (e) => { e.preventDefault(); const t = f.elements.text.value.trim(); if (!t) return; const r = await Control.call('/v1/admin/post', { method: 'POST', base, key, body: { text: t, pin: f.elements.pin.checked } }); if (!r || !r.ok) return UI.toast('تعذّر النشر', 'error'); UI.toast('تم النشر الرسمي', 'success'); this.go('feed'); this.load(); };
     },
     async compress(file, max = MAXW, lim = 240000, square = false) {
       const bm = await createImageBitmap(file), c = document.createElement('canvas'), g = c.getContext('2d');
@@ -403,6 +445,7 @@
       if (a === 'compose') return this.st.user ? this.go('compose') : (UI.toast('سجّل دخولك أولاً', 'warn'), this.go('me'));
       if (a === 'addvid') { const v = await UI.prompt('رابط الفيديو', { label: 'رابط https لفيديو (يوتيوب أو ملف mp4)', placeholder: 'https://' }); if (v && okUrl(v.trim())) this.draft.media.push({ t: 'vid', u: v.trim() }); else if (v) UI.toast('الرابط يبدأ بـ https://', 'warn'); return this.render(); }
       if (a === 'rmmedia') { const x = this.draft.media.splice(+ds.i, 1)[0]; if (x && x.t === 'file') this.call('/v1/files/' + x.id, { method: 'DELETE' }); return this.render(); }
+      if (a === 'fplay') { const el = this.sheet.querySelector('.comm-vp[data-id="' + ds.id + '"]'); if (el) await this.vstart(el, false); return; }
       if (a === 'fdl' || a === 'fview') {
         const card = this.sheet && this.sheet.querySelector('[data-fid="' + ds.id + '"]'); let m = this.feed.concat(this.pfeed).flatMap((p) => p.media || []).find((x) => x.id === ds.id); if (m) m = Object.assign({ chunks: Math.ceil(m.size / 262144) }, m); else m = await this.fileMeta(ds.id);
         if (!m) return UI.toast('تعذّر تحميل الملف', 'error'); UI.toast('⏳ جارٍ التحميل…', 'info');
