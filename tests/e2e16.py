@@ -10,6 +10,10 @@ def check(n,c,x=''):
     if not c: fails.append(n)
 s1=subprocess.Popen(['node','--no-warnings','tools/worker/serve.mjs','8788'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 s2=subprocess.Popen(['node','--no-warnings','tools/worker/serve.mjs','8789'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,env=dict(os.environ,R2='1')); time.sleep(1.5)
+import urllib.request
+def r2on():
+    rq=urllib.request.Request('http://localhost:8789/v1/admin/storage',data=json.dumps({'on':True}).encode(),headers={'authorization':'Bearer '+OWN,'content-type':'application/json'},method='POST'); urllib.request.urlopen(rq).read()
+r2on()
 def chan(api):
     return json.dumps({'format':'alaisai-channel','version':1,'seq':5,'updated':1,'contact':{},'pub':None,'revoked':[],'retain':{'archiveDays':60,'deleteDays':240},'addons':{},'items':[],'api':api,'plans':[],'pay':[],'channels':[]})
 def opensheet(br, api, ident):
