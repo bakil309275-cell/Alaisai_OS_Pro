@@ -81,7 +81,7 @@ try:
     page.click('[data-c=compose]'); check('النشر من الإضافة يختارها افتراضياً', page.locator('.comm-dchip').count()==1 and 'الخدمات الزراعية' in page.inner_text('#cm-chips'))
     page.click('[data-c=close]'); page.click('#close-stage')
     # حساب ثانٍ وصفحة حساب عامة
-    page.evaluate("""async()=>{const r=await fetch('http://localhost:8788/v1/auth/register',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:'سعيد',ident:'saeed@x.com',password:'secret-pass-2'})});const j=await r.json();
+    page.evaluate("""async()=>{const r=await fetch('http://localhost:8788/v1/auth/register',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:'سعيد',ident:'saeed@x.com',password:'secret-pass-2',did:'did-saeed-test-0001'})});const j=await r.json();
       await fetch('http://localhost:8788/v1/posts',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+j.token},body:JSON.stringify({text:'عرض سعيد',scopes:['platform']})})}""")
     page.click('#comm-btn'); page.wait_for_selector('.comm-post', timeout=8000); page.wait_for_timeout(500)
     page.click('.comm-post:has-text("عرض سعيد") strong.comm-lnk'); page.wait_for_selector('.comm-me'); page.wait_for_timeout(500)

@@ -48,7 +48,7 @@ try:
         page.click('[data-c=delacc]'); page.wait_for_selector('.dialog-overlay'); page.click('.dialog-overlay button[type=submit], .dialog-overlay [data-ok]'); page.wait_for_selector('.dialog-overlay input[type=password]')
     page.fill('.dialog-overlay input[type=password]','secret-pass-1'); page.click('.dialog-overlay button[type=submit]'); page.wait_for_timeout(1500)
     check('بعد الحذف يخرج الحساب من الجهاز', page.evaluate("!Community.st.user"))
-    r=page.evaluate("async()=>{const r=await fetch('http://localhost:8788/v1/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ident:'up1@x.com',password:'secret-pass-1'})});return r.status}")
+    r=page.evaluate("async()=>{const r=await fetch('http://localhost:8788/v1/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ident:'up1@x.com',password:'secret-pass-1',did:'dev-zzzzzzzzzzzzzzzzzz'})});return r.status}")
     check('الدخول بالحساب المحذوف مرفوض من الخادم', r==401)
     page.close(); ctx.close()
     # --- R2: فيديو مباشر + صلاحيات المالك

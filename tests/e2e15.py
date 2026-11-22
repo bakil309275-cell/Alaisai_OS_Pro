@@ -35,7 +35,7 @@ try:
     page.goto(BASE); page.wait_for_selector('#comm-btn'); page.wait_for_timeout(800); page.click('#comm-btn'); page.wait_for_selector('.comm-sheet'); page.click('.comm-tab[data-v=me]'); page.click('[data-c=regtoggle]')
     page.fill('input[name=name]','علي'); page.fill('input[name=ident]','ali@x.com'); page.fill('input[name=password]','secret-pass-1'); page.click('.comm-form button[type=submit]'); page.wait_for_selector('.comm-fbar')
     me=page.evaluate("Community.st.user.id")
-    bt=page.evaluate("""async()=>{const r=await fetch('http://localhost:8788/v1/auth/register',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:'سعيد',ident:'saeed@x.com',password:'secret-pass-2'})});return await r.json()}""")
+    bt=page.evaluate("""async()=>{const r=await fetch('http://localhost:8788/v1/auth/register',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:'سعيد',ident:'saeed@x.com',password:'secret-pass-2',did:'did-saeed-test-0001'})});return await r.json()}""")
     H=lambda t:{'content-type':'application/json','authorization':'Bearer '+t}
     page.evaluate("async([b,me])=>{await fetch('http://localhost:8788/v1/friend/'+me,{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+b.token},body:JSON.stringify({op:'send'})})}",[bt,me])
     page.click('.comm-tab[data-v=me]'); page.wait_for_selector('[data-c=fr][data-op=accept]'); page.click('[data-c=fr][data-op=accept]'); page.wait_for_timeout(600)
