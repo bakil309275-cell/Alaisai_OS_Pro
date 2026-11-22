@@ -31,7 +31,7 @@ jobs:
       - name: تجهيز الموقع
         run: |
           mkdir _site
-          cp -r index.html 404.html privacy.html terms.html manifest.json sw.js favicon.ico robots.txt llms.txt release-manifest.json sitemap.xml .nojekyll assets src catalog control promo .well-known _site/
+          cp -r index.html 404.html privacy.html terms.html manifest.json sw.js favicon.ico robots.txt llms.txt release-manifest.json sitemap.xml .nojekyll assets src claude catalog control promo .well-known _site/
       - name: تصغير ملفات JS في نسخة النشر فقط (المصدر في المستودع يبقى مقروءاً)
         continue-on-error: true
         run: |
