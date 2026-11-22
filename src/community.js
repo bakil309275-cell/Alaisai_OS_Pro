@@ -27,12 +27,12 @@
     /** open() يفتح المنصة العامة؛ open({scope:'addon:<معرّف>', name}) يفتحها بنافذة تفاعل الإضافة (من شريط نافذة الإضافة) */
     async open(o) {
       if (this.sheet) { this.close(); if (!o) return; }
-      await this.init(); this.owner = await Control.ownerKeyApi();
+      await this.init(); this.owner = await Control.ownerKeyApi(); setTimeout(() => this.guardPoll(), 1500);
       this.ctx = o && o.scope ? { id: String(o.scope).slice(6), name: o.name || String(o.scope).slice(6) } : null; this.scope = this.ctx ? o.scope : 'platform';
       this.feed = []; this.filter = 'all'; this.q = ''; this.searching = false; this.loadGroups();
       const s = document.createElement('section'); s.className = 'comm-sheet'; if (!document.getElementById('stage-overlay').classList.contains('hidden')) s.classList.add('over'); s.setAttribute('role', 'dialog'); s.setAttribute('aria-label', 'منصة العيسائي');
       s.innerHTML = '<div class="comm-grab" tabindex="0" role="slider" aria-label="حجم النافذة: اسحب أو استخدم الأسهم" aria-valuemin="20" aria-valuemax="95"><i></i></div>'
-        + '<header class="comm-head"><strong>💬 منصة العيسائي</strong><span class="comm-chip" id="comm-chip"></span><span class="grow"></span><button class="btn btn-sm" data-c="reload" aria-label="تحديث">🔄</button><button class="btn btn-sm" data-c="close" aria-label="إغلاق">✕</button></header>'
+        + '<header class="comm-head"><strong>💬 منصة العيسائي</strong><span class="comm-chip" id="comm-chip"></span><span class="grow"></span><button class="btn btn-sm" data-c="claude" aria-label="كلود المساعد" title="كلود: مساعد الاستخدام">🤖</button><button class="btn btn-sm" data-c="reload" aria-label="تحديث">🔄</button><button class="btn btn-sm" data-c="close" aria-label="إغلاق">✕</button></header>'
         + '<div class="comm-body" id="comm-body" tabindex="-1"></div><nav class="comm-nav" id="comm-nav" aria-label="أقسام المنصة"></nav>';
       document.body.appendChild(s); this.sheet = s; this.setH(70);
       const g = s.querySelector('.comm-grab'); let y0 = 0, h0 = 0, drag = false;
@@ -45,10 +45,10 @@
       this.view = 'feed'; this.nav(); this.render(); this.load();
     },
     setH(v) { this.h = Math.max(20, Math.min(95, v)); if (this.sheet) { this.sheet.style.setProperty('--h', this.h + 'vh'); this.sheet.querySelector('.comm-grab').setAttribute('aria-valuenow', Math.round(this.h)); } },
-    close() { if (this.sheet) this.sheet.remove(); this.sheet = null; if (window.Nav) Nav.sync('comm-view', false); },
+    close() { clearInterval(this._vp); clearTimeout(this._gp); if (this.sheet) this.sheet.remove(); this.sheet = null; if (window.Nav) Nav.sync('comm-view', false); },
     go(v) { this.view = v; if (window.Nav) Nav.sync('comm-view', v !== 'feed', () => this.go('feed')); this.nav(); this.render(); const b = document.getElementById('comm-body'); if (b) b.scrollTop = 0; },
     nav() {
-      const n = document.getElementById('comm-nav'); if (!n) return; const main = { compose: 'feed', comments: 'feed', sent: 'feed', grp: 'feed', prof: this.pback === 'me' ? 'me' : 'feed', edit: 'me' }[this.view] || this.view;
+      const n = document.getElementById('comm-nav'); if (!n) return; const main = { compose: 'feed', comments: 'feed', sent: 'feed', grp: 'feed', prof: this.pback === 'me' ? 'me' : 'feed', edit: 'me', verify: 'me', guard: 'owner' }[this.view] || this.view;
       const tabs = TABS.concat(this.owner ? [['owner', '🛡', 'المالك']] : []);
       n.innerHTML = tabs.map(([k, i, l]) => `<button type="button" class="comm-tab" data-c="go" data-v="${k}" aria-current="${k === main}">${i}<span>${l}</span></button>`).join('');
       const hd = this.sheet && this.sheet.querySelector('.comm-head strong'); if (hd) hd.textContent = this.ctx ? '💬 مجتمع ' + this.ctx.name : '💬 منصة العيسائي';
@@ -108,7 +108,7 @@
         if (!el.isConnected) return;
         const v = document.createElement('video'); v.className = 'comm-vid'; v.playsInline = true; v.loop = true; v.muted = !!auto; v.controls = !auto; v.preload = 'auto'; v.src = src; v.dataset.id = id; v.setAttribute('aria-label', el.dataset.name || 'فيديو'); v.style.aspectRatio = el.style.aspectRatio;
         v.addEventListener('click', () => { if (v.muted) { v.muted = false; v.controls = true; if (v.paused) v.play().catch(() => {}); } });
-        el.replaceWith(v); const pl = v.play(); if (pl) pl.catch(() => { v.controls = true; });
+        document.querySelectorAll('video.comm-vid').forEach((x) => { if (!x.paused) x.pause(); }); el.replaceWith(v); if (this._vio) this._vio.observe(v); const pl = v.play(); if (pl) pl.catch(() => { v.controls = true; });
       } catch (_) { UI.toast('تعذّر تحميل الفيديو', 'error'); if (lab) lab.textContent = this.fsize(size); }
       delete el.dataset.busy;
     },
@@ -117,7 +117,7 @@
       if (!('IntersectionObserver' in window)) return; if (this._vio) this._vio.disconnect();
       const auto = (el) => el.dataset.mode === 'r2' || +el.dataset.size <= 3 * 1048576;
       this._vio = new IntersectionObserver((es) => { for (const en of es) { const t = en.target;
-        if (t.tagName === 'VIDEO') { if (en.intersectionRatio < 0.4) { if (!t.paused) t.pause(); } else if (t.paused && t.muted) t.play().catch(() => {}); continue; }
+        if (t.tagName === 'VIDEO') { if (en.intersectionRatio < 0.4) { if (!t.paused) { t.pause(); if (!t.muted) { t.muted = true; } } } else if (t.paused && t.muted) t.play().catch(() => {}); continue; }
         if (en.intersectionRatio >= 0.5 && auto(t) && !(navigator.connection && navigator.connection.saveData)) { document.querySelectorAll('video.comm-vid').forEach((x) => { if (x !== t && !x.paused) x.pause(); }); this.vstart(t, true).then(() => { const v = document.querySelector('video.comm-vid[data-id="' + t.dataset.id + '"]'); if (v) this._vio.observe(v); }); } } }, { threshold: [0, 0.4, 0.5] });
       document.querySelectorAll('.comm-vp, video.comm-vid[data-id]').forEach((x) => this._vio.observe(x));
     },
@@ -175,12 +175,12 @@
     empty(ico, t, d, btn) { return `<div class="comm-empty"><div class="ico" aria-hidden="true">${ico}</div><strong>${E(t)}</strong><p class="muted">${E(d)}</p>${btn || ''}</div>`; },
     render() {
       const b = document.getElementById('comm-body'); if (!b) return;
-      const f = { feed: this.feedView, compose: this.composeView, sent: this.sentView, comments: this.commentsView, grp: this.grpView, chan: this.chanView, mine: this.mineView, me: this.meView, edit: this.editView, prof: this.profView, owner: this.ownerView }[this.view];
+      const f = { feed: this.feedView, compose: this.composeView, sent: this.sentView, comments: this.commentsView, grp: this.grpView, chan: this.chanView, mine: this.mineView, me: this.meView, edit: this.editView, prof: this.profView, owner: this.ownerView, verify: this.verifyView, guard: this.guardView }[this.view];
       f.call(this, b); this.vwatch();
     },
     /** الشريط العلوي: ثابت لا يختفي مع تمرير المنشورات، ويُمرَّر أفقياً (دائرة الحساب، حقل التفكير، بحث، ثم المرشِّحات) */
     bar() {
-      const me = this.st.user, ch = [['all', 'الكل'], ['official', '⭐ الرسمي'], ['img', '🖼 الصور']].concat(me ? [['following', '👥 المتابَعون']] : []);
+      const me = this.st.user, ch = [['all', 'الكل'], ['official', '⭐ الرسمي'], ['vid', '🎬 الفيديو'], ['img', '🖼 الصور']].concat(me ? [['following', '👥 المتابَعون']] : []);
       const chip = (k, l) => `<button type="button" class="chip${this.filter === k ? ' on' : ''}" data-c="filter" data-k="${k}" aria-pressed="${this.filter === k}">${l}</button>`;
       let h = '<div class="comm-fbar" role="toolbar" aria-label="شريط المنشورات"><div class="comm-fscroll">';
       h += me ? `<button type="button" class="comm-avb" data-c="go" data-v="me" aria-label="حسابي">${this.av(me)}</button>` : '<button type="button" class="comm-avb" data-c="go" data-v="me" aria-label="تسجيل الدخول"><span class="comm-av" aria-hidden="true">👤</span></button>';
@@ -205,7 +205,7 @@
       } else if (this.conn === 'load' && !this.feed.length) h += this.skel();
       else {
         const k = this.q.trim().toLowerCase();
-        const list = this.feed.filter((p) => (this.filter === 'official' ? p.official : this.filter === 'img' ? (p.media || []).some((m) => m.t === 'img') : true) && (!k || (p.text + ' ' + p.author.name).toLowerCase().includes(k)));
+        const list = this.feed.filter((p) => (this.filter === 'official' ? p.official : this.filter === 'img' ? (p.media || []).some((m) => m.t === 'img' || (m.t === 'file' && /^image\//.test(m.type || ''))) : this.filter === 'vid' ? (p.media || []).some((m) => m.t === 'vid' || (m.t === 'file' && /^video\//.test(m.type || ''))) : true) && (!k || (p.text + ' ' + p.author.name).toLowerCase().includes(k)));
         h += list.length ? list.map((p) => this.card(p)).join('') + (this.more ? '<div class="comm-bar"><button class="btn" data-c="more">عرض المزيد</button></div>' : '') : this.empty(k ? '🔍' : '📝', k ? 'لا نتائج مطابقة' : 'لا منشورات هنا بعد', k ? 'جرّب كلمة أخرى، أو اضغط Enter للبحث في الخادم.' : (this.scope === 'platform' ? 'كن أول من ينشر في منصة العيسائي.' : 'كن أول من ينشر في مجتمع هذه الإضافة.'), '<button class="btn btn-primary" data-c="compose">✏️ منشور جديد</button>');
       }
       el.innerHTML = h;
@@ -319,10 +319,70 @@
       b.innerHTML = `<form class="comm-form" data-f="auth"><h3>${this.reg ? '📝 إنشاء حساب' : '👤 تسجيل الدخول'}</h3>${this.api() ? '' : '<p class="muted">المنصة غير مفعّلة بعد، لذا لا يمكن إنشاء حساب الآن.</p>'}${this.reg ? '<label class="lbl" for="au-n">الاسم الظاهر</label><input id="au-n" class="field" name="name" maxlength="40" autocomplete="name">' : ''}<label class="lbl" for="au-i">بريد أو هاتف أو اسم مستخدم</label><input id="au-i" class="field" name="ident" maxlength="60" dir="ltr" autocomplete="username"><label class="lbl" for="au-p">كلمة المرور (8 أحرف فأكثر)</label><input id="au-p" class="field" name="password" type="password" maxlength="100" dir="ltr" autocomplete="${this.reg ? 'new-password' : 'current-password'}"><div class="comm-bar"><button class="btn btn-primary" type="submit">${this.reg ? 'إنشاء الحساب' : 'دخول'}</button><button type="button" class="btn" data-c="regtoggle">${this.reg ? 'لدي حساب' : 'حساب جديد'}</button></div></form>`;
       b.querySelector('form').onsubmit = async (e) => {
         e.preventDefault(); const f = e.target.elements, r = await this.call(this.reg ? '/v1/auth/register' : '/v1/auth/login', { method: 'POST', body: { name: f.name ? f.name.value : '', ident: f.ident.value, password: f.password.value, did: Control.st.did } });
+        if (r && r.challenge) { this.vch = Object.assign({ ident: f.ident.value }, r.challenge); return this.go('verify'); }
         if (!r || !r.token) return UI.toast(r && r.error ? r.error : 'تعذّر الاتصال بالخادم', 'error');
-        this.st.token = r.token; this.st.user = r.user; if (Array.isArray(r.user.links) && r.user.links.length && !this.st.pages.length) this.st.pages = r.user.links.slice(0, 8).map((g, i) => ({ id: 'g' + i + Date.now().toString(36), name: g.n, u: g.u }));
-        await this.save(); UI.toast('أهلاً ' + r.user.name, 'success'); this.loadGroups(); this.go('feed'); this.feed = []; this.load();
+        await this.signedIn(r);
       };
+    },
+    async signedIn(r) {
+      this.st.token = r.token; this.st.user = r.user; if (Array.isArray(r.user.links) && r.user.links.length && !this.st.pages.length) this.st.pages = r.user.links.slice(0, 8).map((g, i) => ({ id: 'g' + i + Date.now().toString(36), name: g.n, u: g.u }));
+      this.vch = null; await this.save(); UI.toast('أهلاً ' + r.user.name, 'success'); this.loadGroups(); this.go('feed'); this.feed = []; this.load(); this.guardPoll();
+    },
+    /** شاشة التحقق من جهاز جديد: رمز البريد أو موافقة جهاز موثوق أو اعتماد المالك */
+    verifyView(b) {
+      const c = this.vch; if (!c) return this.go('me');
+      b.innerHTML = `<form class="comm-form" data-f="verify"><h3>🔒 التحقق من هويتك</h3><p>مرحباً <b>${E(c.name)}</b> 👋 يبدو أنك تحاول الدخول إلى حسابك من جهاز آخر (${E(c.label || 'جهاز جديد')}). حرصاً على حماية حسابك وللتأكد من أنك صاحبه:</p><ul class="sm">${c.mail ? `<li>📧 أرسل العيسائي برو رمز تحقق إلى بريدك <b dir="ltr">${E(c.mail)}</b>، انسخه واكتبه هنا.</li>` : ''}<li>📱 أو افتح العيسائي برو على جهازك الموثوق ووافق على الطلب فيدخل هذا الجهاز تلقائياً.</li><li>🆘 إن لم يتيسر أيٌّ منهما فاضغط «طلب مساعدة المالك».</li></ul><label class="lbl" for="vf-c">رمز التحقق (6 أرقام)</label><input id="vf-c" class="field" name="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" dir="ltr"><p class="muted sm" id="vf-st" role="status">⏳ بانتظار الرمز أو موافقة جهازك الموثوق…</p><div class="comm-bar"><button class="btn btn-primary" type="submit">تحقق ودخول</button><button type="button" class="btn" data-c="vhelp">👤 طلب مساعدة المالك</button><button type="button" class="btn" data-c="vcancel">إلغاء</button></div></form>`;
+      const stat = (t) => { const e = document.getElementById('vf-st'); if (e) e.textContent = t; };
+      b.querySelector('form').onsubmit = async (e) => {
+        e.preventDefault(); const code = e.target.elements.code.value.trim(); if (!/^\d{6}$/.test(code)) return UI.toast('اكتب الرمز المكوّن من 6 أرقام', 'warn');
+        const r = await this.call('/v1/auth/verify', { method: 'POST', body: { id: c.id, cs: c.cs, code } });
+        if (r && r.token) return this.signedIn(r); UI.toast(r && r.error ? r.error : 'تعذّر الاتصال بالخادم', 'error'); if (r && (r._s === 410 || r._s === 429)) { this.vch = null; this.go('me'); }
+      };
+      clearInterval(this._vp); this._vp = setInterval(async () => {
+        if (!this.sheet || this.view !== 'verify' || this.vch !== c) return clearInterval(this._vp);
+        const r = await this.call('/v1/auth/verify', { method: 'POST', body: { id: c.id, cs: c.cs } });
+        if (r && r.token) { clearInterval(this._vp); this.signedIn(r); } else if (r && (r.st === 'no' || r._s === 403)) { clearInterval(this._vp); this.vch = null; stat('⛔ رُفض هذا الدخول. إن كنت صاحب الحساب فتواصل مع المالك.'); } else if (r && r._s === 410) { clearInterval(this._vp); this.vch = null; UI.toast('انتهت مهلة التحقق، أعد تسجيل الدخول', 'warn'); this.go('me'); }
+      }, 3000);
+    },
+    /** جهاز موثوق: هل هناك من يحاول الدخول إلى حسابي من جهاز آخر؟ */
+    async guardPoll() {
+      if (!this.st.user || !this.sheet) return; clearTimeout(this._gp); this._gp = setTimeout(() => this.guardPoll(), 15000); if (this._gbusy) return;
+      const r = await this.call('/v1/guard/pending'); if (!r || !r.items || !r.items.length) return; this._gbusy = true;
+      try {
+        const it = r.items[0], v = await UI.dialog({ title: '🔐 محاولة دخول إلى حسابك', message: `مرحباً ${this.st.user.name}، هل أنت من يحاول الدخول إلى حسابك في العيسائي برو من جهاز آخر (${it.label})؟ إن كنت أنت فاضغط «نعم، هذا أنا». وإن لم تكن أنت فاضغط «لا، ليس أنا» وسنمنع ذلك الجهاز من دخول حسابك.`, okText: 'نعم، هذا أنا', cancelText: 'لا، ليس أنا' });
+        if (v) { await this.call('/v1/guard/answer', { method: 'POST', body: { id: it.id, yes: true } }); UI.toast('تم السماح للجهاز الجديد ✅', 'success'); }
+        else if (await UI.confirm('تأكيد: هذه المحاولة ليست منك؟ سنمنع ذلك الجهاز ونبلغ إدارة النظام. يُنصح بتغيير كلمة مرورك.', { title: 'منع المحاولة', okText: 'نعم، امنعها', danger: true })) { await this.call('/v1/guard/answer', { method: 'POST', body: { id: it.id, yes: false } }); UI.toast('تم منع المحاولة وإبلاغ الإدارة 🛡', 'success', 5000); }
+      } finally { this._gbusy = false; }
+    },
+    async devicesCard(b) {
+      const box = b.querySelector('#my-dev'); if (!box) return; const r = await this.call('/v1/me/devices?did=' + encodeURIComponent(Control.st.did)); if (!box.isConnected || !r || !r.items) return;
+      box.innerHTML = '<strong>📱 أجهزتي الموثوقة</strong><p class="muted sm">الأجهزة التي يمكنها دخول حسابك دون تحقق إضافي. أزل أي جهاز لا تعرفه.</p>' + r.items.map((d) => `<div class="admin-row"><span class="grow">${E(d.label || 'جهاز')} ${d.did === r.cur ? '<span class="badge">هذا الجهاز</span>' : ''}<br><small class="muted">آخر استخدام ${day(d.last)}</small></span>${d.did === r.cur || r.items.length < 2 ? '' : `<button type="button" class="btn btn-sm btn-danger" data-c="deldev" data-id="${E(d.did)}">إزالة</button>`}</div>`).join('');
+    },
+    /** لوحة الحارس: ما رصده كلود ومساعده للمالك، مع الإجراءات */
+    async guardView(b) {
+      if (!this.owner) return this.go('feed'); const key = this.owner, base = this.api(), back = '<button class="btn btn-sm" data-c="go" data-v="owner">→ رجوع</button>';
+      b.innerHTML = back + '<p class="muted">جارٍ التحميل…</p>'; const all = this.gall ? 1 : 0;
+      const [g, cs] = await Promise.all([Control.call('/v1/admin/guard' + (all ? '?all=1' : ''), { base, key }), Control.call('/v1/admin/claude', { base, key })]);
+      if (!this.sheet || this.view !== 'guard') return;
+      if (!g) { b.innerHTML = back + '<p class="muted">حدّث الخادم (worker.js 2.15) لتظهر لوحة الحارس.</p>'; return; }
+      const sev = { 0: ['💬', 'طلب مساعدة'], 1: ['🟡', 'تنبيه'], 2: ['🟠', 'مشبوه'], 3: ['🔴', 'خطير'] }, KIND = { secrets: 'طلب أسرار', injection: 'حقن أوامر', attack: 'اختراق', privacy: 'خصوصية', bypass: 'تحايل', impersonation: 'انتحال صفة', newdevice: 'جهاز جديد', bruteforce: 'تخمين دخول', 'code-guess': 'تخمين رمز', 'owner-denied': 'رفض صاحب الحساب', 'denied-device': 'جهاز مرفوض', probe: 'فحص استكشافي', support: 'طلب مساعدة' };
+      const btn = (act, l, id, cls) => `<button class="btn btn-sm ${cls || ''}" data-c="gact" data-act="${act}" data-id="${id}">${l}</button>`;
+      const row = (f) => {
+        const s = sev[f.sev] || sev[1], user = f.uid ? `${E(f.uname || '#' + f.uid)}${f.ubanned ? ' <span class="badge">محظور</span>' : ''}${f.ufrozen > g.now ? ' <span class="badge">مجمَّد</span>' : ''}` : 'زائر/مجهول';
+        const done = f.st === 'done' || f.st === 'dismissed'; let ac = '';
+        if (!done) {
+          if (f.kind === 'newdevice' && f.chal === 'pending') ac += btn('approve', '✅ اعتماد الجهاز', f.id, 'btn-primary') + btn('deny', '⛔ رفض', f.id);
+          if (f.uid && f.kind !== 'support') ac += btn('freeze', '❄️ تجميد 7 أيام', f.id, f.sugg === 'freeze' ? 'btn-primary' : '') + (f.ubanned ? btn('unban', 'رفع الحظر', f.id) : btn('ban', '🚫 حظر', f.id, f.sugg === 'ban' ? 'btn-primary' : '')) + btn('hide', '🙈 إخفاء منشوراته', f.id) + btn('deluser', '🗑 حذف الحساب', f.id, 'btn-danger');
+          if (f.ip && f.kind !== 'support') ac += btn('blockip', '🌐 حظر العنوان', f.id);
+          if (f.hasshot) ac += `<button class="btn btn-sm" data-c="gshot" data-id="${f.id}">🖼 اللقطة</button>`;
+          ac += btn('review', '👁 تمت المراجعة', f.id) + btn('dismiss', '✖ تجاهل', f.id);
+        }
+        return `<div class="ctl-card${f.sev >= 3 && !done ? ' danger' : ''}"><p><b>${s[0]} ${s[1]}</b> · ${E(KIND[f.kind] || f.kind)} · <small class="muted">${day(f.ts)} ${new Date(f.ts).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' })}</small>${done ? ' · ✔ ' + (f.st === 'dismissed' ? 'تُجوهل' : 'عولج') : ''}</p><p class="sm">👤 ${user}</p><blockquote class="sm" dir="auto">${E(f.text)}</blockquote>${f.note ? `<p class="sm">📝 <b>رسالة كلود للمالك:</b> ${E(f.note)}</p>` : ''}${!done && f.sugg && f.sugg !== 'dismiss' ? `<p class="sm muted">الإجراء المقترح: ${{ ban: 'حظر الحساب', freeze: 'تجميد مؤقت', watch: 'مراقبة' }[f.sugg] || E(f.sugg)}</p>` : ''}<div class="comm-bar">${ac}</div></div>`;
+      };
+      const gaps = cs && cs.gaps && cs.gaps.length ? '<details class="ctl-card"><summary><b>❓ أسئلة بلا جواب (' + cs.gaps.length + ')</b> — أضِف لها ملفاً في claude/knowledge</summary>' + cs.gaps.map((x) => `<p class="sm">• ${E(x.q)} <small class="muted">×${x.n}</small></p>`).join('') + '</details>' : '';
+      const blocked = cs && cs.blocked && cs.blocked.length ? '<details class="ctl-card"><summary><b>🌐 عناوين محظورة مؤقتاً (' + cs.blocked.length + ')</b></summary>' + cs.blocked.map((x) => `<p class="sm">• ${E(x.why)} — حتى ${new Date(x.until).toLocaleString('ar')}</p>`).join('') + '</details>' : '';
+      const ai = cs ? `<div class="ctl-card" id="own-ai"><strong>🤖 ذكاء كلود</strong><p class="sm">الإجابة: <b>${cs.ai.on ? 'ذكاء اصطناعي مقيّد بالمعرفة (Workers AI)' : 'مقتطفات مباشرة من المعرفة (دون تكلفة)'}</b> · ${cs.topics} موضوعاً · ${cs.asked} سؤالاً خلال 24 ساعة</p><p class="muted sm">${cs.ai.bound ? '✅ Workers AI مربوط.' : 'لتفعيل الصياغة الذكية اربط Workers AI باسم AI من Cloudflare ← Worker ← Bindings.'} ${cs.mail ? '✅ البريد مفعّل (رموز التحقق تصل بالبريد).' : '⚠️ البريد غير مفعّل: رموز التحقق لا تُرسل بالبريد حتى تضبط RESEND_KEY و MAIL_FROM؛ يبقى التحقق بموافقة الجهاز الموثوق أو اعتمادك.'}</p><button class="btn ${cs.ai.on ? '' : 'btn-primary'}" ${cs.ai.bound ? '' : 'disabled'} data-c="gai" data-on="${cs.ai.on ? 0 : 1}">${cs.ai.on ? 'إيقاف الذكاء الاصطناعي' : '⚡ تفعيل الذكاء الاصطناعي'}</button></div>` : '';
+      b.innerHTML = back + `<h3>🛡 الحارس ومساعد كلود</h3>${ai}<div class="comm-bar"><button class="btn btn-sm ${all ? '' : 'btn-primary'}" data-c="gall" data-v="0">الجديد</button><button class="btn btn-sm ${all ? 'btn-primary' : ''}" data-c="gall" data-v="1">الكل</button></div>` + (g.items.length ? g.items.map(row).join('') : '<p class="muted">لا رصد جديد ✅</p>') + gaps + blocked;
     },
     /** إدارة مجموعة: الأعضاء، دعوة الأصدقاء (للمالك)، المغادرة أو الحذف */
     async grpView(b) {
@@ -347,10 +407,12 @@
         <label class="comm-ddi"><input type="checkbox" name="showc"${me.showc ? ' checked' : ''}> إظهار البريد والهاتف في صفحتي العامة (للعملاء)</label>
         <label class="lbl" for="ed-b">نبذة / سيرة / قصة</label><textarea id="ed-b" class="field" name="bio" rows="5" maxlength="600" placeholder="عرّف الناس بك أو بنشاطك ومنتجاتك وخدماتك">${E(me.bio || '')}</textarea>
         <div class="comm-bar"><button class="btn btn-primary" type="submit">💾 حفظ</button><button type="button" class="btn" data-c="go" data-v="me">إلغاء</button></div>
+        <div class="ctl-card" id="my-dev"><strong>📱 أجهزتي الموثوقة</strong><p class="muted sm">جارٍ التحميل…</p></div>
         <div class="ctl-card" style="border-color:var(--danger)"><strong>🗑 حذف الحساب</strong><p class="muted sm">يحذف حسابك نهائياً مع منشوراتك وتعليقاتك وملفاتك ومجموعاتك وصداقاتك من الخادم. لا يمكن التراجع.</p><button type="button" class="btn btn-danger" data-c="delacc">🗑 حذف حسابي نهائياً</button></div></form>`;
       const f = b.querySelector('form'); f.elements.kind.value = me.kind || 'person';
       f.elements.img.onchange = async () => { const fl = f.elements.img.files[0]; if (!fl) return; try { this.edit.av = await this.compress(fl, 192, 60000, true); document.getElementById('ed-prev').innerHTML = `<img class="comm-av big" alt="" src="${E(this.edit.av)}">`; } catch (_) { UI.toast('تعذّرت معالجة الصورة', 'error'); } };
       f.querySelector('[data-rmav]').onclick = () => { this.edit.av = ''; document.getElementById('ed-prev').innerHTML = `<span class="comm-av big">${E(f.elements.name.value.trim().slice(0, 1) || '؟')}</span>`; };
+      this.devicesCard(b);
       f.onsubmit = async (e) => {
         e.preventDefault(); const x = f.elements, body = { name: x.name.value, email: x.email.value, phone: x.phone.value, bio: x.bio.value, kind: x.kind.value, showc: x.showc.checked }; if (this.edit.av !== undefined) body.av = this.edit.av;
         const r = await this.call('/v1/me', { method: 'POST', body }); if (!r || !r.ok) return UI.toast(r && r.error ? r.error : 'تعذّر الحفظ: لا اتصال بالخادم', 'error');
@@ -380,11 +442,12 @@
       b.innerHTML = '<p class="muted">جارٍ التحميل…</p>'; const key = this.owner, base = this.api();
       const [st, us] = await Promise.all([Control.call('/v1/admin/stats', { base, key }), Control.call('/v1/admin/users', { base, key })]);
       if (!this.sheet || this.view !== 'owner') return;
-      b.innerHTML = `<div class="ctl-card"><strong>🛡 أدوات المالك</strong><p class="muted sm">ظاهرة لك فقط لأن مفتاح المالك محفوظ مشفّراً على هذا الجهاز.</p>${st ? `<p>👥 ${st.users || 0} مستخدم • 🟢 ${st.online || 0} متصل</p>` : '<p class="muted">تعذّر جلب الإحصاءات.</p>'}</div>`
+      b.innerHTML = `<div class="ctl-card"><strong>🛡 أدوات المالك</strong><p class="muted sm">ظاهرة لك فقط لأن مفتاح المالك محفوظ مشفّراً على هذا الجهاز.</p><button class="btn btn-primary" data-c="go" data-v="guard" id="own-guard">🛡 الحارس ومساعد كلود <span id="own-gn"></span></button>${st ? `<p>👥 ${st.users || 0} مستخدم • 🟢 ${st.online || 0} متصل</p>` : '<p class="muted">تعذّر جلب الإحصاءات.</p>'}</div>`
         + '<div class="ctl-card" id="own-stor"><strong>💾 تخزين الملفات والفيديو</strong><p class="muted sm">جارٍ الفحص…</p></div>'
         + `<form class="comm-form" data-f="official"><h3>⭐ منشور رسمي</h3><textarea class="field" name="text" rows="3" maxlength="3000" placeholder="يظهر باسم العيسائي برو" aria-label="نص المنشور الرسمي"></textarea><label><input type="checkbox" name="pin"> تثبيت في الأعلى</label><div class="comm-bar"><button class="btn btn-primary" type="submit">نشر رسمي</button><button type="button" class="btn" data-c="subs">📨 طلبات الاشتراك</button></div></form>`
         + '<h4>الحسابات</h4>' + (us && us.users.length ? us.users.slice(0, 40).map((u) => `<div class="admin-row"><span class="grow">${E(u.name)} <small dir="ltr">${E(u.ident)}</small> ${u.banned ? '<span class="badge">محظور</span>' : ''}</span><button class="btn btn-sm" data-c="mod" data-op="${u.banned ? 'unban' : 'ban'}" data-id="${u.id}">${u.banned ? 'رفع الحظر' : '🚫 حظر'}</button><button class="btn btn-sm btn-danger" data-c="mod" data-op="deluser" data-id="${u.id}">🗑 حذف</button></div>`).join('') : '<p class="muted">لا حسابات.</p>')
         + (us && us.reports.length ? '<h4>منشورات عليها بلاغات</h4>' + us.reports.map((r) => `<div class="admin-row"><span class="grow">منشور #${r.post} — ${r.n} بلاغ</span><button class="btn btn-sm" data-c="mod" data-op="hide" data-id="${r.post}">🙈 إخفاء</button><button class="btn btn-sm btn-danger" data-c="mod" data-op="delpost" data-id="${r.post}">🗑 حذف</button></div>`).join('') : '');
+      Control.call('/v1/admin/claude', { base, key }).then((c) => { const n = b.querySelector('#own-gn'); if (n && c && c.newFlags) n.textContent = '(' + c.newFlags + ' جديد)'; });
       const paintStor = async (set) => {
         const box = b.querySelector('#own-stor'); if (!box) return; const s = await Control.call('/v1/admin/storage', Object.assign({ base, key }, set === undefined ? {} : { method: 'POST', body: { on: set } }));
         if (!s || s.error) { if (set !== undefined) UI.toast(s && s.error ? s.error : 'تعذّر الحفظ', 'error', 6000); if (set === undefined) box.innerHTML = '<strong>💾 تخزين الملفات والفيديو</strong><p class="muted sm">حدّث الخادم (worker.js 2.13) لتظهر الإعدادات.</p>'; return; }
@@ -445,6 +508,18 @@
       if (a === 'compose') return this.st.user ? this.go('compose') : (UI.toast('سجّل دخولك أولاً', 'warn'), this.go('me'));
       if (a === 'addvid') { const v = await UI.prompt('رابط الفيديو', { label: 'رابط https لفيديو (يوتيوب أو ملف mp4)', placeholder: 'https://' }); if (v && okUrl(v.trim())) this.draft.media.push({ t: 'vid', u: v.trim() }); else if (v) UI.toast('الرابط يبدأ بـ https://', 'warn'); return this.render(); }
       if (a === 'rmmedia') { const x = this.draft.media.splice(+ds.i, 1)[0]; if (x && x.t === 'file') this.call('/v1/files/' + x.id, { method: 'DELETE' }); return this.render(); }
+      if (a === 'vcancel') { clearInterval(this._vp); this.vch = null; return this.go('me'); }
+      if (a === 'vhelp') { const c = this.vch; if (!c) return; const r = await this.call('/v1/claude/escalate', { method: 'POST', body: { text: 'طلب مساعدة: أحاول الدخول إلى حسابي (' + c.ident + ') من جهاز جديد (' + (c.label || '') + ') ولا أستطيع إكمال التحقق. أرجو اعتماد الجهاز بعد التأكد من هويتي.' } }); return UI.toast(r && r.ok ? 'وصل طلبك للمالك، سيتواصل معك أو يعتمد جهازك 💚' : 'تعذّر الإرسال، حاول لاحقاً', r && r.ok ? 'success' : 'error', 5000); }
+      if (a === 'deldev') { if (!(await UI.confirm('إزالة هذا الجهاز؟ سيحتاج إلى تحقق عند الدخول مجدداً.', { okText: 'إزالة' }))) return; const r = await this.call('/v1/me/devices/' + encodeURIComponent(ds.id), { method: 'DELETE' }); UI.toast(r && r.ok ? 'تمت الإزالة' : (r && r.error) || 'تعذّر', r && r.ok ? 'success' : 'error'); return this.devicesCard(this.sheet.querySelector('#comm-body')); }
+      if (a === 'gall') { this.gall = ds.v === '1'; return this.render(); }
+      if (a === 'gai') { const r = await Control.call('/v1/admin/claude', { base: this.api(), key: this.owner, method: 'POST', body: { ai: ds.on === '1' } }); if (!r) UI.toast('تعذّر التفعيل (اربط AI أولاً)', 'error'); return this.render(); }
+      if (a === 'gshot') { const r = await Control.call('/v1/admin/guard/' + ds.id + '/shot', { base: this.api(), key: this.owner }); if (r && r.shot) { const d = document.createElement('div'); d.className = 'dialog-overlay'; d.innerHTML = '<div class="dialog" style="max-width:96vw"><img alt="لقطة الشاشة المرفقة" style="max-width:100%;max-height:70vh"><div class="dialog-actions"><button class="btn" type="button">إغلاق</button></div></div>'; d.querySelector('img').src = r.shot; d.querySelector('button').onclick = () => d.remove(); document.body.appendChild(d); } return; }
+      if (a === 'gact') {
+        const ask = { deluser: 'حذف هذا الحساب نهائياً مع كل بياناته؟ لا يمكن التراجع.', ban: 'حظر هذا الحساب؟', hide: 'إخفاء آخر 30 منشوراً لصاحب الحساب؟', blockip: 'حظر هذا العنوان 30 يوماً؟' }[ds.act];
+        if (ask && !(await UI.confirm(ask, { okText: 'تنفيذ', danger: true }))) return;
+        const r = await Control.call('/v1/admin/guard/' + ds.id, { base: this.api(), key: this.owner, method: 'POST', body: { act: ds.act, days: 7 } }); UI.toast(r && r.ok ? '✅ تم' : (r && r.error) || 'تعذّر التنفيذ', r && r.ok ? 'success' : 'error'); return this.render();
+      }
+      if (a === 'claude') { document.getElementById('claude-btn').click(); return; }
       if (a === 'fplay') { const el = this.sheet.querySelector('.comm-vp[data-id="' + ds.id + '"]'); if (el) await this.vstart(el, false); return; }
       if (a === 'fdl' || a === 'fview') {
         const card = this.sheet && this.sheet.querySelector('[data-fid="' + ds.id + '"]'); let m = this.feed.concat(this.pfeed).flatMap((p) => p.media || []).find((x) => x.id === ds.id); if (m) m = Object.assign({ chunks: Math.ceil(m.size / 262144) }, m); else m = await this.fileMeta(ds.id);

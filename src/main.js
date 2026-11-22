@@ -58,6 +58,8 @@
       document.getElementById('store-btn').addEventListener('click', () => Catalog.open());
       document.getElementById('news-btn').addEventListener('click', () => Control.open());
       document.getElementById('comm-btn').addEventListener('click', () => UI.loadScript('src/community.js').then(() => Community.open()).catch((e) => UI.toast('تعذّر فتح المنصة: ' + e.message, 'error')));
+      // كلود: المساعد يعيش في مجلد claude/ بالمستودع ويُحمَّل عند أول نقرة فقط (لا يثقل التطبيق)
+      document.getElementById('claude-btn').addEventListener('click', () => { const nb = window.NativeUpdate && NativeUpdate.native ? NativeUpdate.remote : ''; UI.loadScript(nb + 'claude/ui.js?v=' + (window.APP_VERSION || '')).then(() => ClaudeAI.open()).catch(() => UI.toast('المساعد يحتاج اتصالاً بالإنترنت', 'warn')); });
       document.getElementById('hub-btn').addEventListener('click', () => Cloud.open());
       document.getElementById('share-btn').addEventListener('click', () => Share.open());
       document.getElementById('sync-badge').addEventListener('click', () => Sync.open());

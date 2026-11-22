@@ -7,7 +7,7 @@
   const NATIVE = location.hostname === 'localhost' && location.protocol === 'https:' && (window.Capacitor || window.NATIVE_FORCE);
   window.NativeUpdate = { native: !!NATIVE };
   if (!NATIVE) return;
-  const REMOTE = (window.NATIVE_REMOTE || 'https://bakil309275-cell.github.io/Alaisai_OS_Pro/').replace(/\/?$/, '/'), OTA = 'alaisai-ota';
+  const REMOTE = (window.NATIVE_REMOTE || 'https://bakil309275-cell.github.io/Alaisai_OS_Pro/').replace(/\/?$/, '/'), OTA = 'alaisai-ota'; window.NativeUpdate.remote = REMOTE;
   const OK = /^(index\.html|manifest\.json|privacy\.html|terms\.html|assets\/|src\/|catalog\/|addons\/|promo\/|store\/)/;
   const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (_) { /* لا شيء */ } return null; };
 
