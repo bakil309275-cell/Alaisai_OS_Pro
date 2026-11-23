@@ -1,43 +1,54 @@
-# العيسائي برو (Alaisai OS Pro)
+# الواجهة الخلفية الاختيارية (إعجابات، عدّاد مستخدمين، صندوق رسائل)
 
-سطح مكتب تطبيقات يعمل في المتصفح ودون اتصال (PWA)، بياناتك عندك وحدك.
+التطبيق يعمل كاملاً بدونها. هي طبقة إضافية مجانية على Cloudflare (الخطة المجانية تكفي لآلاف المستخدمين).
+لا تخزّن إلا معرّفاً عشوائياً لكل جهاز، ولا أي بيانات شخصية ما لم يكتب المستخدم اسمه ورقمه في رسالة يرسلها لك.
 
-## التشغيل
-```bash
-python3 -m http.server 8765   # ثم افتح http://localhost:8765
-```
-(ميزات التشفير وService Worker تتطلب HTTPS أو localhost.)
+## الإعداد من الجوال أو الكمبيوتر (بلا أوامر)
+1. ادخل إلى dash.cloudflare.com وأنشئ حساباً مجانياً.
+2. من القائمة: **Storage & Databases ← D1 ← Create database**، سمّها `alaisai`.
+3. من **Workers & Pages ← Create ← Create Worker**، سمّه `alaisai-api` ثم **Deploy**، ثم **Edit code**، احذف كل ما فيه والصق محتوى ملف `worker.js` كاملاً ثم **Deploy**.
+4. افتح الـ Worker ← **Settings ← Bindings ← Add ← D1 database**: الاسم `DB` واختر قاعدة `alaisai`.
+5. من **Settings ← Variables and Secrets ← Add**: النوع **Secret**، الاسم `OWNER_KEY`، والقيمة نص طويل عشوائي (30 حرفاً أو أكثر) تحتفظ به أنت فقط. لا تكتبه في أي ملف ولا ترسله لأحد.
+6. انسخ رابط الـ Worker (مثل `https://alaisai-api.اسمك.workers.dev`).
+7. في العيسائي برو: ⚙️ ← 📡 المنصة ← 📥 الرسائل والإحصاءات ← **رابط الواجهة** (الصق الرابط) ثم **مفتاح المالك** (الصق OWNER_KEY) ثم 🚀 نشر للجميع.
 
-## الميزات
-- **الإضافات الحقيقية**: مجلد (`manifest.json` + `index.html` + `main.js` + `style.css`) يتحوّل إلى تطبيق على سطح المكتب يعمل في بيئة معزولة، ويستخدم واجهة `Alaisai` (`toast/get/set/remove/keys`). تصدير/استيراد كملف `.alaisai-addon.json`.
-- **متجر الإضافات**: النظام نظيف لا يشحن إضافات؛ يعرض ما تنشره في `addons/<الاسم>/` (أي اسم بأي لغة، ومجلدات متداخلة). شغّل `node tools/build-catalog.mjs`، فتصل لكل المستخدمين مع تحديثاتها.
-- **مزامنة GitHub**: نسخة مشفّرة (AES-GCM) في مستودع خاص، يدوية أو تلقائية، مع كشف التعارضات.
-- **الأمان**: كلمة مرور مجزّأة، sandbox لكل تطبيق، نسخ احتياطي دوّار ومشفّر.
-- **PWA/المتاجر**: انظر [`STORE_GUIDE.md`](STORE_GUIDE.md).
+بعد النشر يرى كل مستخدم أزرار التفاعل بعدّادات عامة وعدد المستخدمين، ويظهر في نافذة التواصل زر «إرسال مباشر للمالك».
 
-## كتابة إضافة
-```js
-// main.js داخل الإضافة
-const n = ((await Alaisai.get("opens")) || 0) + 1;   // تخزين خاص بالإضافة (256KB)
-await Alaisai.set("opens", n);
-Alaisai.toast("أهلاً");                               // إشعار
-Alaisai.env.theme;                                    // "dark" | "light"
-```
-متغيرات CSS جاهزة: `--bg --fg --muted --card --line --accent --accent-fg --danger`.
+## ما الذي تقدّمه
+| المسار | الوصف |
+|---|---|
+| `POST /v1/hello` | تسجيل جهاز وتحديث «آخر ظهور» (للعدّاد) |
+| `GET /v1/stats?ids=` | عدّادات التفاعل لعدة منشورات + عدد المستخدمين والمتصلين |
+| `POST /v1/react` | تفاعل (مرة لكل جهاز لكل نوع) أو إلغاؤه، بحد 30 في الدقيقة |
+| `POST /v1/inbox` | رسالة للمالك، بحد 5 في الساعة لكل جهاز |
+| `GET /v1/inbox`، `DELETE /v1/inbox/:id` | للمالك فقط (Bearer OWNER_KEY) |
+| `GET /v1/admin/stats` | للمالك: المستخدمون، المتصلون، الجدد يومياً، الأعلى تفاعلاً |
 
-## الاختبارات
-```bash
-node tests/run.mjs                      # وحدات
-python3 -m http.server 8765 &           # ثم:
-python3 tests/e2e.py                    # المتصفح: الأساسيات والأمان
-python3 tests/e2e2.py                   # الإضافات والمتجر والمزامنة (GitHub وهمي)
-python3 tests/audit.py                  # تثبيت، SEO، وصول، أداء
-```
+## منصة العيسائي والاشتراكات (الإصدار 2.10)
+أضف سراً ثانياً اختيارياً `TOKEN_SECRET` (16 حرفاً فأكثر) لتوقيع رموز دخول المستخدمين؛ وإن لم تضفه يُستعمل `OWNER_KEY`.
+`npx wrangler secret put TOKEN_SECRET` — ثم انشر كالمعتاد (كل شيء في ملف `worker.js` واحد).
 
-## الهيكل
-`index.html` · `assets/{css,fonts,images,screenshots}` · `src/*.js` · `catalog/` · `tools/` · `store/` · `tests/` · `.github/workflows/`
+| المسار | الوظيفة |
+|---|---|
+| `POST /v1/auth/register`، `/v1/auth/login` | حساب (PBKDF2 مملّح) ورمز دخول 30 يوماً |
+| `GET/POST /v1/posts`، `DELETE /v1/posts/:id` | الموجز والنشر (نص، حتى 3 صور مضغوطة، روابط https، فيديو برابط) والحذف للمؤلف |
+| `GET/POST /v1/posts/:id/comments` | التعليقات |
+| `POST /v1/report` | بلاغ؛ 3 بلاغات من 3 حسابات تخفي المنشور تلقائياً |
+| `POST /v1/sub/request`، `GET /v1/sub/mine` | طلب اشتراك واستلام الرمز بمفتاح سري لصاحب الطلب |
+| `POST /v1/admin/post`، `/hide/:id`، `/pin/:id`، `/ban/:uid`، `GET /admin/users`، `/admin/subreq`، `POST /admin/subreq/:id` | أدوات المالك (Bearer OWNER_KEY) |
 
-## الإضافات والمستودع (v2.2)
-- **من التطبيق إلى المستودع:** مع كل مزامنة تُنشر ملفات إضافاتك (غير المشفّرة) في `addons/<الاسم>/`. يمكن إيقاف ذلك من لوحة المزامنة.
-- **من المستودع إلى التطبيق:** ضع مجلداً فيه `manifest.json` و`index.html` داخل `addons/<الاسم>/` فيظهر في «متجر الإضافات» بشارة «جديد».
-- **لكل من ينزّل التطبيق:** عند الدفع إلى `main` يبني سير النشر الكتالوج العام من `catalog/src` و`addons/` تلقائياً.
+الحدود: الصور تُخزَّن مضغوطة (≤ 240 ك.ب) داخل D1؛ للفيديو الثقيل استعمل رابطاً (يوتيوب أو ملف mp4 على استضافتك).
+
+## ملاحظات أمان
+- الحماية من الإغراق: حدود لكل جهاز، وللحماية الأقوى فعّل قاعدة Rate Limiting في Cloudflare على المسارات `POST`.
+- كل البيانات المخزّنة تُحذف تلقائياً (الأجهزة بعد 400 يوم، الرسائل بعد 180 يوماً).
+- إن سُرّب `OWNER_KEY` فغيّره من Settings ثم حدّثه في التطبيق.
+
+## اختبار محلي
+`node tools/worker/test.mjs` يشغّل نفس الكود على SQLite محلية (يتطلب Node 22).
+
+## النشر التلقائي من المستودع (موصى به)
+1. عدّل `tools/worker/wrangler.toml`: `name` (اسم الـ Worker الحالي) و`database_id` (معرّف D1)، وأزل `#` من R2/AI إن كنت تستخدمهما.
+2. Cloudflare ← Workers ← الـ Worker ← Settings ← Builds ← Connect ← GitHub ← اختر المستودع والفرع `main`.
+3. Root directory: `/tools/worker` — Build command: فارغ — Deploy command: `npx wrangler deploy`.
+4. بعدها كل رفع إلى المستودع ينشر `worker.js` تلقائياً. الأسرار تبقى كما هي.
