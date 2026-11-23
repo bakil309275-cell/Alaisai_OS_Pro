@@ -46,3 +46,9 @@
 
 ## اختبار محلي
 `node tools/worker/test.mjs` يشغّل نفس الكود على SQLite محلية (يتطلب Node 22).
+
+## النشر التلقائي من المستودع (موصى به)
+1. عدّل `tools/worker/wrangler.toml`: `name` (اسم الـ Worker الحالي) و`database_id` (معرّف D1)، وأزل `#` من R2/AI إن كنت تستخدمهما.
+2. Cloudflare ← Workers ← الـ Worker ← Settings ← Builds ← Connect ← GitHub ← اختر المستودع والفرع `main`.
+3. Root directory: `/tools/worker` — Build command: فارغ — Deploy command: `npx wrangler deploy`.
+4. بعدها كل رفع إلى المستودع ينشر `worker.js` تلقائياً. الأسرار تبقى كما هي.
