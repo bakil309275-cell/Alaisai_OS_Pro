@@ -31,8 +31,11 @@ jobs:
           npm install --no-audit --no-fund
           npx cap add android
           npx cap sync android
+      - name: أدوات الصور
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
       - name: الأيقونة ورقم الإصدار
         run: |
+          IM=$(command -v magick || command -v convert)
           VN=$(grep -o "APP_VERSION = '[^']*'" src/version.js | grep -o "[0-9][0-9.]*")
           G=native/android/app/build.gradle
           sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/; s/versionName \"[^\"]*\"/versionName \"$VN\"/" $G
@@ -40,9 +43,9 @@ jobs:
           echo '<?xml version="1.0" encoding="utf-8"?><resources><color name="ic_launcher_background">#0b1124</color></resources>' > $R/values/ic_launcher_background.xml
           for d in mdpi:48:108 hdpi:72:162 xhdpi:96:216 xxhdpi:144:324 xxxhdpi:192:432; do
             IFS=: read n s f <<< "$d"
-            convert assets/images/icon-512.png -resize ${s}x${s} $R/mipmap-$n/ic_launcher.png
-            convert assets/images/icon-512.png -resize ${s}x${s} $R/mipmap-$n/ic_launcher_round.png
-            convert assets/images/icon-512.png -resize $((f*62/100))x$((f*62/100)) -background none -gravity center -extent ${f}x${f} $R/mipmap-$n/ic_launcher_foreground.png
+            $IM assets/images/icon-512.png -resize ${s}x${s} $R/mipmap-$n/ic_launcher.png
+            $IM assets/images/icon-512.png -resize ${s}x${s} $R/mipmap-$n/ic_launcher_round.png
+            $IM assets/images/icon-512.png -resize $((f*62/100))x$((f*62/100)) -background none -gravity center -extent ${f}x${f} $R/mipmap-$n/ic_launcher_foreground.png
           done
       - name: بناء APK/AAB
         working-directory: native/android
