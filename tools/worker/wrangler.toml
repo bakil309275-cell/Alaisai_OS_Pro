@@ -10,7 +10,7 @@ compatibility_date = "2025-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "alaisai-pro-db"
-database_id = "d009b655-9e5a-4b5e-8e5a-9e5a4b5e8e5a"
+database_id = "d009b655-1ead-4c27-afe2-73a187d676b8"
 
 # --- اختياري: أزل # من القسم الذي فعّلته عندك، وإلا حذفه النشر التلقائي ---
 # تخزين الملفات R2 (زر R2 في أدوات المالك):
