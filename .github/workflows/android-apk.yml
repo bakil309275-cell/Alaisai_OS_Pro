@@ -47,16 +47,41 @@ jobs:
             $IM assets/images/icon-512.png -resize ${s}x${s} $R/mipmap-$n/ic_launcher_round.png
             $IM assets/images/icon-512.png -resize $((f*62/100))x$((f*62/100)) -background none -gravity center -extent ${f}x${f} $R/mipmap-$n/ic_launcher_foreground.png
           done
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('native/package.json') }}
+          restore-keys: gradle-${{ runner.os }}-
+      - name: مرآة Maven (تفادي خطأ 429 من مستودع Maven المركزي)
+        run: |
+          mkdir -p ~/.gradle/init.d
+          cat > ~/.gradle/init.d/mirror.gradle <<'EOF'
+          def mirror = 'https://maven-central.storage-download.googleapis.com/maven2/'
+          def fix = { repo ->
+            if (repo instanceof MavenArtifactRepository) {
+              def u = repo.url.toString()
+              if (u.startsWith('https://repo.maven.apache.org/maven2') || u.startsWith('https://repo1.maven.org/maven2')) repo.url = mirror
+            }
+          }
+          gradle.beforeSettings { it.pluginManagement.repositories.configureEach(fix) }
+          gradle.allprojects {
+            buildscript.repositories.configureEach(fix)
+            repositories.configureEach(fix)
+          }
+          EOF
       - name: بناء APK/AAB
         working-directory: native/android
         run: |
           chmod +x gradlew
+          retry() { for i in 1 2 3; do "$@" && return 0; echo "محاولة $i فشلت، إعادة بعد 30 ثانية"; sleep 30; done; return 1; }
           mkdir -p ../out
           if [ -z "$KS_B64" ]; then
-            ./gradlew assembleDebug --no-daemon
+            retry ./gradlew assembleDebug --no-daemon
             cp app/build/outputs/apk/debug/*.apk ../out/alaisai-debug.apk
           else
-            ./gradlew assembleRelease bundleRelease --no-daemon
+            retry ./gradlew assembleRelease bundleRelease --no-daemon
             echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
             BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
             "$BT/zipalign" -p -f 4 app/build/outputs/apk/release/app-release-unsigned.apk "$RUNNER_TEMP/aligned.apk"
