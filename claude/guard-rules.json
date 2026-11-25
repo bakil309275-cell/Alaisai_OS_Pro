@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "about": "قواعد الحارس: تُطبَّق على النص بعد التطبيع (حذف التشكيل، توحيد الألف والياء والتاء المربوطة، أحرف صغيرة). sev: 1 تنبيه، 2 مشبوه، 3 خطير. sugg: الإجراء المقترح للمالك.",
+  "rules": [
+    { "id": "secrets-owner", "kind": "secrets", "sev": 3, "sugg": "ban", "re": "(owner[ _-]?key|master[ _-]?key|token[ _-]?secret|api[ _-]?key|المفتاح الرئيسي|مفتاح المالك)", "note": "حاول الحصول على مفتاح المالك أو مفتاح داخلي للنظام." },
+    { "id": "secrets-ask", "kind": "secrets", "sev": 3, "sugg": "ban", "re": "(مفتاح|كلمه ?(ال)?(مرور|سر)|باسورد|رمز|توكن|token|password|secret).{0,25}(المالك|الادمن|الخادم|السيرفر|الورك|worker|cloudflare|github|جيت ?هاب|قاعده البيانات|الداتا ?بيس|database|المستودع)", "note": "طلب مفاتيح أو كلمات مرور خاصة بالمالك أو الخادم أو المستودع." },
+    { "id": "privacy-others", "kind": "privacy", "sev": 2, "sugg": "freeze", "re": "(اعطني|اعطيني|هات|اظهر|اعرض|ارسل|ابي|ابغي|اريد|show|give|list|dump).{0,30}(بيانات|ايميلات|ارقام|هواتف|كلمات ?(المرور|السر)|معلومات).{0,25}(المستخدمين|العملاء|الزبائن|الاعضاء|الحسابات|الاشخاص|users|customers|accounts)", "note": "طلب بيانات مستخدمين آخرين." },
+    { "id": "injection-ignore", "kind": "injection", "sev": 2, "sugg": "freeze", "re": "(تجاهل|انس|تناس|الغ|ignore|forget|disregard|override).{0,30}(التعليمات|الاوامر|القواعد|السابق|instructions|rules|prompt)", "note": "محاولة حقن أوامر لتجاوز تعليمات المساعد." },
+    { "id": "injection-reveal", "kind": "injection", "sev": 2, "sugg": "freeze", "re": "(system ?prompt|developer ?message|تعليمات النظام|برومبت النظام|اكشف تعليماتك|اظهر تعليماتك|ما هي تعليماتك|اعرض تعليماتك|jailbreak|dan mode|وضع المطور)", "note": "محاولة كشف تعليمات المساعد الداخلية أو كسر قيوده." },
+    { "id": "injection-role", "kind": "injection", "sev": 1, "sugg": "watch", "re": "(انت الان|من الان انت|act as|pretend (to be|you)|you are now)", "note": "محاولة تغيير دور المساعد." },
+    { "id": "attack-hack-intent", "kind": "attack", "sev": 3, "sugg": "ban", "re": "(كيف|طريقه|اريد|ابي|ابغي|علمني|ساعدني|اشرح لي|how to|help me).{0,30}(اخترق|اهكر|اهاك|تهكير|هكر|اسرق|اتجسس|hack|crack|exploit|ddos)", "note": "طلب صريح لاختراق أو تهكير أو سرقة." },
+    { "id": "attack-tech", "kind": "attack", "sev": 3, "sugg": "ban", "re": "(sql ?injection|حقن ?sql|union ?select|drop ?table|or 1 ?= ?1|<script|onerror ?=|javascript:|document\\.cookie|reverse ?shell|brute ?force|payload|ثغره|ثغرات|exploit)", "note": "عبارات تقنية تخص هجمات حقن أو ثغرات." },
+    { "id": "attack-destroy", "kind": "attack", "sev": 3, "sugg": "ban", "re": "(احذف|امسح|اتلف|دمر|اسقط|اوقف|عطل).{0,25}(قاعده البيانات|كل الحسابات|كل المنشورات|الخادم|السيرفر|المستودع|الموقع كامل|النظام كامل)", "note": "طلب إتلاف أو إيقاف النظام." },
+    { "id": "attack-word", "kind": "attack", "sev": 1, "sugg": "watch", "re": "(اختراق|تهكير|هكر|اخترق)", "note": "ذكر الاختراق (قد يكون فضولاً)." },
+    { "id": "bypass-sub", "kind": "bypass", "sev": 2, "sugg": "freeze", "re": "(كراك|crack|تخطي|تجاوز|تحايل|اتحايل|خدعه|ثغره).{0,30}(اشتراك|الاشتراك|الدفع|الترخيص|التفعيل|المفتاح|الحمايه)", "note": "محاولة التحايل على الاشتراك أو التفعيل أو الحماية." },
+    { "id": "impersonate-owner", "kind": "impersonation", "sev": 2, "sugg": "freeze", "re": "((انا|أنا|i am|im).{0,6}(المالك|الادمن|صاحب النظام|المطور|admin|owner))|((امنحني|اعطني|ابي|اريد).{0,15}(صلاحيات?|صلاحية|ادمن|صلاحيه المالك))", "note": "ادّعاء صفة المالك أو طلب صلاحيات." }
+  ],
+  "probe": "(\\.env|\\.git|wp-(admin|login|content)|phpmyadmin|\\.php$|\\.sql$|\\.bak$|\\.\\./|/etc/passwd|xmlrpc|cgi-bin|/admin\\.|/console|/actuator)"
+}

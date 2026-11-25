@@ -1,0 +1,17 @@
+{
+  "title": "مكتبة المحامي",
+  "owner": { "name": "مالك التطبيق", "whatsapp": "", "email": "" },
+  "sections": [
+    { "id": "posts", "title": "منشورات", "icon": "📰" },
+    { "id": "books", "title": "كتب ومراجع", "icon": "📚" },
+    { "id": "forms", "title": "نماذج", "icon": "📝" }
+  ],
+  "posts": [
+    { "date": "2026-10-30", "title": "أهلاً بك في المكتبة", "text": "هنا تصلك المنشورات والنماذج والمراجع التي ينشرها مالك التطبيق، وتتحدّث مع تحديث الإضافة. يمكنك عرضها وتنزيلها ومشاركتها." }
+  ],
+  "items": [
+    { "id": "guide-file", "section": "posts", "title": "كيف تنظّم ملف القضية", "desc": "خطوات عملية لترتيب أوراق القضية", "file": "library/guide-case-file.md", "date": "2026-10-30" },
+    { "id": "form-adjourn", "section": "forms", "title": "نموذج طلب استمهال", "desc": "مسودة قابلة للتعديل، تُحفظ كنموذج خاص بك", "file": "library/form-adjourn.txt", "date": "2026-10-30" },
+    { "id": "ref-list", "section": "books", "title": "قائمة المراجع المقترحة", "desc": "مثال على ملف مرجعي نصي؛ استبدله بكتبك (PDF)", "file": "library/references.txt", "date": "2026-10-30" }
+  ]
+}
