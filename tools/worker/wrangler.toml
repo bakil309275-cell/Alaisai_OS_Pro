@@ -1,0 +1,23 @@
+# نشر تلقائي من المستودع (Cloudflare ← Worker ← Settings ← Builds ← Connect to Git)
+# مهم: Cloudflare يجعل هذا الملف مرجع الإعدادات عند كل نشر؛ فاضبط القيمتين التاليتين قبل الربط:
+#   1) name: اسم الـ Worker الحالي عندك بالضبط (يظهر في أعلى صفحته)، وإلا أنشأ Worker جديداً
+#   2) database_id: معرّف قاعدة D1 (Storage & Databases ← D1 ← قاعدتك ← الرمز UUID). ليس سراً
+# الأسرار (OWNER_KEY, TOKEN_SECRET, RESEND_KEY, MAIL_FROM) تبقى في Cloudflare ولا تُمسح بالنشر. لا تضعها هنا.
+name = "alaisai-pro-api"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "alaisai-pro-db"
+database_id = "d009b655-1ead-4c27-afe2-73a187d676b8"
+
+# --- اختياري: أزل # من القسم الذي فعّلته عندك، وإلا حذفه النشر التلقائي ---
+# تخزين الملفات R2 (زر R2 في أدوات المالك):
+# [[r2_buckets]]
+# binding = "FILES"
+# bucket_name = "اسم-الحاوية"
+#
+# الذكاء الاصطناعي لمساعد كلود (Workers AI):
+# [ai]
+# binding = "AI"
