@@ -1,8 +1,8 @@
 {
  "format": "alaisai-channel",
  "version": 1,
- "seq": 10,
- "updated": 1795651544724,
+ "seq": 11,
+ "updated": 1795719319289,
  "api": "https://alaisai-pro-api.bakil309275.workers.dev",
  "contact": {
   "whatsapp": "734454642",
@@ -11,7 +11,12 @@
   "facebook": "",
   "note": ""
  },
- "pub": null,
+ "pub": {
+  "crv": "P-256",
+  "kty": "EC",
+  "x": "LqWQcKNtAEoI5R2lqZID5-wrPn_bP3SrKBQbM8J9_XY",
+  "y": "edJ6fW3qN6dvl5nRNP8aPVx5bc7zvVQCGizBVKTB8mw"
+ },
  "revoked": [],
  "retain": {
   "archiveDays": 60,
@@ -29,7 +34,37 @@
    "level": "info",
    "created": 1794689005484,
    "expires": 1797281005484,
-   "pin": true
+   "pin": true,
+   "arch": false
+  }
+ ],
+ "pay": [],
+ "channels": [],
+ "plans": [
+  {
+   "id": "week",
+   "label": "أسبوع",
+   "days": 7
+  },
+  {
+   "id": "month",
+   "label": "شهر",
+   "days": 30
+  },
+  {
+   "id": "quarter",
+   "label": "3 أشهر",
+   "days": 90
+  },
+  {
+   "id": "year",
+   "label": "سنة",
+   "days": 365
+  },
+  {
+   "id": "life",
+   "label": "مدى الحياة",
+   "days": 0
   }
  ]
 }
