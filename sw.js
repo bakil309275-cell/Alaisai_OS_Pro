@@ -1,6 +1,6 @@
 /* Alaisai OS - Service Worker
  * غيّر VERSION عند كل إصدار ليصل التحديث للمستخدمين. */
-const VERSION = '2.15.1';
+const VERSION = '2.16.0';
 const BUILD = 'dev'; // يستبدله سير العمل برمز الإيداع عند النشر ليصل التحديث للجميع
 const CACHE = `alaisai-${VERSION}-${BUILD}`;
 const CORE = [
