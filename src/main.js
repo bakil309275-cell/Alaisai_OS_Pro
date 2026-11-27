@@ -12,6 +12,7 @@
     },
 
     async init() {
+      try { const C = window.Capacitor; if (C && (C.isNativePlatform ? C.isNativePlatform() : true)) document.documentElement.classList.add('is-native'); } catch (_) { /* لا شيء */ }
       if (window.Nav) Nav.init(); // زر الرجوع التدريجي + سؤال الخروج عند سطح المكتب
       window.addEventListener('error', (e) => this.logError(e.message));
       window.addEventListener('unhandledrejection', (e) => this.logError(e.reason && e.reason.message || e.reason));

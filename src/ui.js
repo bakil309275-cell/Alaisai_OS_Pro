@@ -127,5 +127,19 @@
   /** تحميل سكربت عند الحاجة فقط (يخفّف بدء التشغيل): GitFlash والمنصة لا تُحمَّلان إلا عند فتحهما */
   const loaded = {};
   UI.loadScript = (src) => loaded[src] || (loaded[src] = new Promise((res, rej) => { const el = document.createElement('script'); el.src = src; el.onload = res; el.onerror = () => { delete loaded[src]; rej(new Error('تعذّر تحميل ' + src)); }; document.head.appendChild(el); }));
+  // ---------- زر العين: إظهار/إخفاء كل حقول كلمة المرور والرموز ----------
+  const eyeOne = (inp) => {
+    if (inp.dataset.eye) return; inp.dataset.eye = '1';
+    const w = document.createElement('span'), rtl = getComputedStyle(inp).direction === 'rtl';
+    w.className = 'eye-wrap ' + (rtl ? 'eye-l' : 'eye-r'); inp.parentNode.insertBefore(w, inp); w.appendChild(inp);
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'eye-btn'; b.textContent = '👁'; b.title = 'إظهار'; b.setAttribute('aria-label', 'إظهار النص'); b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', (e) => { e.preventDefault(); const show = inp.type === 'password'; inp.type = show ? 'text' : 'password'; b.textContent = show ? '🙈' : '👁'; b.title = show ? 'إخفاء' : 'إظهار'; b.setAttribute('aria-label', show ? 'إخفاء النص' : 'إظهار النص'); b.setAttribute('aria-pressed', String(show)); inp.focus(); });
+    w.appendChild(b);
+  };
+  UI.eyes = (root) => (root || document).querySelectorAll('input[type=password]').forEach(eyeOne);
+  if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined' && document.documentElement) {
+    new MutationObserver(() => UI.eyes()).observe(document.documentElement, { childList: true, subtree: true });
+    document.addEventListener('DOMContentLoaded', () => UI.eyes());
+  }
   window.UI = UI;
 })();

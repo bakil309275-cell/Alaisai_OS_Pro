@@ -18,7 +18,25 @@
         else { history.replaceState({ alaisai: 'base' }, ''); history.pushState({ alaisai: 'guard' }, ''); }
       } catch (_) { this.ready = false; return; }
       window.addEventListener('popstate', (e) => this.onPop(e));
-      this.watch();
+      this.watch(); this.nativeBack();
+    },
+
+    /** زر الرجوع في هاتف أندرويد داخل غلاف Capacitor: نتحكم به كاملاً بدل الاعتماد على سجل WebView
+     *  (يغلق الطبقة العليا، وإن لم يبقَ شيء يسأل «هل تريد الخروج؟»، و«نعم» تخرج فوراً) */
+    nativeBack(tries) {
+      if (this._nb) return; const C = window.Capacitor; if (!C || !(C.isNativePlatform ? C.isNativePlatform() : true)) return;
+      const A = this.capApp();
+      if (!A) { if ((tries || 0) < 20) setTimeout(() => this.nativeBack((tries || 0) + 1), 250); return; }
+      this._nb = true;
+      A.addListener('backButton', async () => {
+        const live = this.stack.filter((x) => !x.dead);
+        if (live.length) {
+          const L = live[live.length - 1]; let r; try { r = L.close ? await L.close() : undefined; } catch (_) { r = undefined; }
+          if (r !== false && !L.dead) this.release(L);   // إن لم تُغلَق الطبقة تلقائياً نزيلها
+          return;
+        }
+        this.exitPrompt();
+      });
     },
 
     // ---------- سجل المتصفح (عمليات متسلسلة كي لا تتداخل) ----------
@@ -80,7 +98,10 @@
       UI.dialog({ title: 'الخروج من العيسائي برو', message: 'هل تريد الخروج من العيسائي برو؟', okText: 'نعم، خروج', cancelText: 'لا، أبقَ', danger: false })
         .then((yes) => { this.prompting = false; if (yes) this.leave(); });
     },
+    /** إضافة التطبيق في غلاف أندرويد (Capacitor)؛ null في المتصفح */
+    capApp() { try { const C = window.Capacitor; return C && C.Plugins && C.Plugins.App && C.Plugins.App.exitApp ? C.Plugins.App : null; } catch (_) { return null; } },
     leave() {
+      const A = this.capApp(); if (A) { try { return A.exitApp(); } catch (_) { /* نكمل بالطريقة العادية */ } }   // تطبيق أندرويد: خروج فوري بعد الموافقة، دون تأكيد ثانٍ
       this.leaving = true; setTimeout(() => { this.leaving = false; }, 2500);
       try { window.close(); } catch (_) { /* لا شيء */ }
       history.back();

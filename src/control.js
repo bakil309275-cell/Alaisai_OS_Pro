@@ -214,6 +214,15 @@
     },
 
     plans() { const p = (this.ch && this.ch.plans) || []; return p.length ? p : PLANS; },
+    /** خطط المالك: المسودة إن وُجدت (قبل النشر) وإلا المنشور */
+    dplans() { const p = (this.draft && this.draft.plans) || []; return p.length ? p : this.plans(); },
+    /** سطر وصف المدة مع سعرها كما حدّده المالك */
+    planText(p) { return p.label + (p.days ? ' (' + p.days + ' يوم)' : ' (دائم)') + (p.price ? ' — ' + p.price : ''); },
+    /** بطاقة أسعار الاشتراك التي تظهر للعميل أمام كل مدة (تُعرض فقط إن حدّد المالك سعراً لمدة واحدة على الأقل) */
+    priceCard() {
+      const pl = this.plans().filter((p) => p.price); if (!pl.length) return '';
+      return '<div class="ctl-card"><strong>💰 أسعار الاشتراك</strong>' + pl.map((p) => `<p class="sm"><b>${E(p.label)}</b>${p.days ? ' <span class="muted">(' + p.days + ' يوم)</span>' : ' <span class="muted">(دائم)</span>'} — <b>${E(p.price)}</b></p>`).join('') + '<p class="muted sm">الأسعار من مالك المنصة، وتُعرض أيضاً في نافذة طلب الاشتراك.</p></div>';
+    },
     /** يجلب رموز الطلبات المقبولة من الخادم ويفعّلها تلقائياً (الرمز مربوط بحساب الجهاز أصلاً) */
     async syncCodes() {
       if (!this.api() || !(this.st.rq || []).length) return;
@@ -230,18 +239,18 @@
       const c = (this.ch && this.ch.contact) || {}, a = this.st.acct || {}, pay = (this.ch && this.ch.pay) || [], aid = this.st.aid;
       const root = document.getElementById('dialog-root'), ov = document.createElement('div'); ov.className = 'dialog-overlay';
       ov.innerHTML = `<form class="dialog ctl-contact" role="dialog" aria-modal="true" aria-label="طلب اشتراك"><h3>🔑 طلب اشتراك${o.addon ? ' — ' + E(o.addon) : ''}</h3>
-        ${pay.length ? '<div class="ctl-card"><strong>طرق الدفع</strong>' + pay.map((x) => `<p><b>${E(x.name)}:</b> <span dir="ltr">${E(x.details)}</span></p>`).join('') + '</div>' : '<p class="muted sm">لم يحدّد المالك طرق الدفع بعد؛ راسله للاستفسار.</p>'}
+        ${this.priceCard()}${pay.length ? '<div class="ctl-card"><strong>طرق الدفع</strong>' + pay.map((x) => `<p><b>${E(x.name)}:</b> <span dir="ltr">${E(x.details)}</span></p>`).join('') + '</div>' : '<p class="muted sm">لم يحدّد المالك طرق الدفع بعد؛ راسله للاستفسار.</p>'}
         <label class="lbl">الاسم</label><input class="field" name="name" maxlength="60" value="${E(a.name || '')}">
         <label class="lbl">رقم الهاتف</label><input class="field" name="phone" maxlength="25" dir="ltr" value="${E(a.phone || '')}">
         <label class="lbl">البريد (اختياري)</label><input class="field" name="email" maxlength="80" dir="ltr">
-        <label class="lbl">الخطة</label><select class="field" name="plan">${this.plans().map((p) => `<option value="${E(p.id)}">${E(p.label)}</option>`).join('')}</select>
+        <label class="lbl">الخطة</label><select class="field" name="plan">${this.plans().map((p) => `<option value="${E(p.id)}">${E(p.label + (p.price ? ' — ' + p.price : ''))}</option>`).join('')}</select>
         <label class="lbl">إثبات الدفع (رقم الحوالة أو ملاحظة)</label><textarea class="field" name="proof" rows="3" maxlength="1000"></textarea>
         <label class="lbl">صورة الإيصال (اختياري)</label><input class="field" type="file" name="img" accept="image/*">
         <p class="muted sm">معرّف حسابك: <code dir="ltr">${E(aid)}</code> (يُرسل مع الطلب ويُربط به الرمز)</p>
         <div class="ctl-send">${this.api() ? '<button type="button" class="btn btn-primary" data-s="direct">📨 إرسال الطلب للمالك</button>' : ''}${c.whatsapp ? '<button type="button" class="btn" data-s="wa">واتساب</button><button type="button" class="btn" data-s="sms">رسالة SMS</button>' : ''}${c.email ? '<button type="button" class="btn" data-s="mail">بريد</button>' : ''}<button type="button" class="btn" data-s="copy">نسخ</button></div>
         <div class="dialog-actions"><button type="button" class="btn" data-s="x">إغلاق</button></div></form>`;
       root.appendChild(ov); const form = ov.querySelector('form'), f = form.elements, digits = (x) => String(x).replace(/[^\d]/g, '');
-      const text = () => `🔑 طلب اشتراك — ${o.addon || 'كل الإضافات'}\nالاسم: ${f.name.value}\nالهاتف: ${f.phone.value}\nالبريد: ${f.email.value}\nالخطة: ${(this.plans().find((p) => p.id === f.plan.value) || {}).label}\nمعرّف الحساب: ${aid}\nالإثبات: ${f.proof.value}`;
+      const text = () => `🔑 طلب اشتراك — ${o.addon || 'كل الإضافات'}\nالاسم: ${f.name.value}\nالهاتف: ${f.phone.value}\nالبريد: ${f.email.value}\nالخطة: ${(() => { const q = this.plans().find((p) => p.id === f.plan.value) || {}; return (q.label || '') + (q.price ? ' — ' + q.price : ''); })()}\nمعرّف الحساب: ${aid}\nالإثبات: ${f.proof.value}`;
       form.addEventListener('click', async (e) => {
         const b = e.target.closest('[data-s]'); if (!b) return; const s = b.dataset.s; if (s === 'x') return ov.remove();
         if (!f.name.value.trim() || !f.phone.value.trim()) return UI.toast('اكتب اسمك ورقم هاتفك', 'warn');
@@ -343,7 +352,7 @@
         const have = !!d.pub;
         h.innerHTML = `<p class="muted">الاشتراك برمز موقَّع يتحقق منه التطبيق دون خادم. أصدر رمزاً لكل مشترك، وإن أوقفته يصل الإيقاف للجميع عند النشر التالي.</p>` +
           (have ? '<div class="ctl-bar"><button class="btn btn-primary" data-c="issue">＋ إصدار رمز اشتراك</button><button class="btn" data-c="keyexp">⬇️ نسخة احتياطية من المفتاح</button><button class="btn" data-c="keyimp">⬆️ استيراد مفتاح</button></div>' : '<div class="ctl-bar"><button class="btn btn-primary" data-c="keygen">🔑 إنشاء مفتاح الاشتراكات</button><button class="btn" data-c="keyimp">⬆️ استيراد مفتاح</button></div>') +
-          '<h4>خطط الاشتراك</h4><p class="muted sm">' + this.plans().map((p) => E(p.label) + (p.days ? ' (' + p.days + ' يوم)' : ' (دائم)')).join('، ') + '</p><div class="ctl-bar"><button class="btn" data-c="editplans">✏️ الخطط والمدد</button><button class="btn" data-c="editpay">🏦 طرق الدفع</button><button class="btn" data-c="editchan">🔗 قنوات النشر الأخرى</button></div><p class="muted sm">طرق الدفع: ' + ((d.pay || []).length ? (d.pay || []).map((x) => E(x.name)).join('، ') : 'لا شيء') + '</p><h4>طلبات الاشتراك الواردة</h4><div class="ctl-bar"><button class="btn" data-c="loadreq">🔄 تحديث الطلبات</button></div><div id="ctl-req"></div><h4>الرموز الصادرة</h4><div id="ctl-issued"></div>';
+          '<h4>خطط الاشتراك</h4><p class="muted sm">' + this.dplans().map((p) => E(this.planText(p))).join('<br>') + '</p><p class="muted sm">يرى العميل هذه الأسعار أمام كل مدة. بعد أي تعديل اضغط «🚀 نشر للجميع» لتصل إليهم.</p><div class="ctl-bar"><button class="btn btn-primary" data-c="editplans">✏️ المدد والأسعار</button><button class="btn" data-c="editpay">🏦 طرق الدفع</button><button class="btn" data-c="editchan">🔗 قنوات النشر الأخرى</button></div><p class="muted sm">طرق الدفع: ' + ((d.pay || []).length ? (d.pay || []).map((x) => E(x.name)).join('، ') : 'لا شيء') + '</p><h4>طلبات الاشتراك الواردة</h4><div class="ctl-bar"><button class="btn btn-sm ' + (this.reqview === 'done' ? '' : 'btn-primary') + '" data-c="reqview" data-v="new">🆕 الجديدة</button><button class="btn btn-sm ' + (this.reqview === 'done' ? 'btn-primary' : '') + '" data-c="reqview" data-v="done">📦 المعالَجة</button><button class="btn btn-sm" data-c="loadreq">🔄 تحديث</button></div><div id="ctl-req"></div><h4>الرموز الصادرة</h4><div id="ctl-issued"></div>';
         this.issued(); this.loadReq();
       } else if (this.sub === 'contact') {
         const c = d.contact; h.innerHTML = `<p class="muted">وسائل التواصل التي تظهر للمستخدمين في «تواصل مع المالك».</p><div class="admin-row"><span class="grow">واتساب: ${E(c.whatsapp || '—')}</span></div><div class="admin-row"><span class="grow">تيليجرام: ${E(c.telegram || '—')}</span></div><div class="admin-row"><span class="grow">البريد: ${E(c.email || '—')}</span></div><div class="admin-row"><span class="grow">فيسبوك: ${E(c.facebook || '—')}</span></div><div class="admin-row"><span class="grow">ملاحظة: ${E(c.note || '—')}</span></div><div class="ctl-bar"><button class="btn" data-c="editcontact">✏️ تعديل</button><button class="btn" data-c="testcontact">معاينة نافذة التواصل</button></div>`;
@@ -455,10 +464,15 @@
       if (a === 'loadreq') return this.loadReq();
       if (a === 'approve') return this.decide(ds.id, true);
       if (a === 'reject') return this.decide(ds.id, false);
-      if (a === 'editplans') {
-        const v = await UI.dialog({ title: 'خطط الاشتراك', message: 'سطر لكل خطة بالشكل: المعرّف|الاسم|الأيام (0 = دائم)', okText: 'حفظ', fields: [{ id: 't', type: 'textarea', rows: 8, mono: true, value: this.plans().map((p) => p.id + '|' + p.label + '|' + p.days).join('\n') }] }); if (!v) return;
-        const pl = v.t.split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => /^[\w-]{1,30}$/.test(x[0]) && x[1] && /^\d{1,5}$/.test(x[2] || '')).slice(0, 12).map((x) => ({ id: x[0], label: x[1].slice(0, 30), days: +x[2] }));
-        if (!pl.length) return UI.toast('صيغة غير صحيحة', 'error'); d.plans = pl; await this.saveDraft(); return this.body();
+      if (a === 'editplans') return this.editPlans();
+      if (a === 'reqview') { this.reqview = ds.v === 'done' ? 'done' : 'new'; return this.body(); }
+      if (a === 'reqdel') {
+        if (!(await UI.confirm('حذف هذا الطلب نهائياً؟' + (ds.st === 'approved' ? ' (إن لم يفتح المشترك التطبيق بعد فلن يصله الرمز تلقائياً)' : ''), { okText: 'حذف', danger: true }))) return;
+        const key = await this.ownerKeyApi(); await this.call('/v1/admin/subreq/' + ds.id, { method: 'POST', base: this.draft.api, key, body: { del: true } }); return this.loadReq();
+      }
+      if (a === 'reqclear') {
+        if (!(await UI.confirm('حذف كل الطلبات المعالَجة (المقبولة والمرفوضة) نهائياً؟', { okText: 'حذف الكل', danger: true }))) return;
+        const key = await this.ownerKeyApi(); await this.call('/v1/admin/subreq/clear', { method: 'POST', base: this.draft.api, key, body: {} }); return this.loadReq();
       }
       if (a === 'editpay') {
         const v = await UI.dialog({ title: 'طرق الدفع', message: 'سطر لكل طريقة بالشكل: الاسم|رقم الحساب أو التفاصيل (مثال: بنك الكريمي|رقم الحساب 123456 باسم فلان)', okText: 'حفظ', fields: [{ id: 't', type: 'textarea', rows: 8, value: (d.pay || []).map((p) => p.name + '|' + p.details).join('\n') }] }); if (!v) return;
@@ -516,13 +530,46 @@
       const k = await Sync.deviceKey(true); if (!k) { UI.toast('التخزين المشفّر غير متاح في هذا المتصفح', 'error'); return false; }
       await Store.set(K_APIK, await Sec.seal(k, v.k.trim())); UI.toast('✅ تم تفعيل وضع المالك', 'success'); return true;
     },
+    /** محرّر المدد والأسعار: إضافة أي مدة بأي عدد أيام وسعر، وتعديلها أو حذفها. الأسعار تصل للعملاء عند «نشر» */
+    editPlans() {
+      const d = this.draft, rows = this.dplans().map((x) => ({ id: x.id, label: x.label, days: x.days, price: x.price || '' }));
+      const root = document.getElementById('dialog-root'), ov = document.createElement('div'); ov.className = 'dialog-overlay';
+      const PRE = [['أسبوع', 7], ['شهر', 30], ['3 أشهر', 90], ['6 أشهر', 180], ['سنة', 365], ['مدى الحياة', 0]];
+      ov.innerHTML = '<form class="dialog" role="dialog" aria-modal="true" aria-label="المدد والأسعار" style="max-width:560px;max-height:90vh;overflow:auto"><h3>⏱ المدد والأسعار</h3><p class="muted sm">كل صف مدة اشتراك: الاسم، عدد الأيام (0 = دائم)، والسعر كما تريد أن يراه العميل (مثل: 5 دولار، أو 3000 ريال يمني). اترك السعر فارغاً لإخفائه.</p><div id="pl-rows"></div><div class="ctl-bar"><button type="button" class="btn" data-p="add">＋ مدة جديدة</button><select class="field" data-p="pre" aria-label="إضافة مدة جاهزة" style="max-width:190px"><option value="">＋ مدة جاهزة…</option>' + PRE.map((x, k) => `<option value="${k}">${E(x[0])}</option>`).join('') + '</select></div><div class="dialog-actions"><button type="button" class="btn" data-p="x">إلغاء</button><button type="submit" class="btn btn-primary">حفظ</button></div></form>';
+      root.appendChild(ov); const form = ov.querySelector('form'), box = ov.querySelector('#pl-rows');
+      const draw = () => { box.innerHTML = rows.map((r, i) => `<div class="ctl-card" data-i="${i}" style="display:grid;gap:6px;grid-template-columns:1fr 90px;"><input class="field" data-k="label" maxlength="30" placeholder="اسم المدة (مثل: شهر)" aria-label="اسم المدة" value="${E(r.label)}"><input class="field" data-k="days" type="number" min="0" max="36500" inputmode="numeric" placeholder="الأيام" aria-label="الأيام" dir="ltr" value="${E(r.days)}"><input class="field" data-k="price" maxlength="40" placeholder="السعر (اختياري)" aria-label="السعر" value="${E(r.price)}"><button type="button" class="btn btn-sm btn-danger" data-p="del" data-i="${i}">🗑 حذف المدة</button></div>`).join('') || '<p class="muted">لا مدد. أضف مدة.</p>'; };
+      const sync = () => box.querySelectorAll('[data-i]').forEach((el) => { const r = rows[+el.dataset.i]; if (!r) return; el.querySelectorAll('[data-k]').forEach((inp) => { r[inp.dataset.k] = inp.value; }); });
+      const nid = (days) => { let id; do { id = ('d' + days + '-' + rid()).slice(0, 30); } while (rows.some((r) => r.id === id)); return id; };
+      draw();
+      form.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-p]'); if (!b) return; sync();
+        if (b.dataset.p === 'x') return ov.remove();
+        if (b.dataset.p === 'add') { if (rows.length >= 20) return UI.toast('الحد الأقصى 20 مدة', 'warn'); rows.push({ id: nid(30), label: '', days: 30, price: '' }); draw(); const l = box.querySelectorAll('[data-k=label]'); l[l.length - 1].focus(); }
+        if (b.dataset.p === 'del') { const r = rows[+b.dataset.i]; if (r) UI.confirm('حذف مدة «' + (r.label || 'بدون اسم') + '»؟', { okText: 'حذف', danger: true }).then((yes) => { if (yes) { sync(); rows.splice(rows.indexOf(r), 1); draw(); } }); }
+      });
+      form.querySelector('[data-p=pre]').addEventListener('change', (e) => { const k = e.target.value; e.target.value = ''; if (k === '') return; sync(); if (rows.length >= 20) return UI.toast('الحد الأقصى 20 مدة', 'warn'); const x = PRE[+k]; rows.push({ id: nid(x[1]), label: x[0], days: x[1], price: '' }); draw(); });
+      ov.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); ov.remove(); } });
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault(); sync();
+        const out = []; for (const r of rows) {
+          const label = String(r.label).trim().slice(0, 30), days = String(r.days).trim();
+          if (!label) return UI.toast('اكتب اسماً لكل مدة أو احذف الصف الفارغ', 'warn');
+          if (!/^\d{1,5}$/.test(days) || +days > 36500) return UI.toast('عدد الأيام يجب أن يكون رقماً (0 = دائم): ' + label, 'warn');
+          out.push({ id: /^[\w-]{1,30}$/.test(r.id) ? r.id : nid(days), label, days: +days, price: String(r.price).trim().slice(0, 40) });
+        }
+        if (!out.length) return UI.toast('أبقِ مدة واحدة على الأقل', 'warn');
+        d.plans = out; await this.saveDraft(); ov.remove(); UI.toast('حُفظت المدد والأسعار كمسودة. اضغط «🚀 نشر للجميع» ليراها العملاء', 'success', 5000); this.body();
+      });
+    },
     async ownerKeyApi() { try { const k = await Sync.deviceKey(false), sv = await Store.get(K_APIK); if (k && sv) return await Sec.open(k, sv); } catch (_) { /* لا شيء */ } return null; },
+    reqview: 'new',
     async loadReq() {
-      const box = document.getElementById('ctl-req'); if (!box) return; const key = await this.ownerKeyApi(), base = this.draft.api;
+      const box = document.getElementById('ctl-req'); if (!box) return; const key = await this.ownerKeyApi(), base = this.draft.api, done = this.reqview === 'done';
       if (!base || !key) { box.innerHTML = '<p class="muted">اضبط رابط الواجهة ومفتاح المالك من تبويب «الرسائل والإحصاءات» لاستقبال الطلبات مباشرة.</p>'; return; }
-      const r = await this.call('/v1/admin/subreq', { base, key }); if (!r) { box.innerHTML = '<p class="muted">تعذّر الاتصال.</p>'; return; }
+      const r = await this.call('/v1/admin/subreq?view=' + (done ? 'done' : 'new'), { base, key }); if (!r) { box.innerHTML = '<p class="muted">تعذّر الاتصال.</p>'; return; }
       this._req = r.items;
-      box.innerHTML = r.items.length ? r.items.map((x) => `<div class="ctl-card"><header><strong>${E(x.name)}</strong> <span class="badge">${E(x.addon === '*' ? 'كل الإضافات' : x.addon)}</span> <span class="badge">${E((this.plans().find((p) => p.id === x.plan) || {}).label || x.plan || '')}</span> <span class="badge">${x.status === 'new' ? 'جديد' : x.status === 'approved' ? 'مقبول' : 'مرفوض'}</span><small>${fmt(x.ts)}</small></header><p dir="auto">📞 ${E(x.phone)} ${x.email ? '✉️ ' + E(x.email) : ''}\nمعرّف الحساب: ${E(x.aid)}\n${E(x.proof || '')}</p>${/^data:image\/(jpeg|png|webp);base64,/.test(x.proofimg || '') ? `<img class="comm-img" alt="إيصال" src="${E(x.proofimg)}">` : ''}${x.status === 'new' ? `<footer><button class="btn btn-sm btn-primary" data-c="approve" data-id="${x.id}">✅ قبول وإصدار رمز</button><button class="btn btn-sm" data-c="reject" data-id="${x.id}">رفض</button></footer>` : ''}</div>`).join('') : '<p class="muted">لا طلبات.</p>';
+      const clear = done && r.items.length ? '<div class="ctl-bar"><button class="btn btn-sm btn-danger" data-c="reqclear">🧹 حذف كل المعالَج</button></div>' : '';
+      box.innerHTML = clear + (r.items.length ? r.items.map((x) => { const pl = this.plans().find((p) => p.id === x.plan) || {}; return `<div class="ctl-card"><header><strong>${E(x.name)}</strong> <span class="badge">${E(x.addon === '*' ? 'كل الإضافات' : x.addon)}</span> <span class="badge">${E((pl.label || x.plan || '') + (pl.price ? ' — ' + pl.price : ''))}</span> <span class="badge">${x.status === 'new' ? 'جديد' : x.status === 'approved' ? 'مقبول' : 'مرفوض'}</span><small>${fmt(x.ts)}</small></header><p dir="auto">📞 ${E(x.phone)} ${x.email ? '✉️ ' + E(x.email) : ''}\nمعرّف الحساب: ${E(x.aid)}\n${E(x.proof || '')}</p>${/^data:image\/(jpeg|png|webp);base64,/.test(x.proofimg || '') ? `<img class="comm-img" alt="إيصال" src="${E(x.proofimg)}">` : ''}${x.status === 'new' ? `<footer><button class="btn btn-sm btn-primary" data-c="approve" data-id="${x.id}">✅ قبول وإصدار رمز</button><button class="btn btn-sm" data-c="reject" data-id="${x.id}">رفض</button></footer>` : `<footer><button class="btn btn-sm btn-danger" data-c="reqdel" data-id="${x.id}" data-st="${x.status}">🗑 حذف الطلب</button></footer>`}</div>`; }).join('') : `<p class="muted">${done ? 'لا طلبات معالَجة.' : 'لا طلبات جديدة ✅'}</p>`);
     },
     async decide(id, ok) {
       const x = (this._req || []).find((q) => String(q.id) === String(id)); if (!x) return; const key = await this.ownerKeyApi(), base = this.draft.api; if (!base || !key) return;
@@ -534,6 +581,9 @@
       if (!r || !r.ok) return UI.toast('تعذّر الحفظ على الخادم', 'error');
       UI.toast(ok ? '✅ قُبل؛ سيُفعَّل عند المشترك تلقائياً. وانشر القناة ليصل الإيقاف/التجديد' : 'رُفض', 'success');
       if (ok) UI.dialog({ title: 'أرسله أيضاً بطريقتك', message: 'وصل الرمز للمشترك عبر التطبيق تلقائياً. يمكنك إرساله بوسيلة أخرى:', okText: 'مشاركة', cancelText: 'إغلاق', fields: [{ id: 'c', type: 'textarea', rows: 4, mono: true, value: code }] }).then((v) => { if (v) { const t = 'رمز اشتراكك في العيسائي برو:\n' + code, ph = String(x.phone).replace(/[^\d]/g, ''); window.open('https://wa.me/' + ph + '?text=' + encodeURIComponent(t), '_blank', 'noopener'); } });
+      // بعد القرار ينتقل الطلب تلقائياً إلى «المعالَجة»؛ نسأل إن كان يريد حذفه نهائياً حتى لا تزدحم القائمة
+      const del = await UI.dialog({ title: ok ? 'تم القبول ✅' : 'تم الرفض', message: 'هل تريد حذف هذا الطلب نهائياً؟' + (ok ? '\nتنبيه: المشترك يستلم الرمز تلقائياً عند فتح التطبيق؛ فاحذفه بعد التأكد من وصوله أو بعد إرسال الرمز له بنفسك.' : '') + '\nإن اخترت «لا» يبقى في 📦 المعالَجة.', okText: '🗑 نعم، احذفه', cancelText: '📦 لا، أرشفه' });
+      if (del) await this.call('/v1/admin/subreq/' + x.id, { method: 'POST', base, key, body: { del: true } });
       this.loadReq();
     },
     showCode(x) {
