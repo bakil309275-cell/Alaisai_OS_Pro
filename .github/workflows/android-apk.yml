@@ -5,7 +5,14 @@
 #    APK + AAB موقّعان بمفتاحك (AAB لـ Google Play). استعمل نفس مفتاح تطبيقك الحالي ليقبله المتجر كتحديث.
 # التطبيق يحمل ملفاته داخله (لا شريط متصفح ولا كاش متصفح) ويتحدّث وحده من المستودع عبر release-manifest.json.
 name: Android APK
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      cap:
+        description: 'إصدار Capacitor: 8 = متوافق مع Google Play (API 36) · 6 = النسخة القديمة (API 34، للتثبيت المباشر فقط)'
+        type: choice
+        default: '8'
+        options: ['8', '6']
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -17,9 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+        with: { node-version: 22 }
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: 17 }
+        with: { distribution: temurin, java-version: '${{ inputs.cap == ''6'' && ''17'' || ''21'' }}' }
       - name: تجهيز ملفات الويب داخل الغلاف
         run: |
           mkdir -p native/www
@@ -28,7 +35,8 @@ jobs:
       - name: إنشاء مشروع أندرويد
         working-directory: native
         run: |
-          npm install --no-audit --no-fund
+          CAP=${{ inputs.cap || '8' }}
+          npm install --no-audit --no-fund @capacitor/core@^$CAP @capacitor/cli@^$CAP @capacitor/android@^$CAP @capacitor/app@^$CAP
           npx cap add android
           npx cap sync android
       - name: أدوات الصور
@@ -52,8 +60,8 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('native/package.json') }}
-          restore-keys: gradle-${{ runner.os }}-
+          key: gradle-${{ runner.os }}-cap${{ inputs.cap || '8' }}-${{ hashFiles('native/package.json') }}
+          restore-keys: gradle-${{ runner.os }}-cap${{ inputs.cap || '8' }}-
       - name: مرآة Maven (تفادي خطأ 429 من مستودع Maven المركزي)
         run: |
           mkdir -p ~/.gradle/init.d
