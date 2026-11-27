@@ -1,8 +1,8 @@
 {
  "format": "alaisai-channel",
  "version": 1,
- "seq": 2,
- "updated": 1794689172061,
+ "seq": 3,
+ "updated": 1795818125920,
  "api": "https://alaisai-pro-api.bakil309275.workers.dev",
  "contact": {
   "whatsapp": "",
@@ -30,6 +30,38 @@
    "created": 1794689005484,
    "expires": 1797281005484,
    "pin": true
+  }
+ ],
+ "plans": [
+  {
+   "id": "week",
+   "label": "أسبوع",
+   "days": 7,
+   "price": ""
+  },
+  {
+   "id": "month",
+   "label": "شهر",
+   "days": 30,
+   "price": ""
+  },
+  {
+   "id": "quarter",
+   "label": "3 أشهر",
+   "days": 90,
+   "price": ""
+  },
+  {
+   "id": "year",
+   "label": "سنة",
+   "days": 365,
+   "price": ""
+  },
+  {
+   "id": "life",
+   "label": "مدى الحياة",
+   "days": 0,
+   "price": ""
   }
  ]
 }
