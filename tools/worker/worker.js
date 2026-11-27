@@ -576,6 +576,15 @@ function classify(text) { const n = nz(text); let best = null; for (const r of R
 const ipHash = async (env, req) => (await hmac(secret(env) || 'x', 'ip:' + (req.headers.get('cf-connecting-ip') || '0'))).slice(0, 16);
 const SHOT = /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+\/=]{100,200000}$/;
 /** يسجّل رصداً للمالك (مع إزالة التكرار 10 دقائق) ويحظر العنوان تلقائياً عند تكرار الخطورة */
+const GCAT = { help: ['support'], dev: ['newdevice', 'owner-denied', 'denied-device', 'code-guess'], atk: ['bruteforce', 'probe'], claude: [] }; // claude = كل ما سوى ذلك (رصد رسائل المساعد)
+const GOTHER = [].concat(GCAT.help, GCAT.dev, GCAT.atk);
+const catOf = (k) => ['help', 'dev', 'atk'].find((c) => GCAT[c].includes(k)) || 'claude';
+// شرط SQL لقسم: يعيد [جزء الشرط, المعاملات]
+const catSql = (cat, col) => (cat === 'claude' ? [' AND ' + col + ' NOT IN (' + GOTHER.map(() => '?').join(',') + ')', GOTHER] : cat ? [' AND ' + col + ' IN (' + GCAT[cat].map(() => '?').join(',') + ')', GCAT[cat]] : ['', []]);
+async function guardCounts(env) {
+  const out = {}; for (const c of Object.keys(GCAT)) { const [w, a] = catSql(c, 'kind'); out[c] = (await one(env, "SELECT COUNT(*) n FROM cflags WHERE st IN ('new','reviewed')" + w, ...a)).n; }
+  return out;
+}
 async function flag(env, c, f) {
   const { q, one, now } = c, text = String(f.text || '').slice(0, 2000), who = f.uid || 0;
   const dup = await one(env, 'SELECT id FROM cflags WHERE uid = ? AND ip = ? AND kind = ? AND substr(text, 1, 60) = ? AND ts > ?', who, f.ip || '', f.kind, text.slice(0, 60), now - 600000);
@@ -961,10 +970,23 @@ async function platform(req, env, p, u, c) {
       await q(env, "INSERT INTO posts (uid, ts, text, link, media, pin, official, scopes) VALUES (0,?,?,?,?,?,1,',platform,')", now, text, /^https?:\/\/[^\s"'<>]{4,300}$/.test(b.link || '') ? b.link : '', JSON.stringify(md), b.pin ? 1 : 0).run(); return J({ ok: true });
     }
     if (p === '/v1/admin/guard' && m === 'GET') {
-      const all = u.searchParams.get('all') === '1';
-      const items = await rows(env, 'SELECT f.id, f.uid, f.ip, f.kind, f.sev, f.text, f.note, f.sugg, f.st, f.ts, f.ref, (length(f.shot) > 0) AS hasshot, u.name AS uname, u.banned AS ubanned, u.frozen AS ufrozen, (SELECT st FROM dchal WHERE id = f.ref) AS chal, (SELECT until FROM ipb WHERE ip = f.ip) AS ipuntil FROM cflags f LEFT JOIN users u ON u.id = f.uid ' + (all ? '' : "WHERE f.st IN ('new','reviewed') ") + 'ORDER BY f.id DESC LIMIT 100');
-      return J({ items, now });
+      // أقسام مستقلة لكل نوع: help (طلبات مساعدة) · claude (رصد المساعد) · dev (أجهزة ودخول) · atk (هجمات). view: new | archived
+      const cat = Object.hasOwn(GCAT, u.searchParams.get('cat')) ? u.searchParams.get('cat') : '', arch = u.searchParams.get('view') === 'archived';
+      await q(env, "DELETE FROM cflags WHERE st IN ('done','dismissed') AND ts < ?", now - 60 * 86400000).run();
+      const [kw, ka] = catSql(cat, 'f.kind');
+      const items = await rows(env, 'SELECT f.id, f.uid, f.ip, f.kind, f.sev, f.text, f.note, f.sugg, f.st, f.ts, f.ref, (length(f.shot) > 0) AS hasshot, u.name AS uname, u.banned AS ubanned, u.frozen AS ufrozen, (SELECT st FROM dchal WHERE id = f.ref) AS chal, (SELECT until FROM ipb WHERE ip = f.ip) AS ipuntil FROM cflags f LEFT JOIN users u ON u.id = f.uid WHERE f.st ' + (arch ? "IN ('done','dismissed')" : "IN ('new','reviewed')") + kw + ' ORDER BY f.sev DESC, f.ts DESC LIMIT 80', ...ka);
+      for (const f of items) f.cat = catOf(f.kind);
+      return J({ items, now, counts: await guardCounts(env) });
     }
+    if (p === '/v1/admin/inbox' && m === 'GET') {
+      const c = await guardCounts(env);
+      return J({ ...c, subreq: (await one(env, "SELECT COUNT(*) n FROM subreq WHERE status = 'new'")).n, reports: (await one(env, 'SELECT COUNT(DISTINCT post) n FROM reports')).n });
+    }
+    if (p === '/v1/admin/guard/clear' && m === 'POST') {
+      const b = (await body(req)) || {}, [w, a] = catSql(Object.hasOwn(GCAT, b.cat) ? b.cat : '', 'kind');
+      await q(env, "DELETE FROM cflags WHERE st IN ('done','dismissed')" + w, ...a).run(); return J({ ok: true });
+    }
+    if ((mm = /^\/v1\/admin\/reports\/(\d{1,12})\/clear$/.exec(p)) && m === 'POST') { await q(env, 'DELETE FROM reports WHERE post = ?', +mm[1]).run(); return J({ ok: true }); }
     if ((mm = /^\/v1\/admin\/guard\/(\d{1,12})\/shot$/.exec(p)) && m === 'GET') { const r = await one(env, 'SELECT shot FROM cflags WHERE id = ?', +mm[1]); return J({ shot: r ? r.shot : '' }); }
     if ((mm = /^\/v1\/admin\/guard\/(\d{1,12})$/.exec(p)) && m === 'POST') {
       const b = await body(req), f = await one(env, 'SELECT * FROM cflags WHERE id = ?', +mm[1]); if (!b || !f) return J({ error: 'not found' }, 404);
@@ -981,7 +1003,9 @@ async function platform(req, env, p, u, c) {
       else if (act === 'approve' || act === 'deny') {
         const ch = await one(env, "SELECT * FROM dchal WHERE id = ? AND st = 'pending'", f.ref); if (!ch) return J({ error: 'انتهى هذا التحقق' }, 410);
         if (act === 'approve') await q(env, "UPDATE dchal SET st = 'ok' WHERE id = ?", ch.id).run(); else { await q(env, "UPDATE dchal SET st = 'no' WHERE id = ?", ch.id).run(); await q(env, 'INSERT OR REPLACE INTO udev (uid, did, label, ok, ts, last) VALUES (?,?,?,0,?,?)', ch.uid, ch.did, ch.label, now, now).run(); }
-      } else if (!['dismiss', 'review'].includes(act)) return J({ error: 'bad' }, 400);
+      } else if (act === 'delete') { await q(env, 'DELETE FROM cflags WHERE id = ?', f.id).run(); return J({ ok: true }); }
+      else if (act === 'restore') { await q(env, "UPDATE cflags SET st = 'new' WHERE id = ?", f.id).run(); return J({ ok: true }); }
+      else if (!['dismiss', 'review', 'archive'].includes(act)) return J({ error: 'bad' }, 400);
       await q(env, 'UPDATE cflags SET st = ? WHERE id = ?', act === 'review' ? 'reviewed' : act === 'dismiss' ? 'dismissed' : 'done', f.id).run();
       if (act === 'deluser') await q(env, "UPDATE cflags SET st = 'done' WHERE uid = ?", uid).run(); return J({ ok: true });
     }
@@ -998,9 +1022,11 @@ async function platform(req, env, p, u, c) {
     if ((mm = /^\/v1\/admin\/delpost\/(\d{1,12})$/.exec(p)) && m === 'POST') { if (!(await one(env, 'SELECT id FROM posts WHERE id = ?', +mm[1]))) return J({ error: 'not found' }, 404); await dropFiles(env, +mm[1]); await q(env, 'DELETE FROM comments WHERE post = ?', +mm[1]).run(); await q(env, 'DELETE FROM reports WHERE post = ?', +mm[1]).run(); await q(env, 'DELETE FROM posts WHERE id = ?', +mm[1]).run(); return J({ ok: true }); }
     if ((mm = /^\/v1\/admin\/hide\/(\d{1,12})$/.exec(p)) && m === 'POST') { const b = await body(req); await q(env, 'UPDATE posts SET hidden = ? WHERE id = ?', b && b.off ? 0 : 1, +mm[1]).run(); return J({ ok: true }); }
     if ((mm = /^\/v1\/admin\/pin\/(\d{1,12})$/.exec(p)) && m === 'POST') { const b = await body(req); await q(env, 'UPDATE posts SET pin = ? WHERE id = ?', b && b.off ? 0 : 1, +mm[1]).run(); return J({ ok: true }); }
-    if (p === '/v1/admin/subreq' && m === 'GET') return J({ items: await rows(env, 'SELECT id, ts, aid, addon, plan, name, phone, email, proof, proofimg, status, code, note FROM subreq ORDER BY id DESC LIMIT 100') });
+    if (p === '/v1/admin/subreq' && m === 'GET') return J({ items: await rows(env, "SELECT id, ts, aid, addon, plan, name, phone, email, proof, proofimg, status, code, note FROM subreq WHERE status " + (u.searchParams.get('view') === 'done' ? "IN ('approved','rejected')" : "= 'new'") + ' ORDER BY id DESC LIMIT 100'), counts: { new: (await one(env, "SELECT COUNT(*) n FROM subreq WHERE status = 'new'")).n, done: (await one(env, "SELECT COUNT(*) n FROM subreq WHERE status IN ('approved','rejected')")).n } });
+    if (p === '/v1/admin/subreq/clear' && m === 'POST') { await q(env, "DELETE FROM subreq WHERE status IN ('approved','rejected')").run(); return J({ ok: true }); }
     if ((mm = /^\/v1\/admin\/subreq\/(\d{1,12})$/.exec(p)) && m === 'POST') {
-      const b = await body(req); if (!b || !['new', 'approved', 'rejected'].includes(b.status)) return J({ error: 'bad' }, 400);
+      const b = await body(req); if (b && b.del) { await q(env, 'DELETE FROM subreq WHERE id = ?', +mm[1]).run(); return J({ ok: true }); }
+      if (!b || !['new', 'approved', 'rejected'].includes(b.status)) return J({ error: 'bad' }, 400);
       await q(env, 'UPDATE subreq SET status = ?, code = ?, note = ? WHERE id = ?', b.status, str(b.code, 900), str(b.note, 300), +mm[1]).run(); return J({ ok: true });
     }
   }

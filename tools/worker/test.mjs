@@ -271,7 +271,7 @@ await t('الجهاز الجديد: رمز بريد، موافقة جهاز مو
     for (let i = 0; i < 6; i++) last = await g('/v1/auth/verify', { method: 'POST', body: { id: c4.id, cs: c4.cs, code: '12345' + i }, ip: '7.7.7.7' }); assert.equal(last.s, 429);
     // أجهزتي
     const dv = await g('/v1/me/devices?did=' + GA, { auth: TA1 }); assert.equal(dv.j.items.length, 3); assert.equal((await g('/v1/me/devices/' + GB, { method: 'DELETE', auth: TA1 })).s, 200);
-    const fr = await g('/v1/admin/guard?all=1', { auth: env.OWNER_KEY }); if (!fr.j.items) console.log('DBG', fr.s, JSON.stringify(fr.j)); const flags = fr.j.items; const kinds = flags.map((x) => x.kind);
+    const fr = await g('/v1/admin/guard', { auth: env.OWNER_KEY }), fa = await g('/v1/admin/guard?view=archived', { auth: env.OWNER_KEY }); const flags = fr.j.items.concat(fa.j.items); const kinds = flags.map((x) => x.kind);
     assert.ok(kinds.includes('newdevice') && kinds.includes('owner-denied') && kinds.includes('code-guess') && kinds.includes('denied-device'), kinds.join());
     assert.equal((await g('/v1/admin/guard', { auth: TA1 })).s, 401);
   } finally { globalThis.fetch = realFetch; delete env.RESEND_KEY; delete env.MAIL_FROM; }
@@ -314,6 +314,43 @@ await t('الحارس: مسارات الفحص تُرصد، والتخمين ي�
   for (let i = 0; i < 5; i++) await g('/v1/claude/ask', { method: 'POST', body: { q: 'كيف اهكر الخادم ' + i }, ip: '8.2.2.2' });
   assert.equal((await g('/v1/posts', { ip: '8.2.2.2' })).s, 429, 'محظور مؤقتاً'); assert.equal((await g('/v1/posts', { ip: '8.3.3.3' })).s, 200);
   const bl = (await g('/v1/admin/claude', { auth: env.OWNER_KEY })).j.blocked; assert.ok(bl.length >= 1);
+});
+
+await t('صندوق الحارس: أقسام مستقلة، أرشفة/استرجاع/حذف، تفريغ المؤرشف، وصندوق الوارد', async () => {
+  const O = { auth: env.OWNER_KEY }, ib = (await g('/v1/admin/inbox', O)).j;
+  assert.ok(ib.help >= 1 && ib.atk >= 1 && typeof ib.claude === 'number' && typeof ib.dev === 'number' && typeof ib.subreq === 'number' && typeof ib.reports === 'number', JSON.stringify(ib));
+  assert.equal((await g('/v1/admin/inbox', { auth: 'x' })).s, 401);
+  const help = (await g('/v1/admin/guard?cat=help', O)).j; assert.ok(help.items.length >= 1 && help.items.every((x) => x.cat === 'help'));
+  const atk = (await g('/v1/admin/guard?cat=atk', O)).j; assert.ok(atk.items.length >= 1 && atk.items.every((x) => x.cat === 'atk' && ['probe', 'bruteforce'].includes(x.kind)));
+  const cl = (await g('/v1/admin/guard?cat=claude', O)).j; assert.ok(cl.items.every((x) => x.cat === 'claude' && !['support', 'probe', 'bruteforce'].includes(x.kind)));
+  assert.equal((await g('/v1/admin/guard?cat=constructor', O)).s, 200, 'قسم غير معروف = الكل');
+  const f = help.items[0], before = (await g('/v1/admin/inbox', O)).j.help;
+  assert.equal((await g('/v1/admin/guard/' + f.id, { method: 'POST', ...O, body: { act: 'archive' } })).s, 200);
+  assert.equal((await g('/v1/admin/inbox', O)).j.help, before - 1, 'الأرشفة تخفّف القسم');
+  assert.ok(!(await g('/v1/admin/guard?cat=help', O)).j.items.some((x) => x.id === f.id));
+  assert.ok((await g('/v1/admin/guard?cat=help&view=archived', O)).j.items.some((x) => x.id === f.id));
+  assert.equal((await g('/v1/admin/guard/' + f.id, { method: 'POST', ...O, body: { act: 'restore' } })).s, 200);
+  assert.ok((await g('/v1/admin/guard?cat=help', O)).j.items.some((x) => x.id === f.id));
+  assert.equal((await g('/v1/admin/guard/' + f.id, { method: 'POST', ...O, body: { act: 'delete' } })).s, 200);
+  assert.ok(![...(await g('/v1/admin/guard?cat=help', O)).j.items, ...(await g('/v1/admin/guard?cat=help&view=archived', O)).j.items].some((x) => x.id === f.id), 'حُذفت نهائياً');
+  const a0 = atk.items[0]; await g('/v1/admin/guard/' + a0.id, { method: 'POST', ...O, body: { act: 'archive' } });
+  assert.ok((await g('/v1/admin/guard?cat=atk&view=archived', O)).j.items.length >= 1);
+  assert.equal((await g('/v1/admin/guard/clear', { method: 'POST', ...O, body: { cat: 'atk' } })).s, 200);
+  assert.equal((await g('/v1/admin/guard?cat=atk&view=archived', O)).j.items.length, 0, 'تفريغ مؤرشف القسم');
+});
+await t('طلبات الاشتراك: جديدة/معالَجة، حذف طلب، حذف كل المعالَج', async () => {
+  const O = { auth: env.OWNER_KEY }, mk = async (n) => (await call('/v1/sub/request', { method: 'POST', body: { did: 'dsub-' + n + '-aaaaaaaaaaaaaaaa', aid: 'acct-98765' + n, addon: 'الطب والأدوية', plan: 'month', name: 'مشترك ' + n, phone: '77700000' + n, proof: 'حوالة ' + n } })).j.id;
+  const x1 = await mk(1), x2 = await mk(2); assert.ok(x1 && x2);
+  let nw = (await call('/v1/admin/subreq', O)).j; assert.ok(nw.items.some((i) => i.id === x1) && nw.counts.new >= 2);
+  await call('/v1/admin/subreq/' + x1, { method: 'POST', ...O, body: { status: 'rejected' } });
+  nw = (await call('/v1/admin/subreq', O)).j; assert.ok(!nw.items.some((i) => i.id === x1), 'المعالَج يغادر قائمة الجديد');
+  let dn = (await call('/v1/admin/subreq?view=done', O)).j; assert.ok(dn.items.some((i) => i.id === x1) && !dn.items.some((i) => i.id === x2));
+  assert.equal((await call('/v1/admin/subreq/' + x1, { method: 'POST', ...O, body: { del: true } })).s, 200);
+  dn = (await call('/v1/admin/subreq?view=done', O)).j; assert.ok(!dn.items.some((i) => i.id === x1));
+  await call('/v1/admin/subreq/' + x2, { method: 'POST', ...O, body: { status: 'approved', code: 'abc.def' } });
+  assert.equal((await call('/v1/admin/subreq/clear', { method: 'POST', ...O, body: {} })).s, 200);
+  assert.equal((await call('/v1/admin/subreq?view=done', O)).j.items.length, 0);
+  assert.equal((await call('/v1/admin/subreq/clear', { method: 'POST', body: {} })).s, 401);
 });
 
 console.log(`\n${n} اختبار ناجح`); process.exit(bad ? 1 : 0);
