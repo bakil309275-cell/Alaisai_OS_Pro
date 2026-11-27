@@ -298,3 +298,20 @@ img.comm-av{object-fit:cover;background:var(--glass,#ddd)}.comm-av.big{width:76p
 .comm-avedit{display:flex;gap:12px;align-items:center;margin-bottom:8px}
 .close-btn.comm-open{background:var(--accent);color:var(--accent-ink);margin-inline-start:auto;margin-inline-end:8px}.close-btn.comm-open[hidden]{display:none}
 .comm-vp{position:relative;display:block;width:100%;max-height:520px;margin:8px 0;border-radius:12px;overflow:hidden;background:#000;cursor:pointer}.comm-vp img{width:100%;height:100%;object-fit:cover;display:block}.comm-vph{display:grid;place-items:center;width:100%;height:100%;font-size:3rem;color:#fff}.comm-play{position:absolute;inset:0;margin:auto;width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;font-size:1.4rem;padding-inline-start:4px}.comm-vsz{position:absolute;bottom:8px;inset-inline-start:8px;background:rgba(0,0,0,.6);color:#fff;border-radius:8px;padding:2px 8px}video.comm-vid{max-height:520px;object-fit:contain}
+
+/* زر العين لحقول كلمة المرور */
+.eye-wrap{position:relative;display:block;flex:1 1 auto;min-width:0}
+.eye-wrap input{width:100%}
+.eye-r input{padding-right:44px}.eye-l input{padding-left:44px}
+.eye-btn{position:absolute;top:50%;transform:translateY(-50%);min-width:36px;min-height:36px;padding:0;border:0;background:transparent;color:inherit;font-size:1.1rem;cursor:pointer;border-radius:8px;opacity:.8}
+.eye-r .eye-btn{right:4px}.eye-l .eye-btn{left:4px}
+.eye-btn:hover,.eye-btn:focus-visible{opacity:1;outline:2px solid var(--accent,#7aa7ff)}
+
+/* تطبيق أندرويد (Capacitor 8، API 36): العرض يمتد خلف أشرطة النظام، فنُزيح المحتوى بهوامش الأمان.
+   المتغيرات --safe-area-inset-* يحقنها SystemBars؛ وإلا نرجع إلى env() أو صفر. لا أثر على الويب. */
+html.is-native{--sat:var(--safe-area-inset-top,env(safe-area-inset-top,0px));--sab:var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px));--sal:var(--safe-area-inset-left,env(safe-area-inset-left,0px));--sar:var(--safe-area-inset-right,env(safe-area-inset-right,0px))}
+html.is-native body{padding:var(--sat) var(--sar) var(--sab) var(--sal);box-sizing:border-box}
+html.is-native #stage-overlay,html.is-native #dialog-root{top:var(--sat);bottom:var(--sab)}
+html.is-native .comm-sheet{bottom:var(--sab);max-height:calc(95vh - var(--sat))}
+html.is-native .comm-nav{padding-bottom:0}
+html.is-native #toast-wrap{bottom:calc(18px + var(--sab))}
